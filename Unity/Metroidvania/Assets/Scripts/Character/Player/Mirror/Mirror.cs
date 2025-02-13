@@ -1,84 +1,95 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Mirror : MonoBehaviour
 {
-    [SerializeField]
-    private CharacterMovement player;
-    [SerializeField]
-    private float levitationHeight = 0.5f;  // Altura máxima de levitación
-    [SerializeField]
-    private float levitationSpeed = 2f;  // Velocidad de levitación
-    [SerializeField]
-    private float followSpeed = 5f;  // Velocidad con la que el espejo sigue al jugador
-    [SerializeField]
-    private float rotationSpeed = 3f;  // Velocidad con la que el espejo rota
+    [SerializeField] private CharacterMovement player;
+    [SerializeField] private float levitationHeight = 0.5f;
+    [SerializeField] private float levitationSpeed = 2f;
+    [SerializeField] private float followSpeed = 5f;
+    [SerializeField] private float rotationSpeed = 3f;
 
-    // Distancia deseada en los ejes X y Y
-    [SerializeField]
-    private float distanceX = 2f;  // Distancia en X respecto al jugador
-    [SerializeField]
-    private float distanceY = 0.5f;  // Distancia en Y respecto al jugador
-    [SerializeField]
-    private float distanceZ = 1f;  // Distancia en Z respecto al jugador
-    
+    [SerializeField] private float distanceX = 2f;
+    [SerializeField] private float distanceY = 0.5f;
+    [SerializeField] private float distanceZ = 1f;
 
     private float levitationOffset;
+    private bool isAttacking = false;
+    public float attackRange { get; set; }
 
-    // Start is called before the first frame update
     void Start()
     {
-        if(player == null){
-            player = FindObjectOfType<CharacterMovement>();  // Buscar al jugador si no está asignado
+        if (player == null)
+        {
+            player = FindObjectOfType<CharacterMovement>();
+            if (player == null)
+            {
+                Debug.LogWarning("No se encontró un CharacterMovement en la escena.");
+            }
         }
     }
 
-    // Update is called once per frame
     void LateUpdate()
     {
-        // Efecto de levitación (movimiento oscilante)
-        LevitatingEffect();
-
-        // Seguir al jugador con un suave movimiento y aplicar las distancias en X y Y
-        FollowPlayer();
-
-        // Agregar rotaciones suaves
+        UpdateLevitation();
+        UpdatePosition();
         SmoothRotation();
     }
 
-    // Efecto de levitación
-    private void LevitatingEffect()
+    // Controla la levitación normal y reducida en combate
+    private void UpdateLevitation()
     {
-        levitationOffset = Mathf.Sin(Time.time * levitationSpeed) * levitationHeight;
+        float levitationFactor = isAttacking ? 0.2f : 1f;
+        levitationOffset = Mathf.Sin(Time.time * levitationSpeed * levitationFactor) * (levitationHeight * levitationFactor);
         transform.position = new Vector3(transform.position.x, player.transform.position.y + distanceY + levitationOffset, transform.position.z);
     }
 
-    // Hacer que el espejo siga al jugador con suavizado y con distancia ajustada
-    private void FollowPlayer()
+    // Decide si seguir al jugador o moverse frente a él
+    private void UpdatePosition()
     {
-        // Calculamos la posición deseada manteniendo las distancias en X y Z
-        Vector3 targetPosition = new Vector3(
-            player.transform.position.x + distanceX * -player.Direction,  // Distancia en X
-            player.transform.position.y,  
-            player.transform.position.z + distanceZ);             // Distancia en Z
-
-        // Movemos el espejo suavemente hacia la posición calculada
-        transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * followSpeed);  
+        Vector3 targetPosition = isAttacking ? GetAttackPosition() : GetFollowPosition();
+        if ((targetPosition - transform.position).sqrMagnitude > 0.001f) // Evita cálculos innecesarios
+        {
+            transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * followSpeed * (isAttacking ? 1.5f : 1f));
+        }
     }
 
-    // Rotaciones suaves en X, Y y Z
+    private Vector3 GetFollowPosition()
+    {
+        return new Vector3(
+            player.transform.position.x + distanceX * -player.Direction,
+            player.transform.position.y,
+            player.transform.position.z + distanceZ
+        );
+    }
+
+    private Vector3 GetAttackPosition()
+    {
+        return new Vector3(
+            player.transform.position.x + (distanceX + attackRange) * player.Direction,
+            player.transform.position.y,
+            0f
+        );
+    }
+
+    // Mantiene la rotación oscilante del espejo
     private void SmoothRotation()
     {
-        // Calculamos la rotación deseada (puedes ajustar los valores según el efecto que desees)
+        float rotationAmplitude = isAttacking ? 10f : 2f;
+        float rotationFactor = Time.time * rotationSpeed;
+        
         Quaternion targetRotation = Quaternion.Euler(
-            Mathf.Sin(Time.time * rotationSpeed) * 10f, // Oscilación suave en X
-            Mathf.Cos(Time.time * rotationSpeed) * 10f, // Oscilación suave en Y
-            Mathf.Sin(Time.time * rotationSpeed) * 10f  // Oscilación suave en Z
+            Mathf.Sin(rotationFactor) * rotationAmplitude,
+            Mathf.Cos(rotationFactor) * rotationAmplitude,
+            Mathf.Sin(rotationFactor) * rotationAmplitude
         );
 
-        // Aplicamos la rotación suave
-        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
+        float slerpSpeed = isAttacking ? rotationSpeed : 20f;
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * slerpSpeed);
+    }
+
+    public void SetAttackingState(bool state)
+    {
+        isAttacking = state;
     }
 }

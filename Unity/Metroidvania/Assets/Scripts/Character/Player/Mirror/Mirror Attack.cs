@@ -1,60 +1,61 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 public class MirrorAttack : MonoBehaviour
 {
-    [SerializeField]
-    private GameObject mirrorComponents;
-    [SerializeField]
-    private float reactivateMirrorTime = 2f;
+    [SerializeField] private GameObject mirrorComponents;
+    [SerializeField] private float reactivateMirrorTime = 2f;
+    [SerializeField] private Mirror mirror;
 
     private Weapon currentWeapon;
-    private int comboIndex;
-    private Coroutine mirrorCoroutine; // Para rastrear la corrutina actual
-    private bool isHeavyAttackActive = false; // Controla si el Heavy Attack sigue activo
-    
+    private Coroutine mirrorCoroutine;
+    private bool isHeavyAttackActive = false;
+
+    void Start()
+    {
+        if (mirror == null && !TryGetComponent(out mirror))
+        {
+            Debug.LogWarning("Mirror component not found on " + gameObject.name);
+        }
+    }
+
     protected virtual void OnEnable()
     {
-        if (InputActionController.Instance != null)
+        var input = InputActionController.Instance;
+        if (input != null)
         {
-            InputActionController.Instance.OnLightAttack += LightAttack;
-            InputActionController.Instance.OnHeavyAttack += HeavyAttack;
+            input.OnLightAttack += LightAttack;
+            input.OnHeavyAttack += HeavyAttack;
         }
     }
 
     protected virtual void OnDisable()
     {
-        if (InputActionController.Instance != null)
+        var input = InputActionController.Instance;
+        if (input != null)
         {
-            InputActionController.Instance.OnLightAttack -= LightAttack;
-            InputActionController.Instance.OnHeavyAttack -= HeavyAttack;
+            input.OnLightAttack -= LightAttack;
+            input.OnHeavyAttack -= HeavyAttack;
         }
     }
 
     private void LightAttack()
     {
-        ResetMirrorTimer();
-        SetMirrorState(false);
-        currentWeapon.LightAttack(comboIndex);
+        TriggerAttack();
     }
 
     private void HeavyAttack(float value)
     {
-        if (value > 0.5f)
-        {
-            isHeavyAttackActive = true;
-            ResetMirrorTimer(); // Reinicia el contador mientras el ataque pesado esté activo
-        }
-        else
-        {
-            isHeavyAttackActive = false;
-        }
+        isHeavyAttackActive = value > 0.5f;
+        TriggerAttack();
+    }
 
+    private void TriggerAttack()
+    {
+        mirror?.SetAttackingState(true);
+        ResetMirrorTimer();
         SetMirrorState(false);
-        currentWeapon.HeavyAttack(comboIndex);
     }
 
     private void SetMirrorState(bool state)
@@ -63,32 +64,34 @@ public class MirrorAttack : MonoBehaviour
         currentWeapon.SetWeaponActive(!state);
     }
 
-    public void SetActiveWeapon(Weapon activeWeapon)
-    {
-        currentWeapon = activeWeapon;
-        print(currentWeapon.name);
-    }
-
     private void ResetMirrorTimer()
     {
-        // Si ya hay una corrutina en ejecución, detenerla
         if (mirrorCoroutine != null)
         {
             StopCoroutine(mirrorCoroutine);
         }
-
-        // Iniciar una nueva corrutina para reactivar el espejo solo si el Heavy Attack no está activo
         mirrorCoroutine = StartCoroutine(ActivateMirror());
     }
 
     private IEnumerator ActivateMirror()
     {
-        while (isHeavyAttackActive) // Mientras el Heavy Attack esté activo, el tiempo se reinicia
+        while (isHeavyAttackActive)
         {
-            yield return null; // Espera un frame antes de volver a verificar
+            yield return null;
         }
 
         yield return new WaitForSeconds(reactivateMirrorTime);
+        
         SetMirrorState(true);
+        mirror?.SetAttackingState(false);
+    }
+
+    public void SetActiveWeapon(Weapon activeWeapon)
+    {
+        currentWeapon = activeWeapon;
+        if (mirror != null)
+        {
+            mirror.attackRange = currentWeapon.range;
+        }
     }
 }

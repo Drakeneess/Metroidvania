@@ -17,11 +17,11 @@ public class Weapon : MonoBehaviour
     }
     public void SetAsCurrentWeapon(){
         
-
     }
 
     public virtual void Attack(){
         SetWeaponActive(true);
+
     }
     
     public void SetWeaponActive(bool state){
