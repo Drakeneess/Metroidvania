@@ -1,21 +1,33 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class ButtonUIController : MonoBehaviour
 {
     [Header("Game Icons")]
-    public List<ControlSchemeIcons> controlSchemeIcons; // Lista de esquemas con sus íconos
-    private Dictionary<ActionType, Sprite[]> iconsPerAction;
+    public List<ControlSchemeIcons> controlSchemeIcons;
+    private static Dictionary<ActionType, Sprite[]> iconsPerAction = new Dictionary<ActionType, Sprite[]>();
 
-    private ButtonUI[] buttonsUI;
+    private static List<ButtonUI> registeredButtons = new List<ButtonUI>();
+
+    public static void Register(ButtonUI button)
+    {
+        if (!registeredButtons.Contains(button))
+            registeredButtons.Add(button);
+    }
+
+    public static void Unregister(ButtonUI button)
+    {
+        registeredButtons.Remove(button);  // No es necesario comprobar si está en la lista
+    }
 
     private void Awake()
     {
-        buttonsUI = FindObjectsOfType<ButtonUI>();
         InitializeIconsDictionary();
     }
-    private void Start() {
+
+    private void Start()
+    {
+        // Actualizamos los botones activos al iniciar
         UpdateButtonUI(0);
     }
 
@@ -31,24 +43,41 @@ public class ButtonUIController : MonoBehaviour
 
     private void InitializeIconsDictionary()
     {
-        iconsPerAction = new Dictionary<ActionType, Sprite[]>();
-        foreach (var scheme in controlSchemeIcons)
+        // Solo inicializar los íconos si no se ha hecho antes
+        if (iconsPerAction.Count == 0)
         {
-            iconsPerAction[scheme.actionType] = scheme.icons;
+            foreach (var scheme in controlSchemeIcons)
+            {
+                iconsPerAction[scheme.actionType] = scheme.icons;
+            }
         }
     }
 
-    private void UpdateButtonUI(int newScheme)
+    public static void UpdateButtonIcon(ButtonUI buttonUI, int newScheme)
     {
-        foreach (ButtonUI buttonUI in buttonsUI)
+        if (iconsPerAction.TryGetValue(buttonUI.GetActionType(), out Sprite[] icons) && icons.Length > newScheme)
         {
-            if (iconsPerAction.TryGetValue(buttonUI.GetActionType(), out Sprite[] icons) && icons.Length > newScheme)
+            buttonUI.SetButtonIcon(icons[newScheme]);
+        }
+        else
+        {
+            Debug.LogWarning($"Icon not found for {buttonUI.GetActionType()} or invalid scheme index.");
+        }
+    }
+
+    public static void UpdateButtonUI(int newScheme)
+    {
+        // Solo actualizar los botones activos
+        foreach (var buttonUI in registeredButtons)
+        {
+            if (buttonUI.gameObject.activeSelf) // Solo actualizar los botones activos
             {
-                buttonUI.SetButtonIcon(icons[newScheme]);
+                UpdateButtonIcon(buttonUI, newScheme);
             }
         }
     }
 }
+
 
 [System.Serializable]
 public class ControlSchemeIcons

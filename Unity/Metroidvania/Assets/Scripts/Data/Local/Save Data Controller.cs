@@ -115,8 +115,9 @@ public class SaveData
     public string playerName = "";
     public float timePlayed = 0f;
     public int lastCheckpointIndex = -1;
-    public int[] weaponsID= new int[0];
-    public int[] weaponsLevel = new int[1];
+    public int[] weaponsID= null;
+    public int currentWeapon = 0;
+    public int[] weaponsLevel = null;
     public int[] toolsID=null;
     public int[] skillID=null;
     public int[] skillLevel=null;

@@ -7,6 +7,7 @@ public class LanguageMenu : MonoBehaviour
     private string language = "en"; // Idioma por defecto
     private Dictionary<string, string> translations = new Dictionary<string, string>();
     private MenuUIText[] menuUITexts;
+    private Weapon[] weapons;
 
     private void Awake()
     {
@@ -96,6 +97,11 @@ public class LanguageMenu : MonoBehaviour
         foreach (MenuUIText uiText in menuUITexts)
         {
             uiText.UpdateText();
+        }
+
+        weapons = WeaponController.Instance.weapons;
+        foreach (Weapon weapon in weapons){
+            weapon.SetName();
         }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -15,8 +16,19 @@ public class MainMenuFlowController : MonoBehaviour
         // Suscribirse a los eventos de entrada
         if (InputActionController.Instance != null)
         {
-            InputActionController.Instance.OnPressAnyButton += SkipTitleAnimation;
-            InputActionController.Instance.OnSelect += ActivateMenuButtons;
+            InputActionController.Instance.OnActionTriggered += HandleActionTriggered;
+        }
+    }
+
+    private void HandleActionTriggered(string action)
+    {
+        switch(action){
+            case "PAButton":
+                SkipTitleAnimation();
+                break;
+            case "Select":
+                ActivateMenuButtons();
+                break;
         }
     }
 
@@ -25,8 +37,7 @@ public class MainMenuFlowController : MonoBehaviour
         // Desuscribirse de los eventos
         if (InputActionController.Instance != null)
         {
-            InputActionController.Instance.OnPressAnyButton -= SkipTitleAnimation;
-            InputActionController.Instance.OnSelect -= ActivateMenuButtons;
+            InputActionController.Instance.OnActionTriggered -= HandleActionTriggered;
         }
     }
 

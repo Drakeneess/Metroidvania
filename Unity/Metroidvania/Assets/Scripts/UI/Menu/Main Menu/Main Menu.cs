@@ -16,7 +16,7 @@ public class MainMenu : Menu
     // Función de inicio, inicializa el estado del menú
     private void Start()
     {
-        GameMenuController.InGame = false;
+        GameMenuController.CurrentMode = GameMode.Menu;
 
         // Inicializa los títulos y los botones
         InitializeElements(titleContent, Vector3.zero);

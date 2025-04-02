@@ -1,2 +1,4 @@
-character,index,es,en
-NPC1,0,Prueba|Prueba1|Prueba2,Test|Test1|Test2
+character,index,id_conversation,es,en
+0,0,0,Prueba|Prueba1|Prueba2,Test|Test1|Test2
+0,1,1,Prueba|Prueba1|[Pregunta con opcion]|Prueba3,Test|Test1|[Question With Option]|Test3
+1,0,0,Hola|Quiero morir,Hi|I want to die

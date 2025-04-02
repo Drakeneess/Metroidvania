@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Character : MonoBehaviour
@@ -15,32 +14,23 @@ public class Character : MonoBehaviour
 
     private Coroutine mentalHealingCoroutine = null;
     private bool canTakePhysicalDamage = true;
-    private bool isMentalHealthUsed = false; // Para verificar si se ha usado la salud mental
     public bool CanTakePhysicalDamage { get { return canTakePhysicalDamage; } set { canTakePhysicalDamage = value; } }
 
     // Configuraciones para la regeneración de salud
     public float mentalHealthRegenerationRate = 5f; // Cuánto se regenera por segundo
-    public float mentalHealthRegenerationDelay = 3f; // Tiempo de espera después de usar la salud mental antes de que comience a regenerarse
+    public float mentalHealthRegenerationDelay = 3f;  // Tiempo de espera después de usar la salud mental antes de regenerar
 
-    // Start is called before the first frame update
     protected virtual void Start()
     {
         InitializeHealth();
-        StartMentalHealthRegeneration();
+        // Inicia la regeneración de salud mental tras un retraso
+        StartMentalHealthRegenerationDelay();
+    }
+    protected virtual void Update(){
+
     }
 
-    protected virtual void Update()
-    {
-        // Aquí podrías gestionar efectos continuos como el veneno o la regeneración.
-        if (!isMentalHealthUsed)
-        {
-            // Solo permite la regeneración si no se ha usado la salud mental recientemente
-            if (CurrentMentalHealth < mentalHealth)
-            {
-                RestoreMentalHealth(mentalHealthRegenerationRate * Time.deltaTime);
-            }
-        }
-    }
+    // Se elimina la regeneración en Update para que no se regenere constantemente
 
     protected virtual void InitializeHealth()
     {
@@ -65,14 +55,16 @@ public class Character : MonoBehaviour
     }
 
     // Métodos de daño
-    protected virtual void TakePhysicalDamage(float damage)
+    public virtual void TakePhysicalDamage(float damage)
     {
         if (CanTakePhysicalDamage)
         {
+            RumbleController.RumblePulse(0.1f,0.2f,0.06f);
             CurrentPhysicalHealth -= damage;
             if (CurrentPhysicalHealth < 0f)
             {
                 Die();
+                RumbleController.RumblePulse(0.5f,0.9f,0.1f);
             }
         }
     }
@@ -95,50 +87,66 @@ public class Character : MonoBehaviour
         }
     }
 
-    // Pulsos de daño (Efectos temporales)
+    // Pulsos de daño (efectos temporales)
     public virtual void UseMentalPulse(float amount)
     {
         CurrentMentalHealth -= amount;
-        isMentalHealthUsed = true; // Se usó la salud mental
-        // Reinicia la regeneración después de un tiempo
-        StartCoroutine(MentalHealthRegenerationDelay());
+        if (CurrentMentalHealth < 0f)
+        {
+            CurrentMentalHealth = 0f;
+        }
+
+        // Reinicia la regeneración: se detiene la regeneración actual (si existe)
+        if (mentalHealingCoroutine != null)
+        {
+            StopCoroutine(mentalHealingCoroutine);
+            mentalHealingCoroutine = null;
+        }
+        // Reinicia el retraso de regeneración
+        StartMentalHealthRegenerationDelay();
     }
 
     public virtual void UseEmotionPulse(float amount)
     {
         CurrentEmotionalHealth -= amount;
-    }
-
-    // Regeneración de salud mental
-    private void StartMentalHealthRegeneration()
-    {
-        if (mentalHealingCoroutine == null)
+        if (CurrentEmotionalHealth < 0f)
         {
-            mentalHealingCoroutine = StartCoroutine(MentalHealthRegeneration());
+            CurrentEmotionalHealth = 0f;
         }
     }
 
-    private IEnumerator MentalHealthRegeneration()
+    // Regeneración de salud mental tras un retraso
+    private void StartMentalHealthRegenerationDelay()
     {
+        if (mentalHealingCoroutine != null)
+        {
+            StopCoroutine(mentalHealingCoroutine);
+        }
+        mentalHealingCoroutine = StartCoroutine(MentalHealthRegenerationDelayCoroutine());
+    }
+
+    private IEnumerator MentalHealthRegenerationDelayCoroutine()
+    {
+        // Espera el retraso sin regenerar salud mental
+        yield return new WaitForSeconds(mentalHealthRegenerationDelay);
+
+        // Regenera la salud mental de forma continua hasta llegar al máximo
         while (CurrentMentalHealth < mentalHealth)
         {
-            // Regeneración de salud mental
-            RestoreMentalHealth(mentalHealthRegenerationRate);
-            yield return new WaitForSeconds(1f);
+            RestoreMentalHealth(mentalHealthRegenerationRate * Time.deltaTime);
+            yield return null;
         }
-    }
-
-    // Temporizador para reiniciar la regeneración después de usar salud mental
-    private IEnumerator MentalHealthRegenerationDelay()
-    {
-        yield return new WaitForSeconds(mentalHealthRegenerationDelay);
-        isMentalHealthUsed = false; // La salud mental ya no se está usando
+        mentalHealingCoroutine = null;
     }
 
     // Restaurar salud
     protected virtual void RestorePhysicalHealth(float amount)
     {
-        RestoreValue(amount, CurrentPhysicalHealth, physicalHealth);
+        CurrentPhysicalHealth += amount;
+        if (CurrentPhysicalHealth > physicalHealth)
+        {
+            CurrentPhysicalHealth = physicalHealth;
+        }
     }
 
     protected virtual void RestoreMentalHealth(float amount)
@@ -152,25 +160,17 @@ public class Character : MonoBehaviour
 
     protected virtual void RestoreEmotionalHealth(float amount)
     {
-        RestoreValue(amount, CurrentEmotionalHealth, emotionalHealth);
-    }
-
-    private void RestoreValue(float amount, float value, float max)
-    {
-        value += amount;
-        if (value > max)
+        CurrentEmotionalHealth += amount;
+        if (CurrentEmotionalHealth > emotionalHealth)
         {
-            value = max;
-        }
-        if (value < 0)
-        {
-            value = 0;
+            CurrentEmotionalHealth = emotionalHealth;
         }
     }
 
     protected virtual void Die()
     {
-        // Implementar lógica de muerte
+        // Implementa la lógica de muerte
+        CurrentPhysicalHealth = 0f;
     }
 
     public float GetCurrentHealth(HealthType type)

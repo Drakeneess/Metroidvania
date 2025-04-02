@@ -11,55 +11,34 @@ public class Interactable : MonoBehaviour
     public float distanceToPlayer = 1;
     public float timeToAction = 1;
 
-    protected Transform player;
     private float holdTime = 0f;
     private bool hasInteracted = false;
-    private bool canInteract=false;
+    private bool canInteract = false;
 
     protected virtual void Start()
     {
-        player = FindObjectOfType<Player>().transform;
         if (interactableButton == null)
         {
             interactableButton = GetComponentInChildren<ButtonUI>();
         }
+
+        PlayerProximityDetector.Instance.RegisterInteractable(this);
     }
 
-    protected virtual void OnEnable()
+    protected virtual void OnDestroy()
     {
-        if (InputActionController.Instance != null)
-        {
-            // Suscribir eventos de presionar y mantener
-            InputActionController.Instance.OnInteractPressed += InteractPressed;
-            InputActionController.Instance.OnInteractHold += InteractHold;
-        }
+        if (PlayerProximityDetector.Instance != null)
+            PlayerProximityDetector.Instance.UnregisterInteractable(this);
     }
 
-    protected virtual void OnDisable()
+    public void UpdateProximity(bool inRange)
     {
-        if (InputActionController.Instance != null)
-        {
-            // Desuscribir eventos de presionar y mantener
-            InputActionController.Instance.OnInteractPressed -= InteractPressed;
-            InputActionController.Instance.OnInteractHold -= InteractHold;
-        }
-    }
-
-    private void Update()
-    {
-        DetectPlayer();
-    }
-
-    private void DetectPlayer()
-    {
-        float distance = Vector3.Distance(transform.position, player.position);
-
-        if (distance <= distanceToPlayer && isInteractable)
+        if (inRange && isInteractable)
         {
             if (!hasInteracted)
             {
                 interactableButton.Activate();
-                canInteract=true;
+                canInteract = true;
             }
         }
         else
@@ -70,38 +49,65 @@ public class Interactable : MonoBehaviour
         }
     }
 
-    // Acción para la interacción con "Presionar"
-    private void InteractPressed()
-    {
-        if (interactionType == InteractionType.Press && isInteractable && !hasInteracted && canInteract)
+    protected virtual void OnEnable()
+    {        
+        if (InputActionController.Instance != null)
         {
-            Action();
-            hasInteracted = true;
+            InputActionController.Instance.OnActionTriggered += InteractPressed;
+            InputActionController.Instance.OnFloatInput += InteractHold;
+        }
+        else
+        {
+            Debug.LogWarning($"[{name}] InputActionController.Instance es NULL");
         }
     }
 
-    // Acción para la interacción con "Mantener"
-    private void InteractHold(float holdDuration)
-    {
-        if (interactionType == InteractionType.Hold && isInteractable && !hasInteracted && !canInteract)
-        {
-            holdTime += holdDuration;
 
-            if (holdTime >= timeToAction)
+    protected virtual void OnDisable()
+    {
+        if (InputActionController.Instance != null)
+        {
+            InputActionController.Instance.OnActionTriggered -= InteractPressed;
+            InputActionController.Instance.OnFloatInput -= InteractHold;
+        }
+    }
+
+    private void InteractPressed(string actionName)
+    {
+        if (actionName == "InteractPressed")
+        {
+            if (interactionType == InteractionType.Press && isInteractable && !hasInteracted && canInteract)
             {
                 Action();
                 hasInteracted = true;
             }
         }
-        else
+    }
+
+    private void InteractHold(string actionName, float holdDuration)
+    {
+        if (actionName == "InteractHold")
         {
-            holdTime = 0f;  // Resetear si no se mantiene
+            if (interactionType == InteractionType.Hold && isInteractable && !hasInteracted && canInteract)
+            {
+                holdTime += holdDuration;
+
+                if (holdTime >= timeToAction)
+                {
+                    Action();
+                    hasInteracted = true;
+                }
+            }
+            else
+            {
+                holdTime = 0f;
+            }
         }
     }
 
-    // Acción que realiza el interactuable (puedes personalizarla según sea necesario)
     protected virtual void Action()
     {
         interactableButton.Deactivate();
     }
 }
+

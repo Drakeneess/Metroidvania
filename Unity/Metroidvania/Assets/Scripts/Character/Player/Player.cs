@@ -20,7 +20,7 @@ public class Player : Character
     {
         base.Die();
     }
-    protected override void TakePhysicalDamage(float damage)
+    public override void TakePhysicalDamage(float damage)
     {
         base.TakePhysicalDamage(damage);
         UpdateOnPhysicalHealth();

@@ -26,9 +26,11 @@ public class MainMenuButtons : MenuButtons{
 
     private void ContinueGame(){
         print("Continue game");
+        BeginGame();
     }
     private void NewGame() {
         print("New game");
+        BeginGame();
     }
     private void Options() {
         print("Options");
@@ -65,5 +67,10 @@ public class MainMenuButtons : MenuButtons{
         }
 
         UpdateButtonSelection();
+    }
+
+    private void BeginGame(){
+        gameObject.SetActive(false);
+        GameMenuController.CurrentMode = GameMode.Game;
     }
 }

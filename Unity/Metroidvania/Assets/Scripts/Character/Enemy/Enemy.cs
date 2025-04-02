@@ -14,4 +14,14 @@ public class Enemy : Character
     {
         base.Update();
     }
+
+    public override void TakePhysicalDamage(float damage)
+    {
+        base.TakePhysicalDamage(damage);
+    }
+    protected override void Die()
+    {
+        base.Die();
+        Destroy(gameObject);
+    }
 }

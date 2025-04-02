@@ -4,6 +4,7 @@ using UnityEngine;
 public class Mirror : MonoBehaviour
 {
     [SerializeField] private CharacterMovement player;
+    public CharacterMovement Player {get { return player; }}
     [SerializeField] private float levitationHeight = 0.5f;
     [SerializeField] private float levitationSpeed = 2f;
     [SerializeField] private float followSpeed = 5f;
@@ -68,7 +69,7 @@ public class Mirror : MonoBehaviour
         return new Vector3(
             player.transform.position.x + (distanceX + attackRange) * player.Direction,
             player.transform.position.y,
-            0f
+            player.transform.position.z
         );
     }
 

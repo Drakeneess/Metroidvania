@@ -22,7 +22,7 @@ public class CharacterDash : MonoBehaviour
     private void OnEnable() {
         if (InputActionController.Instance != null)
         {
-            InputActionController.Instance.OnDash += HandleDashInput;
+            InputActionController.Instance.OnActionTriggered += HandleDashInput;
         }
     }
 
@@ -30,16 +30,18 @@ public class CharacterDash : MonoBehaviour
     {
         if (InputActionController.Instance != null)
         {
-            InputActionController.Instance.OnDash -= HandleDashInput;
+            InputActionController.Instance.OnActionTriggered -= HandleDashInput;
         }
     }
 
 
-    private void HandleDashInput()
+    private void HandleDashInput(string actionName)
     {
-        if (!isDashing && player.GetCurrentHealth(HealthType.Mental) > 0f) // Evita que se active el dash si ya está en proceso
-        {
-            StartCoroutine(Dash());
+        if (actionName == "Dash"){
+            if (!isDashing && player.GetCurrentHealth(HealthType.Mental) > 0f) // Evita que se active el dash si ya está en proceso
+            {
+                StartCoroutine(Dash());
+            }
         }
     }
 

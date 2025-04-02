@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+/// <summary>
+/// Controlador de acciones de entrada, manejando eventos de manera optimizada.
+/// </summary>
 public class InputActionController : MonoBehaviour
 {
     public static InputActionController Instance { get; private set; }
@@ -10,23 +13,13 @@ public class InputActionController : MonoBehaviour
 
     // Buffer de inputs
     private Dictionary<string, float> inputBuffer = new Dictionary<string, float>();
-    private float bufferTime = 0.1f; // Tiempo máximo que el input queda en buffer
+    private float bufferTime = 0.1f; // Tiempo máximo en el buffer
 
-    // Eventos
-    public event Action OnInteractPressed;
-    public event Action<float> OnInteractHold;
-    public event Action<float> OnMovement;
-    public event Action<float> OnRunning;
-    public event Action OnDash;
-    public event Action OnJump;
-    public event Action OnPressAnyButton;
-    public event Action OnLightAttack;
-    public event Action<float> OnHeavyAttack;
-    public event Action<Vector2> OnChangeWeapon;
+    // Evento único para manejar todas las acciones
+    public event Action<string> OnActionTriggered;
+    public event Action<string, Vector2> OnVector2Input;
+    public event Action<string, float> OnFloatInput;
 
-    public event Action OnSelect;
-    public event Action OnBack;
-    public event Action<Vector2> OnNavigateMenu;
 
     private void Awake()
     {
@@ -53,32 +46,52 @@ public class InputActionController : MonoBehaviour
         SubscribeToInput();
     }
 
+    /// <summary>
+    /// Suscribe las entradas a los eventos correspondientes.
+    /// </summary>
     private void SubscribeToInput()
     {
         if (inputActions == null) return;
 
-        // Juego
-        inputActions.Game.Movement.performed += ctx => OnMovement?.Invoke(ctx.ReadValue<float>());
-        inputActions.Game.Movement.canceled += ctx => OnMovement?.Invoke(0f);
-        inputActions.Game.Jump.performed += _ => AddToBuffer("Jump");
-        inputActions.Game.Run.performed += ctx => OnRunning?.Invoke(ctx.ReadValue<float>());
-        inputActions.Game.Run.canceled += _ => OnRunning?.Invoke(0f);
-        inputActions.Game.Dash.performed += _ => AddToBuffer("Dash");
-        inputActions.Game.LightAttack.performed += _ => AddToBuffer("LightAttack");
-        inputActions.Game.HeavyAttack.performed += ctx => OnHeavyAttack?.Invoke(ctx.ReadValue<float>());
-        inputActions.Game.HeavyAttack.canceled += _ => OnHeavyAttack?.Invoke(0f);
-        inputActions.Game.ChangeWeapon.performed += ctx => OnChangeWeapon?.Invoke(ctx.ReadValue<Vector2>());
+        // Asignación genérica de acciones de entrada con nombre
+        inputActions.Game.Movement.performed += ctx => OnFloatInput?.Invoke("Movement", ctx.ReadValue<float>());
+        inputActions.Game.Movement.canceled += _ => OnFloatInput?.Invoke("Movement", 0f);
+        inputActions.Game.Run.performed += ctx => OnFloatInput?.Invoke("Run", ctx.ReadValue<float>());
+        inputActions.Game.Run.canceled += _ => OnFloatInput?.Invoke("Run", 0f);
+        inputActions.Game.Interact.performed += ctx => OnFloatInput?.Invoke("OnInteractHold", ctx.ReadValue<float>());
+        inputActions.Game.Interact.canceled += _ => OnFloatInput?.Invoke("OnInteractHold",0f);
+        inputActions.Game.HeavyAttack.performed += ctx => OnFloatInput?.Invoke("HeavyAttack", ctx.ReadValue<float>());
+        inputActions.Game.HeavyAttack.canceled += _ => OnFloatInput?.Invoke("HeavyAttack", 0f);
+        inputActions.Game.ChangeWeapon.performed += ctx => OnVector2Input?.Invoke("ChangeWeapon",ctx.ReadValue<Vector2>());
+        
+        inputActions.Dialogue.Navigate.performed += ctx => OnFloatInput?.Invoke("OptionMovement", ctx.ReadValue<float>());
+        inputActions.Dialogue.Navigate.canceled += _ => OnFloatInput?.Invoke("OptionMovement", 0f);
 
-        // Menú
-        inputActions.Menu.Select.performed += _ => AddToBuffer("Select");
-        inputActions.Menu.Back.performed += _ => AddToBuffer("Back");
-        inputActions.Menu.PAButton.performed += _ => AddToBuffer("PAButton");
-        inputActions.Menu.Navigation.performed += ctx => OnNavigateMenu?.Invoke(ctx.ReadValue<Vector2>());
+        inputActions.Menu.Navigation.performed += ctx => OnVector2Input?.Invoke("Navigation",ctx.ReadValue<Vector2>());
 
-        // Interacción
-        inputActions.Game.Interact.performed += _ => AddToBuffer("InteractPressed");
-        inputActions.Game.Interact.started += ctx => OnInteractHold?.Invoke(ctx.ReadValue<float>());
-        inputActions.Game.Interact.canceled += _ => OnInteractHold?.Invoke(0f);
+        inputActions.ToolMenu.Rotate.performed += ctx => OnVector2Input?.Invoke("Rotate", ctx.ReadValue<Vector2>());
+
+        // Acciones con buffer
+        RegisterBufferedAction(inputActions.Game.Jump, "Jump");
+        RegisterBufferedAction(inputActions.Game.Dash, "Dash");
+        RegisterBufferedAction(inputActions.Game.LightAttack, "LightAttack");
+        RegisterBufferedAction(inputActions.Game.Interact, "InteractPressed");
+        
+        RegisterBufferedAction(inputActions.Menu.Select, "Select");
+        RegisterBufferedAction(inputActions.Menu.Back, "Back");
+        RegisterBufferedAction(inputActions.Menu.PAButton, "PAButton");
+        
+        RegisterBufferedAction(inputActions.Dialogue.Select, "OptionSelect");
+
+        RegisterBufferedAction(inputActions.ToolMenu.Select, "ToolSelect");
+    }
+
+    /// <summary>
+    /// Agrega una acción al buffer cuando se presiona.
+    /// </summary>
+    private void RegisterBufferedAction(InputAction action, string actionName)
+    {
+        action.performed += _ => AddToBuffer(actionName);
     }
 
     private void Update()
@@ -86,11 +99,17 @@ public class InputActionController : MonoBehaviour
         ProcessInputBuffer();
     }
 
+    /// <summary>
+    /// Agrega una acción al buffer.
+    /// </summary>
     private void AddToBuffer(string action)
     {
         inputBuffer[action] = Time.time + bufferTime;
     }
 
+    /// <summary>
+    /// Procesa el buffer de acciones y las ejecuta si han transcurrido.
+    /// </summary>
     private void ProcessInputBuffer()
     {
         List<string> keysToRemove = new List<string>();
@@ -99,31 +118,7 @@ public class InputActionController : MonoBehaviour
         {
             if (Time.time >= input.Value)
             {
-                switch (input.Key)
-                {
-                    case "Jump":
-                        OnJump?.Invoke();
-                        break;
-                    case "Dash":
-                        OnDash?.Invoke();
-                        break;
-                    case "Select":
-                        OnSelect?.Invoke();
-                        break;
-                    case "Back":
-                        OnBack?.Invoke();
-                        break;
-                    case "PAButton":
-                        OnPressAnyButton?.Invoke();
-                        break;
-                    case "InteractPressed":
-                        OnInteractPressed?.Invoke();
-                        break;
-                    case "LightAttack":
-                        OnLightAttack?.Invoke();
-                        break;
-                }
-
+                OnActionTriggered?.Invoke(input.Key);
                 keysToRemove.Add(input.Key);
             }
         }
@@ -138,24 +133,42 @@ public class InputActionController : MonoBehaviour
     {
         if (inputActions == null) return;
 
-        inputActions.Game.Movement.performed -= ctx => OnMovement?.Invoke(ctx.ReadValue<float>());
-        inputActions.Game.Movement.canceled -= ctx => OnMovement?.Invoke(0f);
-        inputActions.Game.Jump.performed -= _ => AddToBuffer("Jump");
-        inputActions.Game.Dash.performed -= _ => AddToBuffer("Dash");
-        inputActions.Game.Run.performed -= ctx => OnRunning?.Invoke(ctx.ReadValue<float>());
-        inputActions.Game.Run.canceled -= _ => OnRunning?.Invoke(0f);
-        inputActions.Game.LightAttack.performed -= _ => AddToBuffer("LightAttack");
-        inputActions.Game.HeavyAttack.performed -= ctx => OnHeavyAttack?.Invoke(ctx.ReadValue<float>());
-        inputActions.Game.HeavyAttack.canceled -= ctx => OnHeavyAttack?.Invoke(0f);
-        inputActions.Game.ChangeWeapon.performed -= ctx => OnChangeWeapon?.Invoke(ctx.ReadValue<Vector2>());
+        inputActions.Game.Movement.performed -= ctx => OnFloatInput?.Invoke("Movement", ctx.ReadValue<float>());
+        inputActions.Game.Movement.canceled -= _ => OnFloatInput?.Invoke("Movement", 0f);
+        inputActions.Game.Run.performed -= ctx => OnFloatInput?.Invoke("Run", ctx.ReadValue<float>());
+        inputActions.Game.Run.canceled -= _ => OnFloatInput?.Invoke("Run", 0f);
+        inputActions.Game.Interact.performed -= ctx => OnFloatInput?.Invoke("OnInteractHold", ctx.ReadValue<float>());
+        inputActions.Game.Interact.canceled -= _ => OnFloatInput?.Invoke("OnInteractHold",0f);
+        inputActions.Game.HeavyAttack.performed -= ctx => OnFloatInput?.Invoke("HeavyAttack", ctx.ReadValue<float>());
+        inputActions.Game.HeavyAttack.canceled -= _ => OnFloatInput?.Invoke("HeavyAttack", 0f);
+        
+        inputActions.Dialogue.Navigate.performed -= ctx => OnFloatInput?.Invoke("OptionMovement", ctx.ReadValue<float>());
+        inputActions.Dialogue.Navigate.canceled -= _ => OnFloatInput?.Invoke("OptionMovement", 0f);
 
-        inputActions.Menu.Select.performed -= _ => AddToBuffer("Select");
-        inputActions.Menu.Back.performed -= _ => AddToBuffer("Back");
-        inputActions.Menu.PAButton.performed -= _ => AddToBuffer("PAButton");
-        inputActions.Menu.Navigation.performed -= ctx => OnNavigateMenu?.Invoke(ctx.ReadValue<Vector2>());
+        inputActions.Menu.Navigation.performed -= ctx => OnVector2Input?.Invoke("Navigation",ctx.ReadValue<Vector2>());
 
-        inputActions.Game.Interact.performed -= _ => AddToBuffer("InteractPressed");
-        inputActions.Game.Interact.started -= ctx => OnInteractHold?.Invoke(ctx.ReadValue<float>());
-        inputActions.Game.Interact.canceled -= ctx => OnInteractHold?.Invoke(0f);
+        inputActions.ToolMenu.Rotate.performed -= ctx => OnVector2Input?.Invoke("Rotate", ctx.ReadValue<Vector2>());
+
+        // Desuscribimos todas las acciones bufferizadas
+        UnregisterBufferedAction(inputActions.Game.Jump, "Jump");
+        UnregisterBufferedAction(inputActions.Game.Dash, "Dash");
+        UnregisterBufferedAction(inputActions.Game.LightAttack, "LightAttack");
+        UnregisterBufferedAction(inputActions.Game.Interact, "InteractPressed");
+        
+        UnregisterBufferedAction(inputActions.Menu.Select, "Select");
+        UnregisterBufferedAction(inputActions.Menu.Back, "Back");
+        UnregisterBufferedAction(inputActions.Menu.PAButton, "PAButton");
+        
+        UnregisterBufferedAction(inputActions.Dialogue.Select, "OptionSelect");
+
+        UnregisterBufferedAction(inputActions.ToolMenu.Select, "ToolSelect");
+    }
+
+    /// <summary>
+    /// Desuscribe una acción registrada en el buffer.
+    /// </summary>
+    private void UnregisterBufferedAction(InputAction action, string actionName)
+    {
+        action.performed -= _ => AddToBuffer(actionName);
     }
 }

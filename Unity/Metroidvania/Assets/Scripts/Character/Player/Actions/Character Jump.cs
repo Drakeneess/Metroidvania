@@ -11,6 +11,7 @@ public class CharacterJump : MonoBehaviour
     private Rigidbody rb;
     private Player player;
     private bool isGrounded;
+    public bool IsGrounded{ get { return isGrounded; } set { isGrounded = value; } }
     private int jumpCount;
     private bool wasGrounded;
 
@@ -36,7 +37,7 @@ public class CharacterJump : MonoBehaviour
     {
         if (InputActionController.Instance != null)
         {
-            InputActionController.Instance.OnJump += HandleJumpEvent;
+            InputActionController.Instance.OnActionTriggered += HandleJumpEvent;
         }
     }
 
@@ -44,7 +45,7 @@ public class CharacterJump : MonoBehaviour
     {
         if (InputActionController.Instance != null)
         {
-            InputActionController.Instance.OnJump -= HandleJumpEvent;
+            InputActionController.Instance.OnActionTriggered -= HandleJumpEvent;
         }
     }
 
@@ -71,11 +72,13 @@ public class CharacterJump : MonoBehaviour
     /// <summary>
     /// Realiza el salto, aplicando fuerza y reseteando la velocidad vertical.
     /// </summary>
-    private void HandleJumpEvent()
+    private void HandleJumpEvent(string actionName)
     {
-        if (CanJump())
-        {
-            PerformJump();
+        if(actionName == "Jump"){
+            if (CanJump())
+            {
+                PerformJump();
+            }
         }
     }
 
@@ -87,5 +90,23 @@ public class CharacterJump : MonoBehaviour
         jumpCount++;
         player.UseMentalPulse(2.5f);
         RumbleController.RumblePulse(0.05f, 0.2f, 0.1f);
+    }
+
+    public void StallAir(float duration)
+    {
+        StartCoroutine(StallAirCoroutine(duration));
+    }
+
+    private IEnumerator StallAirCoroutine(float duration)
+    {
+        // Desactivamos la gravedad y “reseteamos” la velocidad vertical
+        rb.useGravity = false;
+        rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
+
+        // Esperamos un momento
+        yield return new WaitForSeconds(duration);
+
+        // Restauramos la gravedad a su valor original
+        rb.useGravity = true;
     }
 }

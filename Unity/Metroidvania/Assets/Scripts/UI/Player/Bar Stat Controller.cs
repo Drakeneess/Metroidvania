@@ -31,6 +31,9 @@ public class BarStatController : MonoBehaviour {
     }
 
     void Update() {
+        if(delayedValue < currentValue){
+            delayedValue = currentValue;
+        }
         // Update the main health bar with a slower update speed
         currentValue = player.GetCurrentHealth(healthType);
         mainBar.fillAmount = Mathf.MoveTowards(mainBar.fillAmount, currentValue / maxValue, mainBarUpdateSpeed);
@@ -38,5 +41,6 @@ public class BarStatController : MonoBehaviour {
         // Use MoveTowards for the delayed bar to ensure a constant transition speed
         delayedValue = Mathf.MoveTowards(delayedValue, currentValue, delayedBarSpeed);
         delayedBar.fillAmount = delayedValue / maxValue;
+
     }
 }

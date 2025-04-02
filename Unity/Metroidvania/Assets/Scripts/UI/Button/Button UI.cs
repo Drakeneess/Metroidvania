@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,6 +20,7 @@ public class ButtonUI : MonoBehaviour
                 Debug.LogError($"No Image component found for {gameObject.name}. Please assign it in the inspector.");
             }
         }
+        HandleControlSchemeChanged(0);
     }
 
     /// <summary>
@@ -29,13 +29,7 @@ public class ButtonUI : MonoBehaviour
     /// <param name="icon">El nuevo sprite para el ícono.</param>
     public void SetButtonIcon(Sprite icon)
     {
-        if (icon == null)
-        {
-            Debug.LogWarning($"Null icon provided for {gameObject.name}. No changes made.");
-            return;
-        }
-
-        if (buttonIcon.sprite != icon)
+        if (icon != null && buttonIcon.sprite != icon)
         {
             buttonIcon.sprite = icon;
         }
@@ -49,6 +43,7 @@ public class ButtonUI : MonoBehaviour
         if (!gameObject.activeSelf)
         {
             gameObject.SetActive(true);
+            SubscribeToControlSchemeChange();
         }
     }
 
@@ -60,6 +55,7 @@ public class ButtonUI : MonoBehaviour
         if (gameObject.activeSelf)
         {
             gameObject.SetActive(false);
+            UnsubscribeFromControlSchemeChange();
         }
     }
 
@@ -70,5 +66,33 @@ public class ButtonUI : MonoBehaviour
     public ActionType GetActionType()
     {
         return actionType;
+    }
+
+    private void OnEnable()
+    {
+        // Registrar al ButtonUIController solo cuando el botón está activo
+        ButtonUIController.Register(this);
+    }
+
+    private void OnDisable()
+    {
+        // Desregistrar cuando se desactive
+        ButtonUIController.Unregister(this);
+        UnsubscribeFromControlSchemeChange();
+    }
+
+    private void SubscribeToControlSchemeChange()
+    {
+        InputController.OnControlSchemeChanged += HandleControlSchemeChanged;
+    }
+
+    private void UnsubscribeFromControlSchemeChange()
+    {
+        InputController.OnControlSchemeChanged -= HandleControlSchemeChanged;
+    }
+
+    private void HandleControlSchemeChanged(int newScheme)
+    {
+        ButtonUIController.UpdateButtonIcon(this, newScheme);
     }
 }

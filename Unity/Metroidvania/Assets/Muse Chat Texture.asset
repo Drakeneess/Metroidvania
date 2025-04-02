@@ -230,7 +230,7 @@ MonoBehaviour:
     - rid: 132892811195580429
       type: {class: MainUI/UISize, ns: Unity.Muse.Common, asm: Unity.Muse.Common}
       data:
-        m_NodeListWidth: 300.00003
+        m_NodeListWidth: 300
         m_NodeListRefineWidth: 300
         m_AssetListRefineWidth: 200
     - rid: 132892811195580430

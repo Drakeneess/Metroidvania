@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,6 +11,8 @@ public class CharacterMovement : MonoBehaviour
     private float direction = 1;
     public float Direction { get { return direction; } }
     private float currentSpeed;
+    private bool canMove=true;
+    public bool CanMove { get { return canMove; } set { canMove= value; } }
 
     // Variables para almacenar los inputs actuales
     private float horizontalInput = 0f;
@@ -23,8 +26,7 @@ public class CharacterMovement : MonoBehaviour
     {
         if (InputActionController.Instance != null)
         {
-            InputActionController.Instance.OnMovement += HandleMovementInput;
-            InputActionController.Instance.OnRunning += HandleRunningInput;
+            InputActionController.Instance.OnFloatInput += HandleActionInput;
         }
     }
 
@@ -32,8 +34,19 @@ public class CharacterMovement : MonoBehaviour
     {
         if (InputActionController.Instance != null)
         {
-            InputActionController.Instance.OnMovement -= HandleMovementInput;
-            InputActionController.Instance.OnRunning -= HandleRunningInput;
+            InputActionController.Instance.OnFloatInput -= HandleActionInput;
+        }
+    }
+
+    private void HandleActionInput(string actionName, float value)
+    {
+        switch(actionName){
+            case "Movement":
+                HandleMovementInput(value);
+                break;
+            case "Run":
+                HandleRunningInput(value);
+                break;
         }
     }
 
@@ -81,8 +94,10 @@ public class CharacterMovement : MonoBehaviour
     // Mueve al personaje en el eje X (el eje Z se fuerza a cero)
     private void HandleMovement(float directionMove)
     {
-        Vector3 move = transform.right * currentSpeed * directionMove * Time.deltaTime;
-        move.z = 0f;
-        transform.Translate(move, Space.Self);
+        if(canMove){
+            Vector3 move = transform.right * currentSpeed * directionMove * Time.deltaTime;
+            move.z = 0f;
+            transform.Translate(move, Space.Self);
+        }
     }
 }
