@@ -69,7 +69,9 @@ public class InputActionController : MonoBehaviour
 
         inputActions.Menu.Navigation.performed += ctx => OnVector2Input?.Invoke("Navigation",ctx.ReadValue<Vector2>());
 
-        inputActions.ToolMenu.Rotate.performed += ctx => OnVector2Input?.Invoke("Rotate", ctx.ReadValue<Vector2>());
+        inputActions.ToolMenu.Rotate.performed += ctx => OnVector2Input?.Invoke("RotateTool", ctx.ReadValue<Vector2>());
+        inputActions.ToolMenu.Rotate.canceled += _ => OnVector2Input?.Invoke("RotateTool", Vector2.zero);
+
 
         // Acciones con buffer
         RegisterBufferedAction(inputActions.Game.Jump, "Jump");
@@ -147,7 +149,8 @@ public class InputActionController : MonoBehaviour
 
         inputActions.Menu.Navigation.performed -= ctx => OnVector2Input?.Invoke("Navigation",ctx.ReadValue<Vector2>());
 
-        inputActions.ToolMenu.Rotate.performed -= ctx => OnVector2Input?.Invoke("Rotate", ctx.ReadValue<Vector2>());
+        inputActions.ToolMenu.Rotate.performed -= ctx => OnVector2Input?.Invoke("RotateTool", ctx.ReadValue<Vector2>());
+        inputActions.ToolMenu.Rotate.canceled -= _ => OnVector2Input?.Invoke("RotateTool", Vector2.zero);
 
         // Desuscribimos todas las acciones bufferizadas
         UnregisterBufferedAction(inputActions.Game.Jump, "Jump");

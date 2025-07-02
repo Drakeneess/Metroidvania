@@ -17,7 +17,6 @@ public class ToolUIController : MonoBehaviour
         toolUI = obj;
 
         toolUI.SetActive(true);
-        
         toolUI.transform.SetParent(transform);
         toolUI.transform.localPosition = toolUIPosition;
         toolUI.transform.localScale = Vector3.one;
@@ -28,7 +27,7 @@ public class ToolUIController : MonoBehaviour
 
         StandardizeScale();
     }
-    private void StandardizeScale(float targetHeight = 1.8f)
+    private void StandardizeScale(float targetHeight = 1.5f)
     {
         Renderer[] renderers = toolUI.GetComponentsInChildren<Renderer>();
         if (renderers.Length == 0) return;

@@ -8,6 +8,7 @@ public class ButtonUIController : MonoBehaviour
     private static Dictionary<ActionType, Sprite[]> iconsPerAction = new Dictionary<ActionType, Sprite[]>();
 
     private static List<ButtonUI> registeredButtons = new List<ButtonUI>();
+    private static int actualScheme;
 
     public static void Register(ButtonUI button)
     {
@@ -53,27 +54,25 @@ public class ButtonUIController : MonoBehaviour
         }
     }
 
-    public static void UpdateButtonIcon(ButtonUI buttonUI, int newScheme)
+    public static void UpdateButtonIcon(ButtonUI buttonUI)
     {
-        if (iconsPerAction.TryGetValue(buttonUI.GetActionType(), out Sprite[] icons) && icons.Length > newScheme)
+        if (iconsPerAction.TryGetValue(buttonUI.GetActionType(), out Sprite[] icons) && icons.Length > actualScheme)
         {
-            buttonUI.SetButtonIcon(icons[newScheme]);
+            buttonUI.SetButtonIcon(icons[actualScheme]);
         }
         else
         {
-            Debug.LogWarning($"Icon not found for {buttonUI.GetActionType()} or invalid scheme index.");
+            Debug.LogWarning($"Icon not found for {buttonUI.GetActionType()} or invalid scheme index. {buttonUI.transform.parent.parent.name}");
         }
     }
 
     public static void UpdateButtonUI(int newScheme)
     {
+        actualScheme = newScheme;
         // Solo actualizar los botones activos
         foreach (var buttonUI in registeredButtons)
         {
-            if (buttonUI.gameObject.activeSelf) // Solo actualizar los botones activos
-            {
-                UpdateButtonIcon(buttonUI, newScheme);
-            }
+            UpdateButtonIcon(buttonUI);
         }
     }
 }

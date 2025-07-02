@@ -8,8 +8,11 @@ public class ShardItemInteractor : Interactable
     private Shard shard;
     public Shard Shard { 
         set{
-            shard = value;
-            if(shard==null){
+            if(value!=null){
+                shard = value;
+                isInteractable=true;
+            }
+            else{
                 isInteractable=false;
             }
         } 
@@ -18,7 +21,7 @@ public class ShardItemInteractor : Interactable
     protected override void Start()
     {
         base.Start();
-        
+        if(shard == null){ isInteractable = false;}
     }
     protected override void OnEnable()
     {
@@ -30,8 +33,10 @@ public class ShardItemInteractor : Interactable
     }
     protected override void Action()
     {
+        if(shard==null) return;
         base.Action();
         ToolMenuController.Instance.ShowMenu(shard.ShardTool);
+        shard.ShardTool.UnlockTool();
         shard.SetInMirror();
     }
 }

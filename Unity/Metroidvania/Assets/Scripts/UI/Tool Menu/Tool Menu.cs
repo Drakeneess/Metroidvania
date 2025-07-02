@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -25,6 +26,10 @@ public class ToolMenu : MonoBehaviour
 
     void OnEnable()
     {
+        if(InputActionController.Instance != null)
+        {
+            InputActionController.Instance.OnActionTriggered += OnSelectPressed;
+        }
         UICamera.gameObject.SetActive(true);
         if(GameMenuController.Instance != null){
             GameMenuController.CurrentMode = GameMode.ToolMenu;
@@ -37,10 +42,24 @@ public class ToolMenu : MonoBehaviour
         SetValues();
     }
 
+    private void OnSelectPressed(string actionName)
+    {
+        if(actionName == "ToolSelect"){
+            foreach(Canvas canva in canvas){
+                if(canva.gameObject.CompareTag("GameUI")){
+                    canva.gameObject.SetActive(true);
+                }
+            }
+            if(GameMenuController.Instance != null){
+                GameMenuController.CurrentMode = GameMode.Game;
+            }
+            gameObject.SetActive(false);
+        }
+    }
+
     void OnDisable()
     {
         UICamera.gameObject.SetActive(false);
-        GameMenuController.Instance.SetPreviousMode();
     }
 
     public void Initialize(ShardTool shardTool){
@@ -51,6 +70,7 @@ public class ToolMenu : MonoBehaviour
 
         GameObject shardToolObject = Instantiate(shardTool.gameObject);
         RemoveAllExcept(shardToolObject, typeof(Transform), typeof(Renderer), typeof(MeshFilter), typeof(MeshRenderer));
+        shardToolObject.AddComponent<ToolUI>();
         toolUIController.SetNewObject(shardToolObject);
     }
     private void SetValues(){

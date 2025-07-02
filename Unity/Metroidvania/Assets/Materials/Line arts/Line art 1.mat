@@ -111,7 +111,7 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _Line_Width: 1.03
+    - _Line_Width: 1.04
     - _Metallic: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.005

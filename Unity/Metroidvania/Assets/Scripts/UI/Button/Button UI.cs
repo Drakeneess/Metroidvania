@@ -77,7 +77,7 @@ public class ButtonUI : MonoBehaviour
     private void OnDisable()
     {
         // Desregistrar cuando se desactive
-        ButtonUIController.Unregister(this);
+        //ButtonUIController.Unregister(this);
         UnsubscribeFromControlSchemeChange();
     }
 
@@ -93,6 +93,6 @@ public class ButtonUI : MonoBehaviour
 
     private void HandleControlSchemeChanged(int newScheme)
     {
-        ButtonUIController.UpdateButtonIcon(this, newScheme);
+        ButtonUIController.UpdateButtonIcon(this);
     }
 }

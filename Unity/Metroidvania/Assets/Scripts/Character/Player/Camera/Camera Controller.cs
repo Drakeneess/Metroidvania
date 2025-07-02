@@ -7,13 +7,19 @@ public class CameraController : MonoBehaviour
     public static CameraController instance { get; private set; }
 
     [Header("Player Settings")]
-    public Transform player; // Referencia al jugador
+    public Player player;
 
     [Header("Follow Settings")]
-    public float followSpeed = 2.0f; // Velocidad con la que la cámara sigue al jugador
-    public Vector3 offset; // Desplazamiento de la cámara respecto al jugador
+    public float followSpeed = 2.0f;
 
-    private bool isFollowing = true; // Bandera para habilitar/deshabilitar el seguimiento
+    [Tooltip("Offset cuando el jugador está a máxima salud")]
+    public Vector3 offsetMin = new Vector3(0, 5, -10);
+
+    [Tooltip("Offset cuando el jugador está a mínima salud")]
+    public Vector3 offsetMax = new Vector3(0, 8, -16);
+
+    private bool isFollowing = true;
+
     public static bool IsFollowingPlayer
     {
         get { return instance.isFollowing; }
@@ -22,7 +28,6 @@ public class CameraController : MonoBehaviour
 
     private void Awake()
     {
-        // Configuración de la instancia
         if (instance == null)
         {
             instance = this;
@@ -41,26 +46,21 @@ public class CameraController : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Sigue al jugador con un retraso suave.
-    /// </summary>
     private void FollowPlayer()
     {
         if (player == null) return;
+        float healthPercent = Mathf.Clamp01(player.GetPercentageHealth(HealthType.Physical));
 
-        // Posición objetivo con el desplazamiento aplicado
-        Vector3 targetPosition = player.position + offset;
+        // Interpolamos el offset entre el cercano (offsetMin) y el lejano (offsetMax)
+        Vector3 dynamicOffset = Vector3.Lerp(offsetMax, offsetMin, healthPercent);
 
-        // Interpolación suave hacia la posición objetivo
+        Vector3 targetPosition = player.transform.position + dynamicOffset;
+
         transform.position = Vector3.Lerp(transform.position, targetPosition, followSpeed * Time.deltaTime);
     }
 
-    /// <summary>
-    /// Sacudir la cámara.
-    /// </summary>
     public static void ShakeCamera()
     {
-        // Implementación futura para agregar sacudidas a la cámara
         Debug.Log("ShakeCamera not implemented yet.");
     }
 }

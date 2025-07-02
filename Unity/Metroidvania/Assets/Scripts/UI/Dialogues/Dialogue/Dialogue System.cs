@@ -8,12 +8,15 @@ public class DialogueSystem : MonoBehaviour
 {
     public static DialogueSystem Instance { get; private set; } 
     public static bool IsDialogueActive { get; private set; } 
+    public delegate void OnLetterTypedDelegate(char c);
+    public static event OnLetterTypedDelegate OnLetterTyped;
     public TextMeshProUGUI dialogueText;
     public TextMeshProUGUI nameText;
     public GameObject dialoguePanel;
     public float typingSpeed = 0.05f;
     public OptionDialogue optionDialogue;
 
+    private DialogueBlip[] allBlips;
     private Dialogue currentDialogue; // Almacena el diálogo actual
     private string[] dialogues; 
     private int currentDialogueIndex = 0;
@@ -35,6 +38,7 @@ public class DialogueSystem : MonoBehaviour
 
     private void Start()
     {
+        allBlips = FindObjectsOfType<DialogueBlip>();
         EndDialogue();
     }
 
@@ -106,6 +110,7 @@ public class DialogueSystem : MonoBehaviour
         foreach (char letter in sentence.ToCharArray())
         {
             dialogueText.text += letter;
+            OnLetterTyped?.Invoke(letter);
             yield return new WaitForSeconds(typingSpeed);
         }
     }
@@ -115,6 +120,10 @@ public class DialogueSystem : MonoBehaviour
     /// </summary>
     private void EndDialogue()
     {
+        foreach (var blip in allBlips)
+        {
+            blip.SetActive(false);
+        }
         dialoguePanel.SetActive(false);
         GameMenuController.CurrentMode = GameMode.Game;
     }

@@ -16,6 +16,8 @@ public class CharacterMovement : MonoBehaviour
 
     // Variables para almacenar los inputs actuales
     private float horizontalInput = 0f;
+    public float HorizontalInput => horizontalInput;
+    public event Action<float> OnMovementInputChanged;
 
     void Start()
     {
@@ -62,6 +64,7 @@ public class CharacterMovement : MonoBehaviour
     private void HandleMovementInput(float value)
     {
         horizontalInput = value;
+        OnMovementInputChanged?.Invoke(horizontalInput);
     }
 
     // Actualiza la velocidad según el input de correr

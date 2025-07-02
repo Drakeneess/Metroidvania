@@ -16,7 +16,7 @@ public class WeaponController : MonoBehaviour
         get { 
             return currentWeapon; 
         } 
-        private set { 
+        set { 
             currentWeapon = value;
             if(mirrorAttack!= null){
                 mirrorAttack.SetActiveWeapon(value);

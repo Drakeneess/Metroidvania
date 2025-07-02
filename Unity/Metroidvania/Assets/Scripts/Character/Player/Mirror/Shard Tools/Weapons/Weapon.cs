@@ -13,6 +13,7 @@ public class Weapon : ShardTool
     protected override void Start()
     {
         base.Start();
+        originalRotation = transform.rotation;
     }
 
     public void SetAsCurrentWeapon()
@@ -30,9 +31,9 @@ public class Weapon : ShardTool
         ActivateDamageArea();
     }
 
-    public virtual void ResetWeaponPosition(int comboIndex)
+    public virtual void ResetWeaponPosition()
     {
-        // Animaciones o colocación
+        transform.rotation = originalRotation;
     }
 
     private void ActivateDamageArea()
@@ -48,6 +49,11 @@ public class Weapon : ShardTool
                 enemy.GetComponent<Enemy>().TakePhysicalDamage(damage);
             }
         }
+    }
+    public override void UnlockTool()
+    {
+        base.UnlockTool();
+        WeaponController.Instance.CurrentWeapon=this;
     }
 
     private float CalculateDamage(float distance)

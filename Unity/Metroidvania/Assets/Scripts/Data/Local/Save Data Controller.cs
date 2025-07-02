@@ -31,7 +31,8 @@ public class SaveDataController : MonoBehaviour
         // Comprobamos si los datos guardados existen
         if (AreSavedData())
         {
-            LoadData();
+            print(" Datos guardados existen");
+            saveData = LoadData();
         }
         else
         {
@@ -69,43 +70,43 @@ public class SaveDataController : MonoBehaviour
     }
 
     public static SaveData LoadData()
-{
-    string path = GetSavePath();
-    if (File.Exists(path))
     {
-        try
+        string path = GetSavePath();
+        if (File.Exists(path))
         {
-            // Verificar si el archivo está vacío
-            FileInfo fileInfo = new FileInfo(path);
-            if (fileInfo.Length == 0)
+            try
             {
-                Debug.LogWarning("El archivo de guardado está vacío.");
-                return null;  // Retorna null si el archivo está vacío
-            }
+                // Verificar si el archivo está vacío
+                FileInfo fileInfo = new FileInfo(path);
+                if (fileInfo.Length == 0)
+                {
+                    Debug.LogWarning("El archivo de guardado está vacío.");
+                    return null;  // Retorna null si el archivo está vacío
+                }
 
-            using (FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    BinaryFormatter formatter = new BinaryFormatter();
+                    return formatter.Deserialize(stream) as SaveData;
+                }
+            }
+            catch (IOException ex)
             {
-                BinaryFormatter formatter = new BinaryFormatter();
-                return formatter.Deserialize(stream) as SaveData;
+                Debug.LogError("Error al cargar los datos: " + ex.Message);
+                return null;
+            }
+            catch (SerializationException ex)
+            {
+                Debug.LogError("Error de deserialización: " + ex.Message);
+                return null;
             }
         }
-        catch (IOException ex)
+        else
         {
-            Debug.LogError("Error al cargar los datos: " + ex.Message);
-            return null;
-        }
-        catch (SerializationException ex)
-        {
-            Debug.LogError("Error de deserialización: " + ex.Message);
+            Debug.LogWarning("Archivo de guardado no encontrado en " + path);
             return null;
         }
     }
-    else
-    {
-        Debug.LogWarning("Archivo de guardado no encontrado en " + path);
-        return null;
-    }
-}
 
 }
 
@@ -114,6 +115,7 @@ public class SaveData
 {
     public string playerName = "";
     public float timePlayed = 0f;
+    public int lastScene = -1;
     public int lastCheckpointIndex = -1;
     public int[] weaponsID= null;
     public int currentWeapon = 0;

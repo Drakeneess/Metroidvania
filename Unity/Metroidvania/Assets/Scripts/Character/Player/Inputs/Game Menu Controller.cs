@@ -29,6 +29,7 @@ public class GameMenuController : MonoBehaviour
         get => Instance.currentMode;
         set
         {
+            Instance.previousMode = Instance.currentMode;
             Instance.currentMode = value;
             Instance.UpdateInputScheme(value);
         }
@@ -57,7 +58,6 @@ public class GameMenuController : MonoBehaviour
     {
         if (InputController.instance == null) return; // Evita errores si InputController no está disponible
 
-        previousMode = currentMode;
         switch (mode)
         {
             case GameMode.Menu:
@@ -86,12 +86,17 @@ public class GameMenuController : MonoBehaviour
                 InputController.instance.InputActions.Dialogue.Disable();
                 InputController.instance.InputActions.ToolMenu.Enable();
                 break;
-            }
+        }
     }
     public void SetPreviousMode(){
         if(previousMode != GameMode.None){
             currentMode = previousMode;
+            print(currentMode+" "+previousMode);
         }
+        else{
+            currentMode = GameMode.Game;
+        }
+        print(currentMode);
     }
 }
 

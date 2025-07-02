@@ -31,8 +31,6 @@ public class MirrorAttack : MonoBehaviour
         if(player != null){
             jump = player.GetComponent<CharacterJump>();
         }
-
-        LightAttack("LightAttack");
     }
 
     protected virtual void OnEnable()
@@ -60,6 +58,7 @@ public class MirrorAttack : MonoBehaviour
         if(actionName == "LightAttack"){
             // Si se está cargando un heavy attack, ignoramos el light attack
             if (currentState == CombatState.HeavyAttacking) return;
+            if(player.GetCurrentHealth(HealthType.Mental)<currentWeapon.GetMentalHealthUsage()) return; 
 
             ChangeState(CombatState.LightAttacking);
             StartCoroutine(SetPlayerMovement(0.5f));
@@ -102,14 +101,15 @@ public class MirrorAttack : MonoBehaviour
         if(actionName == "HeavyAttack"){
             if (value > 0.5f)
             {
+                if(player.GetPercentageHealth(HealthType.Mental)<0.1f) return; 
+
                 // Inicia la carga si aún no se ha iniciado
                 if (currentState != CombatState.HeavyAttacking)
                 {
                     isHeavyAttackActive = true;
                     // Cancelar cualquier acción previa (por ejemplo, un light attack en curso)
                     StopAllCoroutines();
-                    mirror?.SetAttackingState(true);
-
+                    
                     ChangeState(CombatState.HeavyAttacking);
                     StartCoroutine(SetPlayerMovement(0.7f)); // Duración del bloqueo de movimiento para heavy attack
                     TriggerAttack(true); // En heavy attack, mantenemos el arma activa (modo carga)
@@ -176,6 +176,7 @@ public class MirrorAttack : MonoBehaviour
         yield return new WaitForSeconds(recoveryTime);
         ChangeState(CombatState.Recovery);
         yield return new WaitForSeconds(0.5f);
+        currentWeapon.ResetWeaponPosition();
         ChangeState(CombatState.Idle);
     }
 

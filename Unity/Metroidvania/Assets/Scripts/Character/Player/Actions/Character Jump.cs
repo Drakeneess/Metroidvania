@@ -7,9 +7,12 @@ public class CharacterJump : MonoBehaviour
     [Header("Jump Settings")]
     public float jumpForce = 5.0f;
     public int maxJump = 2;
+    public float jumpUseCost = 2.5f;
+
 
     private Rigidbody rb;
     private Player player;
+    
     private bool isGrounded;
     public bool IsGrounded{ get { return isGrounded; } set { isGrounded = value; } }
     private int jumpCount;
@@ -66,7 +69,7 @@ public class CharacterJump : MonoBehaviour
     /// </summary>
     private bool CanJump()
     {
-        return (isGrounded || jumpCount < maxJump) && player.GetCurrentHealth(HealthType.Mental) > 0f;
+        return (isGrounded || jumpCount < maxJump) && player.GetCurrentHealth(HealthType.Mental) > jumpUseCost;
     }
 
     /// <summary>
@@ -88,8 +91,9 @@ public class CharacterJump : MonoBehaviour
         rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
         rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
         jumpCount++;
-        player.UseMentalPulse(2.5f);
+        player.UseMentalPulse(jumpUseCost);
         RumbleController.RumblePulse(0.05f, 0.2f, 0.1f);
+        player.TakePhysicalDamage(10);
     }
 
     public void StallAir(float duration)

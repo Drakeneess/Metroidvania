@@ -33,7 +33,11 @@ public class Interactable : MonoBehaviour
 
     public void UpdateProximity(bool inRange)
     {
-        if (inRange && isInteractable)
+        if(!isInteractable) {
+            interactableButton.Deactivate();
+            return;
+        }
+        if (inRange)
         {
             if (!hasInteracted)
             {

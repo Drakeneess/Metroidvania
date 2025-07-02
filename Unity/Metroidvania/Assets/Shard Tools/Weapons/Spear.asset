@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd7c218d15fb263409b8ab91c720998c, type: 3}
   m_Name: Spear
   m_EditorClassIdentifier: 
-  toolName: 
-  toolDescription: _Desc
+  toolName: Destino vacio
+  toolDescription: Spear_Desc
   mentalHealthUsage: 3
-  unlocked: 0
-  toolImageUI: {fileID: 0}
+  unlocked: 1
+  toolImageUI: {fileID: 21300000, guid: e230e720c71b1224bb3ed7a838ee03a6, type: 3}
   damage: 10
-  range: 10
+  range: 0.2
   damageRange: 2
   maxCombo: 3
   maxTimeChargedAttack: 2

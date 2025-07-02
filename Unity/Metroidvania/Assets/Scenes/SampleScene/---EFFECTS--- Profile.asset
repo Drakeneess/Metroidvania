@@ -93,13 +93,13 @@ MonoBehaviour:
   active: 1
   shadows:
     m_OverrideState: 1
-    m_Value: {r: 0.38287646, g: 0.42836386, b: 0.509434, a: 1}
+    m_Value: {r: 0.42138356, g: 0.3626234, b: 0.2504449, a: 1}
   highlights:
     m_OverrideState: 1
-    m_Value: {r: 0.4935524, g: 0.8583126, b: 0.9748427, a: 1}
+    m_Value: {r: 0.654088, g: 0.48704523, b: 0.37640908, a: 1}
   balance:
     m_OverrideState: 1
-    m_Value: -44
+    m_Value: -68
 --- !u!114 &-2863038850458959306
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -124,7 +124,7 @@ MonoBehaviour:
     m_Value: 30
   gaussianMaxRadius:
     m_OverrideState: 1
-    m_Value: 1.081
+    m_Value: 1.116
   highQualitySampling:
     m_OverrideState: 1
     m_Value: 0
@@ -161,7 +161,7 @@ MonoBehaviour:
   active: 1
   intensity:
     m_OverrideState: 1
-    m_Value: 0.526
+    m_Value: 0.672
 --- !u!114 &-529276752321348603
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -177,13 +177,13 @@ MonoBehaviour:
   active: 1
   postExposure:
     m_OverrideState: 1
-    m_Value: 0.58
+    m_Value: 0.48
   contrast:
     m_OverrideState: 1
-    m_Value: -18
+    m_Value: -16
   colorFilter:
     m_OverrideState: 1
-    m_Value: {r: 0.5471698, g: 0.5471698, b: 0.5471698, a: 1}
+    m_Value: {r: 0.55345905, g: 0.50414664, b: 0.4403306, a: 1}
   hueShift:
     m_OverrideState: 1
     m_Value: 0
@@ -234,16 +234,16 @@ MonoBehaviour:
     m_Value: 0.89
   intensity:
     m_OverrideState: 1
-    m_Value: 0.22
+    m_Value: 4.2
   scatter:
     m_OverrideState: 1
-    m_Value: 0.524
+    m_Value: 0.148
   clamp:
     m_OverrideState: 1
     m_Value: 65472
   tint:
     m_OverrideState: 1
-    m_Value: {r: 1, g: 1, b: 1, a: 1}
+    m_Value: {r: 0.8113208, g: 0.7439469, b: 0.5740476, a: 1}
   highQualityFiltering:
     m_OverrideState: 1
     m_Value: 1
@@ -274,17 +274,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   active: 1
   color:
-    m_OverrideState: 0
-    m_Value: {r: 0.03658868, g: 0.06993385, b: 0.31446534, a: 1}
+    m_OverrideState: 1
+    m_Value: {r: 0.14465404, g: 0.11930927, b: 0, a: 1}
   center:
     m_OverrideState: 1
     m_Value: {x: 0.5, y: 0.5}
   intensity:
     m_OverrideState: 1
-    m_Value: 0.56
+    m_Value: 0.433
   smoothness:
     m_OverrideState: 1
-    m_Value: 0.293
+    m_Value: 0.659
   rounded:
     m_OverrideState: 1
     m_Value: 0

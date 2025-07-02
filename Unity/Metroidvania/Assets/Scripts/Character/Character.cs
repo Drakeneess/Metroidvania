@@ -12,6 +12,33 @@ public class Character : MonoBehaviour
     protected float CurrentMentalHealth { get; private set; }
     protected float CurrentEmotionalHealth { get; private set; }
 
+    private float GetPhysicalPercentageHealth
+    { 
+        get { return CurrentPhysicalHealth / physicalHealth; }
+    }
+    private float GetMentalPercentageHealth
+    {
+        get { return CurrentMentalHealth / mentalHealth; }
+    }
+    private float GetEmotionalPercentageHealth
+    {
+        get { return CurrentEmotionalHealth / emotionalHealth; }
+    }
+
+    public float GetPercentageHealth(HealthType healthType)
+    {
+        switch (healthType)
+        {
+            case HealthType.Physical:
+                return GetPhysicalPercentageHealth;
+            case HealthType.Mental:
+                return GetMentalPercentageHealth;
+            case HealthType.Emotional:
+                return GetEmotionalPercentageHealth;
+            default:
+                return 0f;
+        }
+    }
     private Coroutine mentalHealingCoroutine = null;
     private bool canTakePhysicalDamage = true;
     public bool CanTakePhysicalDamage { get { return canTakePhysicalDamage; } set { canTakePhysicalDamage = value; } }
@@ -201,6 +228,9 @@ public class Character : MonoBehaviour
             default:
                 return 0;
         }
+    }
+    public virtual void Respawn(){
+        InitializeHealth();
     }
 }
 

@@ -41,6 +41,5 @@ public class BarStatController : MonoBehaviour {
         // Use MoveTowards for the delayed bar to ensure a constant transition speed
         delayedValue = Mathf.MoveTowards(delayedValue, currentValue, delayedBarSpeed);
         delayedBar.fillAmount = delayedValue / maxValue;
-
     }
 }

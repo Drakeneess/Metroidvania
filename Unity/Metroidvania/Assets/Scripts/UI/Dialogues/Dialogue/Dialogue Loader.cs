@@ -45,7 +45,9 @@ public class DialogueLoader : MonoBehaviour
         }
 
         string[] lines = csvFile.text.Split('\n');
-        string[] headers = lines[0].Split(','); // ["character", "index", "id_conversation", "es", "en"]
+        string[] headers = lines[0].Split(','); // ["character", "index", "id_conversation", "emotion", "es", "en", ...]
+
+        int emotionColIndex = System.Array.IndexOf(headers, "emotion");
 
         for (int i = 1; i < lines.Length; i++) // Saltar encabezados
         {
@@ -58,26 +60,50 @@ public class DialogueLoader : MonoBehaviour
             int index = int.Parse(values[1].Trim());
             string idConversation = values[2].Trim();
 
-            // Si el personaje no está en el diccionario, lo agregamos
             if (!dialogues.ContainsKey(character))
                 dialogues[character] = new Dictionary<int, Dialogue>();
 
-            // Creamos el diálogo si no existe
             if (!dialogues[character].ContainsKey(index))
-            {
                 dialogues[character][index] = new Dialogue(character, index, idConversation);
-            }
 
             Dialogue dialogue = dialogues[character][index];
 
-            // Cargamos los textos en distintos idiomas
-            for (int j = 3; j < values.Length; j++)
+            // EMOCIONES
+            print(values.Length + " " + emotionColIndex);
+            string[] emotionPerLine = values[emotionColIndex].Trim().Split('|');
+            EmotionType[] parsedEmotions = new EmotionType[emotionPerLine.Length];
+            for (int j = 0; j < emotionPerLine.Length; j++)
+            {
+                if (int.TryParse(emotionPerLine[j], out int emoValue) && System.Enum.IsDefined(typeof(EmotionType), emoValue))
+                    parsedEmotions[j] = (EmotionType)emoValue;
+                else
+                {
+                    Debug.LogWarning($"Valor de emoción inválido: '{emotionPerLine[j]}'. Se usará Calm.");
+                    parsedEmotions[j] = EmotionType.Calm;
+                }
+            }
+
+            // TEXTOS POR IDIOMA
+            for (int j = 4; j < values.Length; j++)
             {
                 string language = headers[j].Trim();
                 string[] sentences = values[j].Trim().Split('|');
 
-                if (!dialogue.texts.ContainsKey(language))
-                    dialogue.texts[language] = sentences;
+                dialogue.texts[language] = sentences;
+
+                // Ajustamos cantidad de emociones a cantidad de frases
+                EmotionType[] adjustedEmotions = new EmotionType[sentences.Length];
+                for (int k = 0; k < sentences.Length; k++)
+                {
+                    if (k < parsedEmotions.Length)
+                        adjustedEmotions[k] = parsedEmotions[k];
+                    else
+                        adjustedEmotions[k] = parsedEmotions[parsedEmotions.Length - 1]; // Repetir la última
+                }
+
+                // Solo asignamos una vez las emociones generales
+                if (dialogue.emotions == null)
+                    dialogue.emotions = adjustedEmotions;
             }
         }
     }
@@ -159,6 +185,7 @@ public class Dialogue
     public int index;
     public string idConversation;
     public Dictionary<string, string[]> texts = new Dictionary<string, string[]>(); // idioma -> frases
+    public EmotionType[] emotions; // Emociones por línea, universales
     public List<Decision> decisions = new List<Decision>(); // Lista de decisiones asociadas
 
     public Dialogue(string character, int index, string idConversation)
@@ -196,8 +223,14 @@ public class Dialogue
         }
         return localizedDecisions;
     }
-}
 
+    public EmotionType GetEmotionForLine(int lineIndex)
+    {
+        if (emotions != null && lineIndex < emotions.Length)
+            return emotions[lineIndex];
+        return EmotionType.Calm;
+    }
+}
 
 /// <summary>
 /// Representa una decisión dentro del diálogo.

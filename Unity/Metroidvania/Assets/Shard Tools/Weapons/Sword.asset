@@ -15,8 +15,8 @@ MonoBehaviour:
   toolName: Autojuicio
   toolDescription: Sword_Desc
   mentalHealthUsage: 0.5
-  unlocked: 0
-  toolImageUI: {fileID: 0}
+  unlocked: 1
+  toolImageUI: {fileID: 21300000, guid: 70296d6a4182c054eb98555798d3a205, type: 3}
   damage: 10
   range: 0.1
   damageRange: 2

@@ -54,7 +54,7 @@ public class CharacterDash : MonoBehaviour
         float dashEndTime = Time.time + dashDuration;
 
         // Calculamos la dirección hacia donde el jugador está mirando
-        Vector3 dashDirection = new Vector3(characterMovement.Direction, 0f, 0f);
+        Vector3 dashDirection = new(characterMovement.Direction, 0f, 0f);
 
         // Aplicamos la velocidad del dash
         rb.velocity = dashDirection * dashSpeed;

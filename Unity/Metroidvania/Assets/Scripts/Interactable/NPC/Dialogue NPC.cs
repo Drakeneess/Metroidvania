@@ -14,10 +14,12 @@ public class DialogueNPC : Interactable
 
     private string characterName;
     private string idCharacter;
+    private DialogueBlip dialogueBlip;
 
     protected override void Start()
     {
         base.Start();
+        dialogueBlip = GetComponent<DialogueBlip>();
         characterName = characterDialogue.ToString();
         idCharacter = ((int)characterDialogue).ToString(); // Obtener el índice como string
     }
@@ -33,6 +35,9 @@ public class DialogueNPC : Interactable
         {
             // Enviar el diálogo al sistema de diálogos
             DialogueSystem.Instance.StartDialogue(characterName, dialogue);// Mostrar decisiones si existen
+            EmotionType emotion = dialogue.GetEmotionForLine(dialogueIndex);
+            dialogueBlip.SetActive(true);
+            dialogueBlip.SetEmotion(emotion);
         }
         else
         {

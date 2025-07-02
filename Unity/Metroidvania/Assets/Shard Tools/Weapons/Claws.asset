@@ -12,12 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd7c218d15fb263409b8ab91c720998c, type: 3}
   m_Name: Claws
   m_EditorClassIdentifier: 
-  weaponName: 
-  damage: 10
+  toolName: Desgarradores
+  toolDescription: Claws_Desc
   mentalHealthUsage: 3
-  range: 10
-  unlocked: 0
-  weaponImageUI: {fileID: 0}
+  unlocked: 1
+  toolImageUI: {fileID: 21300000, guid: e78b1a251b2544543a263c2986eeaee0, type: 3}
+  damage: 10
+  range: 0.05
+  damageRange: 2
   maxCombo: 3
   maxTimeChargedAttack: 2
   recoveryTime: 0.3

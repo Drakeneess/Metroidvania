@@ -37,6 +37,10 @@ public class ShardTool : MonoBehaviour
             gameObject.SetActive(false);
     }
 
+    public virtual void UnlockTool(){
+        shardToolData.unlocked = true;
+    }
+
     // Métodos comunes
     public virtual string GetToolName() => shardToolData.toolName;
     public virtual string GetToolDescription() => shardToolData.toolDescription;

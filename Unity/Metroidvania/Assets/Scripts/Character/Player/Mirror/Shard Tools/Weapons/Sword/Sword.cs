@@ -1,13 +1,18 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Sword : Weapon
 {
-    // Variables para control de rotación
-    public float attackSpeed = 1.0f;  // Velocidad de interpolación de rotación
-    private Quaternion startRotation; // Rotación inicial
-    private Quaternion endRotation;   // Rotación final
+    public float attackSpeed = 1.0f;
+
+    private Quaternion startRotation;
+    private Quaternion endRotation;
+
+    private Vector3 startPosition;
+    private Vector3 endPosition;
+
+    private Coroutine currentRotationRoutine;
+    private bool isAttacking = false;
 
     protected override void Awake()
     {
@@ -18,56 +23,75 @@ public class Sword : Weapon
 
     public override void LightAttack(int comboIndex)
     {
-        base.LightAttack(comboIndex);
+        if (isAttacking || comboIndex >= positions.Length - 1)
+            return;
 
+        base.LightAttack(comboIndex);
         Slash(comboIndex);
     }
 
     public override void HeavyAttack(float value)
     {
+        if (isAttacking) return;
+
         base.HeavyAttack(value);
+        // Puedes agregar lógica similar a Slash aquí si lo deseas
     }
 
     private void Slash(int comboIndex)
     {
-        // Aquí puedes definir la rotación inicial y final para el primer ataque.
-        // Supongamos que quieres girar la espada hacia un ángulo de ataque en el eje Y (puedes cambiar esto según el eje que necesites).
-        if(comboIndex==0){
-            originalRotation = transform.rotation;
+        startRotation = transform.rotation;
+        endRotation = Quaternion.Euler(positions[comboIndex + 1]);
 
-            startRotation = transform.rotation;
-            endRotation = Quaternion.Euler(positions[0]);
+        startPosition = transform.localPosition;
+        endPosition = startPosition + transform.forward * 0.3f;
 
-            SlashAnimation(startRotation, endRotation, 0.1f);
-        }
-        startRotation = Quaternion.Euler(positions[comboIndex]);
-        endRotation = Quaternion.Euler(positions[comboIndex+1]);
+        if (currentRotationRoutine != null)
+            StopCoroutine(currentRotationRoutine);
 
-        SlashAnimation(startRotation, endRotation, attackSpeed);
+        currentRotationRoutine = StartCoroutine(RotateSword(startRotation, endRotation, startPosition, endPosition, attackSpeed));
     }
 
-    private void SlashAnimation(Quaternion startRot, Quaternion endRot, float animSpeed){
-
-        StartCoroutine(RotateSword(startRot, endRot, animSpeed));  // Iniciar la rotación con un Coroutine
-    }
-
-    private void Stab(float value)
+    private IEnumerator RotateSword(Quaternion startRot, Quaternion endRot, Vector3 startPos, Vector3 endPos, float speed)
     {
-        // Código para el ataque de apuñalamiento (puedes agregar más lógica de rotación aquí también si es necesario)
-    }
-
-    private IEnumerator RotateSword(Quaternion start, Quaternion end, float speed)
-    {
+        isAttacking = true;
 
         float elapsedTime = 0f;
         while (elapsedTime < 1f)
         {
-            //Aqui viene la corrida de toro
-            transform.localRotation = Quaternion.Slerp(start, end, elapsedTime);
-            elapsedTime += Time.deltaTime * speed;  // Aumentar el tiempo de rotación según la velocidad
-            yield return null;  // Esperar al siguiente frame
+            float t = Mathf.SmoothStep(0f, 1f, elapsedTime);
+
+            transform.rotation = Quaternion.Slerp(startRot, endRot, t);
+            transform.localPosition = Vector3.Lerp(startPos, endPos, t);
+
+            elapsedTime += Time.deltaTime * speed;
+            yield return null;
         }
-        transform.localRotation = end;  // Asegurarse de que la rotación final sea exactamente la de destino
+
+        transform.rotation = endRot;
+        transform.localPosition = endPos;
+
+        yield return new WaitForSeconds(GetRecoveryTime());
+
+        StartCoroutine(SmoothReset(0.2f)); // Vuelve a la posición original con suavidad
+        isAttacking = false;
     }
 
+    private IEnumerator SmoothReset(float duration)
+    {
+        Quaternion currentRot = transform.rotation;
+        Vector3 currentPos = transform.localPosition;
+
+        float t = 0f;
+        while (t < 1f)
+        {
+            transform.rotation = Quaternion.Slerp(currentRot, originalRotation, t);
+            transform.localPosition = Vector3.Lerp(currentPos, Vector3.zero, t);
+            t += Time.deltaTime / duration;
+            yield return null;
+        }
+
+        transform.rotation = originalRotation;
+        transform.localPosition = Vector3.zero;
+    }
 }
