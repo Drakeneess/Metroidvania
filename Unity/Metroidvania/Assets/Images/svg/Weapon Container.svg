@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="750mm"
+   height="250mm"
+   viewBox="0 0 937.5 312.5"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="Weapon Container.svg"
+   inkscape:version="1.4 (86a8ad7, 2024-10-11)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     inkscape:document-units="mm"
+     inkscape:export-bgcolor="#ffffff00"
+     inkscape:zoom="0.63993888"
+     inkscape:cx="302.37263"
+     inkscape:cy="436.76046"
+     inkscape:window-width="1920"
+     inkscape:window-height="1094"
+     inkscape:window-x="-11"
+     inkscape:window-y="-11"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1">
+    <linearGradient
+       id="linearGradient12"
+       inkscape:collect="always">
+      <stop
+         style="stop-color:#ffffff;stop-opacity:1;"
+         offset="0.08419175"
+         id="stop12" />
+      <stop
+         style="stop-color:#b4b4b4;stop-opacity:0.07801419;"
+         offset="1"
+         id="stop13" />
+    </linearGradient>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath25">
+      <rect
+         style="fill:#ff0000;stroke:none;stroke-width:3;stroke-linecap:square;stroke-linejoin:miter;paint-order:stroke markers fill;stop-color:#000000"
+         id="rect25-8"
+         width="78"
+         height="45.033199"
+         x="763.61322"
+         y="452.82422" />
+    </clipPath>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient118859"
+       id="linearGradient47"
+       x1="20"
+       y1="50"
+       x2="80"
+       y2="50"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(1.1666667,0,0,1.1666667,12.377344,-58.333337)" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient119593"
+       id="linearGradient46"
+       x1="0"
+       y1="0"
+       x2="100"
+       y2="100"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient118859">
+      <stop
+         style="stop-color:#fc0000;stop-opacity:1;"
+         offset="0"
+         id="stop118855" />
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="1"
+         id="stop118857" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient119593">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop119589" />
+      <stop
+         style="stop-color:#f70000;stop-opacity:1;"
+         offset="1"
+         id="stop119591" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient3990"
+       inkscape:swatch="gradient">
+      <stop
+         style="stop-color:#ffffff;stop-opacity:1;"
+         offset="0"
+         id="stop3990" />
+      <stop
+         style="stop-color:#ffffff;stop-opacity:0;"
+         offset="1"
+         id="stop3991" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient12"
+       id="linearGradient13"
+       x1="130.75386"
+       y1="303.36963"
+       x2="128.68658"
+       y2="71.32029"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       id="path9"
+       style="fill:url(#linearGradient13);fill-opacity:1;stroke-width:0.538004;stroke-linecap:round;stroke-linejoin:bevel;stroke-dasharray:0.538004, 0.538004;paint-order:fill markers stroke"
+       d="M 128.40753 -1.5502929 A 99.465958 105.99848 0 0 0 28.941385 104.44776 A 99.465958 105.99848 0 0 0 94.560118 203.83768 L 92.509855 203.74983 L 53.748656 227.00681 L 71.320581 231.14093 L 90.442798 216.67023 L 94.576913 226.49005 L 120.41771 227.68248 L 120.41771 292.51638 L 116.79972 292.51638 L 100.26197 299.23496 L 120.41771 305.62604 L 120.41771 305.95354 L 121.45124 305.95354 L 136.95546 305.95354 L 136.95546 305.43678 L 158.14474 300.26849 L 143.15728 292.51638 L 136.95546 292.51638 L 136.95546 227.63468 L 161.76273 226.49005 L 165.89749 216.67023 L 185.01906 231.14093 L 202.59099 227.00681 L 163.82979 203.74983 L 162.31244 203.81507 A 99.465958 105.99848 0 0 0 227.87368 104.44776 A 99.465958 105.99848 0 0 0 128.40753 -1.5502929 z "
+       inkscape:export-filename="..\png\HUD\Current Weapon Mirror.png"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96" />
+    <ellipse
+       style="fill:#f9f9f9;fill-opacity:1;stroke-width:0.494391;stroke-linecap:round;stroke-linejoin:bevel;stroke-dasharray:0.494391, 0.494391;paint-order:fill markers stroke"
+       id="ellipse10"
+       cx="128.72606"
+       cy="102.83529"
+       rx="89.993011"
+       ry="98.931915"
+       inkscape:export-filename="..\png\HUD\Current Weapon.png"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96" />
+  </g>
+</svg>

@@ -22,7 +22,8 @@ public class IdleAnimationHandler
 
     public void StartIdle()
     {
-        animator.SetInteger("IddleState", GetImmediateIdleState());
+        animator.SetBool("isIdle", true);
+        animator.SetInteger("IdleState", GetImmediateIdleState());
 
         if (idleRoutine == null)
             idleRoutine = coroutineRunner.StartCoroutine(IdleTimerCoroutine());
@@ -31,7 +32,8 @@ public class IdleAnimationHandler
 
     public void StopIdle()
     {
-        animator.SetInteger("IddleState", 0); // reset
+        animator.SetBool("isIdle", false);
+        animator.SetInteger("IdleState", 0); // reset
 
         if (idleRoutine != null)
         {
@@ -45,7 +47,7 @@ public class IdleAnimationHandler
         float wait = idleThreshold + UnityEngine.Random.Range(-1f, 1f);
         yield return new WaitForSeconds(wait);
 
-        animator.SetInteger("IddleState", GetRandomIdleState());
+        animator.SetInteger("IdleState", GetRandomIdleState());
         idleRoutine = null;
     }
 

@@ -36,10 +36,11 @@ public class CheckpointsController : MonoBehaviour
             player.LastCheckpoint = GetLastCheckpoint();
         }
     }
-    private Checkpoint GetLastCheckpoint(){
+    private Checkpoint GetLastCheckpoint()
+    {
         // Get the last checkpoint from the save data
         foreach(Checkpoint checkpoint in Checkpoints){
-            if(checkpoint.checkpointID == SaveDataController.Instance.saveData.lastCheckpointIndex){
+            if(checkpoint.CheckpointID == SaveDataController.Instance.saveData.lastCheckpointIndex){
                 return checkpoint;
             }
         }

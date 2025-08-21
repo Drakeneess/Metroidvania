@@ -20,6 +20,7 @@ public class InputController : MonoBehaviour
         if (instance == null)
         {
             instance = this;
+            DontDestroyOnLoad(gameObject);
             inputActions = new Input();
             EnableInputActions();  // Llamamos a un método para habilitar las acciones
         }
@@ -34,7 +35,6 @@ public class InputController : MonoBehaviour
 
     private void OnDestroy()
     {
-        DisableInputActions();  // Deshabilitamos las acciones al destruir el objeto
         InputSystem.onActionChange -= OnInputActionChange;
     }
 

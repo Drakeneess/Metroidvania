@@ -9,7 +9,7 @@ public class WeaponController : MonoBehaviour
     public static WeaponController Instance { get; private set; }
     public Weapon[] weapons;
     public Image weaponImageUI;
-    public MirrorAttack mirrorAttack;
+    public WeaponChangeController weaponChange;
 
     private Weapon currentWeapon;
     public Weapon CurrentWeapon { 
@@ -18,8 +18,8 @@ public class WeaponController : MonoBehaviour
         } 
         set { 
             currentWeapon = value;
-            if(mirrorAttack!= null){
-                mirrorAttack.SetActiveWeapon(value);
+            if(weaponChange!= null){
+                weaponChange.SetActiveWeapon(value);
             }
             UpdateWeaponUI(value.GetToolImage());    
         } 
@@ -38,8 +38,8 @@ public class WeaponController : MonoBehaviour
             Destroy(gameObject);
         }
 
-        if(mirrorAttack == null){
-            mirrorAttack = FindObjectOfType<MirrorAttack>();
+        if(weaponChange == null){
+            weaponChange = FindObjectOfType<WeaponChangeController>();
         }
         // Asignamos el arma inicial si existe
         currentWeapon = weapons[currentWeaponIndex];

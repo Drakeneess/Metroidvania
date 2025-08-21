@@ -26,6 +26,7 @@ public enum PlayerAnimationState
     Blocking,
     Jumping,
     TakingDamage,
+    Evading,
     Die,
     Rest
 }

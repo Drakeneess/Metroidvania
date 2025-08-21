@@ -5,13 +5,17 @@ using UnityEngine.InputSystem.DualShock;
 
 public class Player : Character
 {
-    public float emotionalUseRate=1;
+    public float emotionalUseRate = 1;
     private Checkpoint lastCheckpoint;
-    public Checkpoint LastCheckpoint { set {
-        lastCheckpoint = value;
-        SetOnCheckpointPosition();
+    public Checkpoint LastCheckpoint
+    {
+        set
+        {
+            lastCheckpoint = value;
+            SetOnCheckpointPosition();
+        }
+        get { return lastCheckpoint; }
     }
-    get { return lastCheckpoint; } }
 
     [SerializeField]
     private CharacterMovement characterMovement;
@@ -32,6 +36,7 @@ public class Player : Character
         {
             UpdateOnPhysicalHealth(dualShockGamepad);
         }
+        vibrationTime = 0.06f;
     }
     protected override void Update()
     {
@@ -45,21 +50,25 @@ public class Player : Character
     {
         base.TakePhysicalDamage(damage);
         DualShockGamepad dualShockGamepad = DualShockGamepad.current;
-        if (dualShockGamepad != null){
+        if (dualShockGamepad != null)
+        {
             UpdateOnPhysicalHealth(dualShockGamepad);
         }
+        PlayerAnimationController.SetCurrentHealthPercentage(GetPercentageHealth(HealthType.Physical));
     }
-    protected override void RestorePhysicalHealth(float amount)
+    public override void RestorePhysicalHealth(float amount)
     {
         base.RestorePhysicalHealth(amount);
         DualShockGamepad dualShockGamepad = DualShockGamepad.current;
-        if (dualShockGamepad != null){
+        if (dualShockGamepad != null)
+        {
             UpdateOnPhysicalHealth(dualShockGamepad);
         }
+        PlayerAnimationController.SetCurrentHealthPercentage(GetPercentageHealth(HealthType.Physical));
     }
     public override void UseMentalPulse(float amount)
     {
-        amount*=emotionalUseRate;
+        amount *= emotionalUseRate;
         base.UseMentalPulse(amount);
     }
     public override void Respawn()
@@ -68,26 +77,42 @@ public class Player : Character
         base.Respawn();
     }
 
-    private void UpdateOnPhysicalHealth(DualShockGamepad dualShockGamepad){
-        if(CurrentPhysicalHealth>=physicalHealth*0.6){
-            UpdateColorBar(Color.blue,dualShockGamepad);
+    private void UpdateOnPhysicalHealth(DualShockGamepad dualShockGamepad)
+    {
+        if (CurrentPhysicalHealth >= physicalHealth * 0.6)
+        {
+            UpdateColorBar(Color.blue, dualShockGamepad);
         }
-        else if(CurrentPhysicalHealth>=physicalHealth*0.3){
+        else if (CurrentPhysicalHealth >= physicalHealth * 0.3)
+        {
             UpdateColorBar(Color.yellow, dualShockGamepad);
         }
-        else{
+        else
+        {
             UpdateColorBar(Color.red, dualShockGamepad);
         }
     }
-    private void UpdateColorBar(Color color, DualShockGamepad dualShockGamepad) {
-        if(dualShockGamepad!=null){
+    private void UpdateColorBar(Color color, DualShockGamepad dualShockGamepad)
+    {
+        if (dualShockGamepad != null)
+        {
             dualShockGamepad.SetLightBarColor(color);
-        }  
+        }
     }
 
-    public void SetOnCheckpointPosition(){
-        if (lastCheckpoint != null) {
-            transform.position=lastCheckpoint.CheckpointPosition;
+    public void SetOnCheckpointPosition()
+    {
+        if (lastCheckpoint != null)
+        {
+            transform.position = lastCheckpoint.CheckpointPosition;
         }
+    }
+    public void RestOnRefugee(Checkpoint newCheckpoint)
+    {
+        PlayerAnimationController.SetResting();
+        RestorePhysicalHealth(physicalHealth);
+        RestoreMentalHealth(mentalHealth);
+        RestoreEmotionalHealth(emotionalHealth);
+        LastCheckpoint = newCheckpoint;
     }
 }

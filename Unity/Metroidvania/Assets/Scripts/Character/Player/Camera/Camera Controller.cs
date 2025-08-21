@@ -17,7 +17,6 @@ public class CameraController : MonoBehaviour
 
     [Tooltip("Offset cuando el jugador está a mínima salud")]
     public Vector3 offsetMax = new Vector3(0, 8, -16);
-
     private bool isFollowing = true;
 
     public static bool IsFollowingPlayer

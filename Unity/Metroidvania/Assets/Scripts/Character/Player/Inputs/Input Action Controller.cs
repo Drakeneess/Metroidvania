@@ -59,33 +59,42 @@ public class InputActionController : MonoBehaviour
         inputActions.Game.Run.performed += ctx => OnFloatInput?.Invoke("Run", ctx.ReadValue<float>());
         inputActions.Game.Run.canceled += _ => OnFloatInput?.Invoke("Run", 0f);
         inputActions.Game.Interact.performed += ctx => OnFloatInput?.Invoke("OnInteractHold", ctx.ReadValue<float>());
-        inputActions.Game.Interact.canceled += _ => OnFloatInput?.Invoke("OnInteractHold",0f);
+        inputActions.Game.Interact.canceled += _ => OnFloatInput?.Invoke("OnInteractHold", 0f);
         inputActions.Game.HeavyAttack.performed += ctx => OnFloatInput?.Invoke("HeavyAttack", ctx.ReadValue<float>());
         inputActions.Game.HeavyAttack.canceled += _ => OnFloatInput?.Invoke("HeavyAttack", 0f);
-        inputActions.Game.ChangeWeapon.performed += ctx => OnVector2Input?.Invoke("ChangeWeapon",ctx.ReadValue<Vector2>());
-        
+        inputActions.Game.Block.performed += ctx => OnFloatInput?.Invoke("Block", ctx.ReadValue<float>());
+        inputActions.Game.Block.canceled += _ => OnFloatInput?.Invoke("Block", 0f);
+        inputActions.Game.ChangeWeapon.performed += ctx => OnVector2Input?.Invoke("ChangeWeapon", ctx.ReadValue<Vector2>());
+
         inputActions.Dialogue.Navigate.performed += ctx => OnFloatInput?.Invoke("OptionMovement", ctx.ReadValue<float>());
         inputActions.Dialogue.Navigate.canceled += _ => OnFloatInput?.Invoke("OptionMovement", 0f);
 
-        inputActions.Menu.Navigation.performed += ctx => OnVector2Input?.Invoke("Navigation",ctx.ReadValue<Vector2>());
+        inputActions.Menu.Navigation.performed += ctx => OnVector2Input?.Invoke("Navigation", ctx.ReadValue<Vector2>());
 
         inputActions.ToolMenu.Rotate.performed += ctx => OnVector2Input?.Invoke("RotateTool", ctx.ReadValue<Vector2>());
         inputActions.ToolMenu.Rotate.canceled += _ => OnVector2Input?.Invoke("RotateTool", Vector2.zero);
 
+        inputActions.Map.Zoom.performed += ctx => OnFloatInput?.Invoke("MapZoom", ctx.ReadValue<float>());
+        inputActions.Map.Zoom.canceled += _ => OnFloatInput?.Invoke("MapZoom", 0f);
+        inputActions.Map.Navigation.performed += ctx => OnVector2Input?.Invoke("MapNavigation", ctx.ReadValue<Vector2>());
+        inputActions.Map.Navigation.canceled += _ => OnVector2Input?.Invoke("MapNavigation", Vector2.zero);
 
         // Acciones con buffer
         RegisterBufferedAction(inputActions.Game.Jump, "Jump");
         RegisterBufferedAction(inputActions.Game.Dash, "Dash");
         RegisterBufferedAction(inputActions.Game.LightAttack, "LightAttack");
         RegisterBufferedAction(inputActions.Game.Interact, "InteractPressed");
-        
+        RegisterBufferedAction(inputActions.Game.Map, "Map");
+
         RegisterBufferedAction(inputActions.Menu.Select, "Select");
         RegisterBufferedAction(inputActions.Menu.Back, "Back");
         RegisterBufferedAction(inputActions.Menu.PAButton, "PAButton");
-        
+
         RegisterBufferedAction(inputActions.Dialogue.Select, "OptionSelect");
 
         RegisterBufferedAction(inputActions.ToolMenu.Select, "ToolSelect");
+
+        RegisterBufferedAction(inputActions.Map.Close, "CloseMap");
     }
 
     /// <summary>
@@ -140,31 +149,42 @@ public class InputActionController : MonoBehaviour
         inputActions.Game.Run.performed -= ctx => OnFloatInput?.Invoke("Run", ctx.ReadValue<float>());
         inputActions.Game.Run.canceled -= _ => OnFloatInput?.Invoke("Run", 0f);
         inputActions.Game.Interact.performed -= ctx => OnFloatInput?.Invoke("OnInteractHold", ctx.ReadValue<float>());
-        inputActions.Game.Interact.canceled -= _ => OnFloatInput?.Invoke("OnInteractHold",0f);
+        inputActions.Game.Interact.canceled -= _ => OnFloatInput?.Invoke("OnInteractHold", 0f);
         inputActions.Game.HeavyAttack.performed -= ctx => OnFloatInput?.Invoke("HeavyAttack", ctx.ReadValue<float>());
         inputActions.Game.HeavyAttack.canceled -= _ => OnFloatInput?.Invoke("HeavyAttack", 0f);
-        
+        inputActions.Game.Block.performed -= ctx => OnFloatInput?.Invoke("Block", ctx.ReadValue<float>());
+        inputActions.Game.Block.canceled -= _ => OnFloatInput?.Invoke("Block", 0f);
+
         inputActions.Dialogue.Navigate.performed -= ctx => OnFloatInput?.Invoke("OptionMovement", ctx.ReadValue<float>());
         inputActions.Dialogue.Navigate.canceled -= _ => OnFloatInput?.Invoke("OptionMovement", 0f);
 
-        inputActions.Menu.Navigation.performed -= ctx => OnVector2Input?.Invoke("Navigation",ctx.ReadValue<Vector2>());
+        inputActions.Menu.Navigation.performed -= ctx => OnVector2Input?.Invoke("Navigation", ctx.ReadValue<Vector2>());
 
         inputActions.ToolMenu.Rotate.performed -= ctx => OnVector2Input?.Invoke("RotateTool", ctx.ReadValue<Vector2>());
         inputActions.ToolMenu.Rotate.canceled -= _ => OnVector2Input?.Invoke("RotateTool", Vector2.zero);
+
+        inputActions.Map.Zoom.performed -= ctx => OnFloatInput?.Invoke("MapZoom", ctx.ReadValue<float>());
+        inputActions.Map.Zoom.canceled -= _ => OnFloatInput?.Invoke("MapZoom", 0f);
+        inputActions.Map.Navigation.performed -= ctx => OnVector2Input?.Invoke("MapNavigation", ctx.ReadValue<Vector2>());
+        inputActions.Map.Navigation.canceled -= _ => OnVector2Input?.Invoke("MapNavigation", Vector2.zero);
 
         // Desuscribimos todas las acciones bufferizadas
         UnregisterBufferedAction(inputActions.Game.Jump, "Jump");
         UnregisterBufferedAction(inputActions.Game.Dash, "Dash");
         UnregisterBufferedAction(inputActions.Game.LightAttack, "LightAttack");
         UnregisterBufferedAction(inputActions.Game.Interact, "InteractPressed");
-        
+        UnregisterBufferedAction(inputActions.Game.Map, "Map");
+
         UnregisterBufferedAction(inputActions.Menu.Select, "Select");
         UnregisterBufferedAction(inputActions.Menu.Back, "Back");
         UnregisterBufferedAction(inputActions.Menu.PAButton, "PAButton");
-        
+
         UnregisterBufferedAction(inputActions.Dialogue.Select, "OptionSelect");
 
         UnregisterBufferedAction(inputActions.ToolMenu.Select, "ToolSelect");
+        
+        UnregisterBufferedAction(inputActions.Map.Close, "CloseMap");
+
     }
 
     /// <summary>

@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.UIElements;
 using UnityEngine;
 
 public class ToolMenuController : MonoBehaviour
@@ -10,7 +9,16 @@ public class ToolMenuController : MonoBehaviour
 
     void Awake()
     {
-        Instance = this;
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
     }
     public void ShowMenu(ShardTool shardTool){
         toolMenu.Initialize(shardTool);

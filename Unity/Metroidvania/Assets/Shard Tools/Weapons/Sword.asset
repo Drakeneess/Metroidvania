@@ -16,11 +16,13 @@ MonoBehaviour:
   toolDescription: Sword_Desc
   mentalHealthUsage: 0.5
   unlocked: 1
-  toolImageUI: {fileID: 21300000, guid: 70296d6a4182c054eb98555798d3a205, type: 3}
+  toolImageUI: {fileID: 21300000, guid: e190a0c9417cf9f4ea147e54f6c68a39, type: 3}
   damage: 10
   range: 0.1
+  knockback: 5
+  attackSpeed: 1
   damageRange: 2
   maxCombo: 3
   maxTimeChargedAttack: 1
-  recoveryTime: 0.3
-  comboResetTime: 0.5
+  recoveryTime: 2
+  comboResetTime: 5

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -18,6 +19,11 @@ public class MainMenu : Menu
     {
         GameMenuController.CurrentMode = GameMode.Menu;
 
+        InitializeMenu();
+    }
+
+    public void InitializeMenu()
+    {
         // Inicializa los títulos y los botones
         InitializeElements(titleContent, Vector3.zero);
         InitializeElements(menuButtons, new Vector3(horizontalOffset, -verticalSpacing, 0));
@@ -28,7 +34,7 @@ public class MainMenu : Menu
     /// </summary>
     private void InitializeElements(GameObject[] elements, Vector3 offsetStep)
     {
-        int position=0;
+        int position = 0;
         for (int i = 0; i < elements.Length; i++)
         {
             GameObject element = elements[i];
@@ -40,7 +46,7 @@ public class MainMenu : Menu
                 RectTransform rectTransform = element.GetComponent<RectTransform>();
                 if (rectTransform != null)
                 {
-                    position=NotDeployButtonContinue(element)?position-1:position;
+                    position = NotDeployButtonContinue(element) ? position - 1 : position;
                     rectTransform.localPosition += offsetStep * position; // Aplica un desplazamiento según el índice
                 }
 

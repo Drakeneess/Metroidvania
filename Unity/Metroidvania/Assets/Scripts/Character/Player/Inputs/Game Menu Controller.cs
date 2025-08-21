@@ -64,6 +64,7 @@ public class GameMenuController : MonoBehaviour
                 InputController.instance.InputActions.Game.Disable();
                 InputController.instance.InputActions.Dialogue.Disable();
                 InputController.instance.InputActions.ToolMenu.Disable();
+                InputController.instance.InputActions.Map.Disable();
                 InputController.instance.InputActions.Menu.Enable();
                 break;
 
@@ -71,6 +72,7 @@ public class GameMenuController : MonoBehaviour
                 InputController.instance.InputActions.Menu.Disable();
                 InputController.instance.InputActions.Dialogue.Disable();
                 InputController.instance.InputActions.ToolMenu.Disable();
+                InputController.instance.InputActions.Map.Disable();
                 InputController.instance.InputActions.Game.Enable();
                 break;
 
@@ -78,13 +80,22 @@ public class GameMenuController : MonoBehaviour
                 InputController.instance.InputActions.Game.Disable();
                 InputController.instance.InputActions.Menu.Disable();
                 InputController.instance.InputActions.ToolMenu.Disable();
+                InputController.instance.InputActions.Map.Disable();
                 InputController.instance.InputActions.Dialogue.Enable();
                 break;
             case GameMode.ToolMenu:
                 InputController.instance.InputActions.Game.Disable();
                 InputController.instance.InputActions.Menu.Disable();
                 InputController.instance.InputActions.Dialogue.Disable();
+                InputController.instance.InputActions.Map.Disable();
                 InputController.instance.InputActions.ToolMenu.Enable();
+                break;
+            case GameMode.MapMenu:
+                InputController.instance.InputActions.Game.Disable();
+                InputController.instance.InputActions.Menu.Disable();
+                InputController.instance.InputActions.Dialogue.Disable();
+                InputController.instance.InputActions.ToolMenu.Enable();
+                InputController.instance.InputActions.Map.Enable();
                 break;
         }
     }
@@ -109,5 +120,6 @@ public enum GameMode
     Menu,      // Modo de menú principal o pausa
     Game,      // Modo de juego activo
     Selection,  // Modo de selección (ej. selección de personaje o nivel)
-    ToolMenu
+    ToolMenu,
+    MapMenu
 }

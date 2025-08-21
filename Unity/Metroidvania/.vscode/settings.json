@@ -51,5 +51,9 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "Metroidvania.sln"
+    "dotnet.defaultSolution": "Metroidvania.sln",
+    "json.schemas": [
+        
+
+    ]
 }

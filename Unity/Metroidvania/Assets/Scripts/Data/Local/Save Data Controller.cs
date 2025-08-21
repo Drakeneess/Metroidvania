@@ -107,20 +107,4 @@ public class SaveDataController : MonoBehaviour
             return null;
         }
     }
-
-}
-
-[System.Serializable]
-public class SaveData
-{
-    public string playerName = "";
-    public float timePlayed = 0f;
-    public int lastScene = -1;
-    public int lastCheckpointIndex = -1;
-    public int[] weaponsID= null;
-    public int currentWeapon = 0;
-    public int[] weaponsLevel = null;
-    public int[] toolsID=null;
-    public int[] skillID=null;
-    public int[] skillLevel=null;
 }

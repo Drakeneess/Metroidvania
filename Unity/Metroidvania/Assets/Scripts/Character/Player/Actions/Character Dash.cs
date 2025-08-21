@@ -40,6 +40,7 @@ public class CharacterDash : MonoBehaviour
         if (actionName == "Dash"){
             if (!isDashing && player.GetCurrentHealth(HealthType.Mental) > 0f) // Evita que se active el dash si ya está en proceso
             {
+                if (characterMovement.IsOnAir) return;
                 StartCoroutine(Dash());
             }
         }
@@ -50,6 +51,7 @@ public class CharacterDash : MonoBehaviour
         player.CanTakePhysicalDamage = false;
         isDashing = true;
         player.UseMentalPulse(5f);
+        PlayerAnimationController.SetEvading();
         RumbleController.RumblePulse(0.05f, 0.2f, 0.1f);
         float dashEndTime = Time.time + dashDuration;
 

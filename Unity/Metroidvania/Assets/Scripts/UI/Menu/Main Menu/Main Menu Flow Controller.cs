@@ -18,6 +18,27 @@ public class MainMenuFlowController : MonoBehaviour
         {
             InputActionController.Instance.OnActionTriggered += HandleActionTriggered;
         }
+        SceneController.OnSceneActivated += HandleSceneActivated;
+    }
+
+    private void OnDisable()
+    {
+        // Desuscribirse de los eventos
+        if (InputActionController.Instance != null)
+        {
+            InputActionController.Instance.OnActionTriggered -= HandleActionTriggered;
+        }
+        SceneController.OnSceneActivated -= HandleSceneActivated;
+    }
+
+    private void HandleSceneActivated()
+    {
+        mainMenu = GetComponent<MainMenu>();
+        if (mainMenu != null)
+        {
+            // Inicia la secuencia de título cuando la escena esté realmente lista
+            StartCoroutine(BeginTitle());
+        }
     }
 
     private void HandleActionTriggered(string action)
@@ -32,22 +53,9 @@ public class MainMenuFlowController : MonoBehaviour
         }
     }
 
-    private void OnDisable()
-    {
-        // Desuscribirse de los eventos
-        if (InputActionController.Instance != null)
-        {
-            InputActionController.Instance.OnActionTriggered -= HandleActionTriggered;
-        }
-    }
-
     void Start()
     {
-        mainMenu = GetComponent<MainMenu>(); // Obtiene la referencia a MainMenu
-        if (mainMenu != null)
-        {
-            StartCoroutine(BeginTitle()); // Comienza la animación del título
-        }
+
     }
 
     /// <summary>

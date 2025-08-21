@@ -13,6 +13,8 @@ public class CharacterMovement : MonoBehaviour
     private float currentSpeed;
     private bool canMove=true;
     public bool CanMove { get { return canMove; } set { canMove= value; } }
+    private bool isOnAir=false;
+    public bool IsOnAir { get { return isOnAir; } set { isOnAir= value; } }
 
     // Variables para almacenar los inputs actuales
     private float horizontalInput = 0f;
@@ -65,6 +67,8 @@ public class CharacterMovement : MonoBehaviour
     {
         horizontalInput = value;
         OnMovementInputChanged?.Invoke(horizontalInput);
+        PlayerAnimationController.SetMoving(value != 0);
+        PlayerAnimationController.SetWalkState(value != 0);
     }
 
     // Actualiza la velocidad según el input de correr

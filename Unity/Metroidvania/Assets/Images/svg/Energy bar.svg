@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="750mm"
+   height="250mm"
+   viewBox="0 0 750 250"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4 (86a8ad7, 2024-10-11)"
+   sodipodi:docname="Energy bar.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     inkscape:document-units="mm"
+     inkscape:zoom="0.36213173"
+     inkscape:cx="1292.3474"
+     inkscape:cy="329.99041"
+     inkscape:window-width="1920"
+     inkscape:window-height="1094"
+     inkscape:window-x="-11"
+     inkscape:window-y="-11"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1">
+    <linearGradient
+       id="linearGradient21"
+       inkscape:collect="always">
+      <stop
+         style="stop-color:#ffffff;stop-opacity:1;"
+         offset="0.31617308"
+         id="stop22" />
+      <stop
+         style="stop-color:#ffffff;stop-opacity:0;"
+         offset="1"
+         id="stop23" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient12">
+      <stop
+         style="stop-color:#fafafa;stop-opacity:1;"
+         offset="0.93533117"
+         id="stop15" />
+      <stop
+         style="stop-color:#ffffff;stop-opacity:0.63070542;"
+         offset="1"
+         id="stop16" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient21"
+       id="linearGradient23"
+       x1="24.841328"
+       y1="32.147602"
+       x2="706.5166"
+       y2="50.413284"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       id="path1"
+       style="fill:url(#linearGradient23);stroke-width:0.581941;stroke-linecap:round;stroke-linejoin:bevel;stroke-dasharray:0.581941, 0.581941;paint-order:fill markers stroke;fill-opacity:1;opacity:1"
+       d="M 348.0294 0 L 140.39401 6.5453369 L 45.812708 5.8182495 L 18.472774 21.818306 L 24.384041 31.27251 L 0 51.636125 L 57.635242 74.909123 L 138.91607 57.454374 L 490.64034 79.999768 L 696.05932 79.999768 L 750.00022 56.000199 L 743.34998 31.27251 L 730.78795 18.181836 L 693.10343 19.636528 L 348.0294 0 z M 344.20535 13.151135 L 668.10082 26.690361 L 703.47282 25.687321 L 715.26332 34.713127 L 721.50531 51.762215 L 670.87533 68.310042 L 478.06333 68.310042 L 147.92585 52.765255 L 71.633354 64.799662 L 17.534847 48.753613 L 40.422856 34.713127 L 34.874357 28.194661 L 60.536357 17.162777 L 149.31285 17.664038 L 344.20535 13.151135 z "
+       inkscape:export-filename="Energybar container.png"
+       inkscape:export-xdpi="135.46663"
+       inkscape:export-ydpi="135.46663" />
+    <path
+       style="fill:#ffffff;stroke-width:0.581941;stroke-linecap:round;stroke-linejoin:bevel;stroke-dasharray:0.581941, 0.581941;paint-order:fill markers stroke"
+       d="m -0.73062731,151.73231 24.38423831,-20.36364 -5.911332,-9.45455 27.339901,-16 94.58128,0.72727 207.63547,-6.54545 345.07389,19.63636 37.68473,-1.45454 12.56159,13.09091 6.65023,24.72727 -53.94088,24 H 489.90976 L 138.18563,157.55049 56.904842,175.00503 Z"
+       id="path3" />
+  </g>
+</svg>

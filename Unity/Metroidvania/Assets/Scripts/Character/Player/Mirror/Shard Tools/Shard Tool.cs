@@ -16,7 +16,6 @@ public class ShardTool : MonoBehaviour
     protected virtual void Start()
     {
         characterMovement = FindObjectOfType<CharacterMovement>();
-        SetToolActive(false);
     }
 
     public virtual void SetName()

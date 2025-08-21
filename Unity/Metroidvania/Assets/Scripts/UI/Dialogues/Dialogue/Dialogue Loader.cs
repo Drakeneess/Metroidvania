@@ -69,7 +69,6 @@ public class DialogueLoader : MonoBehaviour
             Dialogue dialogue = dialogues[character][index];
 
             // EMOCIONES
-            print(values.Length + " " + emotionColIndex);
             string[] emotionPerLine = values[emotionColIndex].Trim().Split('|');
             EmotionType[] parsedEmotions = new EmotionType[emotionPerLine.Length];
             for (int j = 0; j < emotionPerLine.Length; j++)

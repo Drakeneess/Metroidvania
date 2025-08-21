@@ -46,6 +46,7 @@ public class Character : MonoBehaviour
     // Configuraciones para la regeneración de salud
     public float mentalHealthRegenerationRate = 5f; // Cuánto se regenera por segundo
     public float mentalHealthRegenerationDelay = 3f;  // Tiempo de espera después de usar la salud mental antes de regenerar
+    protected float vibrationTime = 0.04f;
 
     protected virtual void Start()
     {
@@ -88,15 +89,14 @@ public class Character : MonoBehaviour
         {
             RumbleController.RumblePulse(0.1f,0.2f,0.06f);
             CurrentPhysicalHealth -= damage;
-            if (CurrentPhysicalHealth < 0f)
+            if (CurrentPhysicalHealth <= 0f)
             {
                 Die();
-                RumbleController.RumblePulse(0.5f,0.9f,0.1f);
             }
         }
     }
 
-    protected virtual void TakeMentalDamage(float damage)
+    public virtual void TakeMentalDamage(float damage)
     {
         CurrentMentalHealth -= damage;
         if (CurrentMentalHealth < 0f)
@@ -105,7 +105,7 @@ public class Character : MonoBehaviour
         }
     }
 
-    protected virtual void TakeEmotionalDamage(float damage)
+    public virtual void TakeEmotionalDamage(float damage)
     {
         CurrentEmotionalHealth -= damage;
         if (CurrentEmotionalHealth < 0f)
@@ -167,7 +167,7 @@ public class Character : MonoBehaviour
     }
 
     // Restaurar salud
-    protected virtual void RestorePhysicalHealth(float amount)
+    public virtual void RestorePhysicalHealth(float amount)
     {
         CurrentPhysicalHealth += amount;
         if (CurrentPhysicalHealth > physicalHealth)
@@ -176,7 +176,7 @@ public class Character : MonoBehaviour
         }
     }
 
-    protected virtual void RestoreMentalHealth(float amount)
+    public virtual void RestoreMentalHealth(float amount)
     {
         CurrentMentalHealth += amount;
         if (CurrentMentalHealth > mentalHealth)
@@ -185,7 +185,7 @@ public class Character : MonoBehaviour
         }
     }
 
-    protected virtual void RestoreEmotionalHealth(float amount)
+    public virtual void RestoreEmotionalHealth(float amount)
     {
         CurrentEmotionalHealth += amount;
         if (CurrentEmotionalHealth > emotionalHealth)
@@ -198,6 +198,7 @@ public class Character : MonoBehaviour
     {
         // Implementa la lógica de muerte
         CurrentPhysicalHealth = 0f;
+        RumbleController.RumblePulse(0.5f,0.9f,vibrationTime);
     }
 
     public float GetCurrentHealth(HealthType type)

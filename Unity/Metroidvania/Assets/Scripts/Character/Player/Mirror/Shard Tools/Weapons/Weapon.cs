@@ -1,19 +1,22 @@
+using System.Collections;
 using UnityEngine;
 
 public class Weapon : ShardTool
 {
     [Header("Weapon Config")]
     [SerializeField] private LayerMask characterMask;
-    [SerializeField] protected Vector3[] positions;
+    [SerializeField] protected ComboPose[] comboAnimations;
+
+    protected bool isAttacking = false;
 
     protected Quaternion originalRotation;
 
-    private WeaponData WeaponData => shardToolData as WeaponData;
+    protected WeaponData WeaponData => shardToolData as WeaponData;
 
     protected override void Start()
     {
         base.Start();
-        originalRotation = transform.rotation;
+        originalRotation = transform.localRotation;
     }
 
     public void SetAsCurrentWeapon()
@@ -33,7 +36,52 @@ public class Weapon : ShardTool
 
     public virtual void ResetWeaponPosition()
     {
-        transform.rotation = originalRotation;
+        transform.localRotation = originalRotation;
+    }
+
+    protected IEnumerator RotateWeapon(Quaternion startRot, Quaternion endRot, Vector3 startPos, Vector3 endPos, float speed)
+    {
+        isAttacking = true;
+
+        float elapsedTime = 0f;
+        while (elapsedTime < 1f)
+        {
+            float t = elapsedTime / WeaponData.attackSpeed;
+            t = Mathf.SmoothStep(0f, 1f, t); // O AnimationCurve si querés más control
+
+
+            transform.localRotation = Quaternion.Slerp(startRot, endRot, t);
+            transform.localPosition = Vector3.Lerp(startPos, endPos, t);
+
+            elapsedTime += Time.deltaTime * speed;
+            yield return null;
+        }
+
+        transform.localRotation = endRot;
+        transform.localPosition = endPos;
+
+        yield return new WaitForSeconds(GetRecoveryTime());
+
+        StartCoroutine(SmoothReset(0.2f)); // Vuelve a la posición original con suavidad
+        isAttacking = false;
+    }
+
+    protected IEnumerator SmoothReset(float duration)
+    {
+        Quaternion currentRot = transform.localRotation;
+        Vector3 currentPos = transform.localPosition;
+
+        float t = 0f;
+        while (t < 1f)
+        {
+            transform.localRotation = Quaternion.Slerp(currentRot, originalRotation, t);
+            transform.localPosition = Vector3.Lerp(currentPos, Vector3.zero, t);
+            t += Time.deltaTime / duration;
+            yield return null;
+        }
+
+        transform.localRotation = originalRotation;
+        transform.localPosition = Vector3.zero;
     }
 
     private void ActivateDamageArea()

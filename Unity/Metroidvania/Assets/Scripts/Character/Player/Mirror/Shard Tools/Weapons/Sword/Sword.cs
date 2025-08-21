@@ -3,8 +3,6 @@ using UnityEngine;
 
 public class Sword : Weapon
 {
-    public float attackSpeed = 1.0f;
-
     private Quaternion startRotation;
     private Quaternion endRotation;
 
@@ -12,7 +10,6 @@ public class Sword : Weapon
     private Vector3 endPosition;
 
     private Coroutine currentRotationRoutine;
-    private bool isAttacking = false;
 
     protected override void Awake()
     {
@@ -21,9 +18,14 @@ public class Sword : Weapon
         base.Awake();
     }
 
+    protected override void Start()
+    {
+        base.Start();
+    }
+
     public override void LightAttack(int comboIndex)
     {
-        if (isAttacking || comboIndex >= positions.Length - 1)
+        if (isAttacking)
             return;
 
         base.LightAttack(comboIndex);
@@ -40,58 +42,46 @@ public class Sword : Weapon
 
     private void Slash(int comboIndex)
     {
-        startRotation = transform.rotation;
-        endRotation = Quaternion.Euler(positions[comboIndex + 1]);
+        if (comboIndex >= comboAnimations.Length) return;
 
-        startPosition = transform.localPosition;
-        endPosition = startPosition + transform.forward * 0.3f;
+        var pose = comboAnimations[comboIndex];
+
+        Quaternion startRot = Quaternion.Euler(pose.startRotation);
+        Quaternion endRot = Quaternion.Euler(pose.endRotation);
 
         if (currentRotationRoutine != null)
             StopCoroutine(currentRotationRoutine);
 
-        currentRotationRoutine = StartCoroutine(RotateSword(startRotation, endRotation, startPosition, endPosition, attackSpeed));
+        currentRotationRoutine = StartCoroutine(RotateToPose(startRot, endRot, pose.duration, pose.rotationCurve, pose.shakeIntensity));
     }
 
-    private IEnumerator RotateSword(Quaternion startRot, Quaternion endRot, Vector3 startPos, Vector3 endPos, float speed)
+    private IEnumerator RotateToPose(Quaternion startRot, Quaternion endRot, float duration, AnimationCurve curve, float shakeIntensity)
     {
         isAttacking = true;
 
-        float elapsedTime = 0f;
-        while (elapsedTime < 1f)
+        float elapsed = 0f;
+
+        while (elapsed < duration)
         {
-            float t = Mathf.SmoothStep(0f, 1f, elapsedTime);
+            float t = elapsed / duration;
+            float evaluatedT = curve != null ? curve.Evaluate(t) : t;
 
-            transform.rotation = Quaternion.Slerp(startRot, endRot, t);
-            transform.localPosition = Vector3.Lerp(startPos, endPos, t);
+            Quaternion baseRot = Quaternion.Slerp(startRot, endRot, evaluatedT);
 
-            elapsedTime += Time.deltaTime * speed;
+            float shake = shakeIntensity * Mathf.Sin(Time.time * 80f) * (1f - Mathf.Abs(0.5f - t) * 2f); // Shake más fuerte en el medio
+            Quaternion shakeOffset = Quaternion.Euler(0f, 0f, shake);
+
+            transform.localRotation = baseRot * shakeOffset;
+
+            elapsed += Time.deltaTime;
             yield return null;
         }
 
-        transform.rotation = endRot;
-        transform.localPosition = endPos;
+        transform.localRotation = endRot;
 
         yield return new WaitForSeconds(GetRecoveryTime());
 
-        StartCoroutine(SmoothReset(0.2f)); // Vuelve a la posición original con suavidad
+        StartCoroutine(SmoothReset(0.2f));
         isAttacking = false;
-    }
-
-    private IEnumerator SmoothReset(float duration)
-    {
-        Quaternion currentRot = transform.rotation;
-        Vector3 currentPos = transform.localPosition;
-
-        float t = 0f;
-        while (t < 1f)
-        {
-            transform.rotation = Quaternion.Slerp(currentRot, originalRotation, t);
-            transform.localPosition = Vector3.Lerp(currentPos, Vector3.zero, t);
-            t += Time.deltaTime / duration;
-            yield return null;
-        }
-
-        transform.rotation = originalRotation;
-        transform.localPosition = Vector3.zero;
     }
 }

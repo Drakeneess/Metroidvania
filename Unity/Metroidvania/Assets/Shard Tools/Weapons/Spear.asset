@@ -16,9 +16,11 @@ MonoBehaviour:
   toolDescription: Spear_Desc
   mentalHealthUsage: 3
   unlocked: 1
-  toolImageUI: {fileID: 21300000, guid: e230e720c71b1224bb3ed7a838ee03a6, type: 3}
+  toolImageUI: {fileID: 21300000, guid: 508b4dcf04f283a4490ebd60e0ccbd29, type: 3}
   damage: 10
   range: 0.2
+  knockback: 5
+  attackSpeed: 1
   damageRange: 2
   maxCombo: 3
   maxTimeChargedAttack: 2
