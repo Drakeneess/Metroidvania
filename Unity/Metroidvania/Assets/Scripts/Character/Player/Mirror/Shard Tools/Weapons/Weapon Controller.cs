@@ -12,118 +12,91 @@ public class WeaponController : MonoBehaviour
     public WeaponChangeController weaponChange;
 
     private Weapon currentWeapon;
-    public Weapon CurrentWeapon { 
-        get { 
-            return currentWeapon; 
-        } 
-        set { 
-            currentWeapon = value;
-            if(weaponChange!= null){
-                weaponChange.SetActiveWeapon(value);
-            }
-            UpdateWeaponUI(value.GetToolImage());    
-        } 
+    public Weapon CurrentWeapon
+    { 
+        get => currentWeapon;
+        private set => currentWeapon = value; // sin UI aquí
     }
+
     private int currentWeaponIndex = 0;
 
     void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
+        Instance = this;
 
-        if(weaponChange == null){
+        if (weaponChange == null)
             weaponChange = FindObjectOfType<WeaponChangeController>();
-        }
-        // Asignamos el arma inicial si existe
+
+        // Arma inicial: pedimos el cambio (si el espejo está activo, se aplicará ya)
         currentWeapon = weapons[currentWeaponIndex];
-        CurrentWeapon = currentWeapon;
-        currentWeapon.SetAsCurrentWeapon();
+        weaponChange?.RequestWeaponChange(currentWeapon);
+    }
+
+    void Start()
+    {
+        int savedWeapon = SaveDataController.Instance.saveData.currentWeapon;
+        if (SaveDataController.AreSavedData() && savedWeapon != -1)
+        {
+            foreach (Weapon weapon in weapons)
+            {
+                if (savedWeapon == weapon.GetToolID())
+                {
+                    ApplyWeaponChange(weapon);
+                }
+            }
+        }
     }
 
     private void OnEnable()
     {
         if (InputActionController.Instance != null)
-        {
             InputActionController.Instance.OnVector2Input += ChangeWeapon;
-        }
     }
 
     private void OnDisable()
     {
         if (InputActionController.Instance != null)
-        {
             InputActionController.Instance.OnVector2Input -= ChangeWeapon;
-        }
     }
 
     private void ChangeWeapon(string actionName, Vector2 value)
     {
-        if(actionName == "ChangeWeapon"){
-            int newWeaponIndex = -1;
+        if(actionName != "ChangeWeapon") return;
 
-            // Compara las componentes de Vector2 para determinar el arma
-            if (value.x == 0f && value.y == 1f) // Vector2.up
-            {
-                newWeaponIndex = 0;
-                ShowWeaponFeedback("Sword");
-            }
-            else if (value.x == 0f && value.y == -1f) // Vector2.down
-            {
-                newWeaponIndex = 1;
-                ShowWeaponFeedback("Scythe");
-            }
-            else if (value.x == -1f && value.y == 0f) // Vector2.left
-            {
-                newWeaponIndex = 2;
-                ShowWeaponFeedback("Spear");
-            }
-            else if (value.x == 1f && value.y == 0f) // Vector2.right
-            {
-                newWeaponIndex = 3;
-                ShowWeaponFeedback("Claws");
-            }
+        int newWeaponIndex = -1;
+        if      (value == Vector2.up)    newWeaponIndex = 0;
+        else if (value == Vector2.down)  newWeaponIndex = 1;
+        else if (value == Vector2.left)  newWeaponIndex = 2;
+        else if (value == Vector2.right) newWeaponIndex = 3;
 
-            // Verifica si el arma está desbloqueada antes de cambiar
-            if (newWeaponIndex >= 0 && newWeaponIndex < weapons.Length && weapons[newWeaponIndex].GetUnlocked())
-            {
-                SetNewWeapon(newWeaponIndex);
-            }
-            else
-            {
-                Debug.Log("Weapon not unlocked, keeping current weapon.");
-            }
-        }
+        if (newWeaponIndex < 0 || newWeaponIndex >= weapons.Length) return;
+        if (!weapons[newWeaponIndex].GetUnlocked()) { Debug.Log("Weapon locked."); return; }
+
+        // Evita re-aplicar la misma
+        if (newWeaponIndex == currentWeaponIndex) return;
+
+        currentWeaponIndex = newWeaponIndex;
+        var desired = weapons[currentWeaponIndex];
+        CurrentWeapon = desired;
+
+        // 👉 Pide el cambio (bloquea o encola según estado del espejo)
+        weaponChange?.RequestWeaponChange(desired);
     }
 
-    private void SetNewWeapon(int newIndex)
+    // Llamado SOLO cuando el cambio realmente se aplicó
+    public void ApplyWeaponChange(Weapon newWeapon)
     {
-        // Solo cambiamos si el índice es diferente
-        if (newIndex != currentWeaponIndex)
+        CurrentWeapon = newWeapon;
+        if (newWeapon != null)
         {
-            currentWeaponIndex = newIndex;
-            currentWeapon = weapons[currentWeaponIndex];
-            CurrentWeapon = currentWeapon;
-            currentWeapon.SetAsCurrentWeapon();
+            UpdateWeaponUI(newWeapon.GetToolImage());
+            SaveDataController.Instance.saveData.currentWeapon = newWeapon.GetToolID();
         }
     }
 
-    private void ShowWeaponFeedback(string weaponName)
+    private void UpdateWeaponUI(Sprite sprite)
     {
-        // Aquí puedes implementar una forma más visual de mostrar el cambio de arma, como texto o iconos
-        Debug.Log("Weapon changed to: " + weaponName);
-    }
-
-    private void UpdateWeaponUI(Sprite weaponImageUI)
-    {
-        if(Instance.weaponImageUI.sprite != weaponImageUI && Instance.weaponImageUI != null && weaponImageUI != null){
-            Instance.weaponImageUI.sprite = weaponImageUI;
-        }
+        if (weaponImageUI != null && sprite != null && weaponImageUI.sprite != sprite)
+            weaponImageUI.sprite = sprite;
     }
 }

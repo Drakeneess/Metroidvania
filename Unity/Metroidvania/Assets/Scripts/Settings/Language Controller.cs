@@ -13,16 +13,7 @@ public class LanguageController : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        else
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
+        Instance = this;
         InitializeLanguages();
     }
 
@@ -36,7 +27,7 @@ public class LanguageController : MonoBehaviour
     private static void InitializeLanguages()
     {
         Instance.languageDict.Add(Language.English, "en");
-        Instance.languageDict.Add(Language.Spanish, "es");
+        Instance.languageDict.Add(Language.Espanol, "es");
     }
 
     // Cambiar el idioma
@@ -62,5 +53,5 @@ public class LanguageController : MonoBehaviour
 public enum Language
 {
     English,
-    Spanish,
+    Espanol,
 }

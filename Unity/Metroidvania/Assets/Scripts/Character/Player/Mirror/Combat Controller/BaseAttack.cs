@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public abstract class BaseAttack : MonoBehaviour
@@ -10,21 +9,25 @@ public abstract class BaseAttack : MonoBehaviour
 
     protected void PrepareAttack(CombatState state, bool keepWeaponActive)
     {
-        ctx.combatController.ChangeState(state);
-        ctx.movementControl.LockMovement(ctx.combatController.ComboResetTime);
         ctx.combatController.TriggerAttack(keepWeaponActive);
     }
 
-    protected IEnumerator DoWeaponAttack(float delay, System.Action<Weapon> attackAction)
+    /// Maneja ejecución + impacto + ventana de recuperación
+    protected IEnumerator DoWeaponAttack(System.Action<Weapon> attackAction)
     {
         if (ctx.weapon != null)
-        {
             ctx.weapon.SetToolActive(true);
-        }
-        ctx.combatController.StartRecoveryWindow();
 
-        yield return new WaitForSeconds(delay);
+        float exec = ctx.weapon != null ? ctx.weapon.GetExecutionTime() : 0.35f;
+        yield return new WaitForSeconds(exec);
+
         attackAction?.Invoke(ctx.weapon);
+
+        float total  = ctx.combatController.ComboResetTime;
+        float window = Mathf.Max(0f, total - exec);
+        if (window > 0f)
+            ctx.combatController.StartRecoveryWindow(window);
+        else
+            ctx.combatController.EndCombo();
     }
 }
-

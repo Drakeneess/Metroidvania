@@ -25,6 +25,7 @@ public enum PlayerAnimationState
     Attacking,
     Blocking,
     Jumping,
+    Curing,
     TakingDamage,
     Evading,
     Die,

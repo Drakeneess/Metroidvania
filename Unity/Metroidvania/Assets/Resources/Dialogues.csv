@@ -1,4 +1,5 @@
 character,index,id_conversation,emotion,es,en
 0,0,0,6,Prueba|Prueba1|Prueba2,Test|Test1|Test2
-0,1,1,4,Prueba|Prueba1|[Pregunta con opcion]|Prueba3,Test|Test1|[Question With Option]|Test3
-1,0,2,0,Hola|Quiero morir,Hi|I want to die
+0,1,1,4,El silencio aquí es pesado...|[¿Qué sientes realmente Emil?]|Gracias por ser honesto conmigo.,The silence here feels heavy...|[What do you really feel Emil?]|Thank you for being honest with me.
+0,2,2,3,Continúa tu búsqueda,Continue your quest
+1,0,3,2,Hola|Estoy cansado,Hi|I'm tired

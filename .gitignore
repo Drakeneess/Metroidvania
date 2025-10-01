@@ -78,3 +78,5 @@ crashlytics-build.properties
 secrets.json
 *.credentials.json
 
+Frontend/sos-frontend/.env.development
+Frontend/sos-frontend/.env.production

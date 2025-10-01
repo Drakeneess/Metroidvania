@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class DialogueBlip : MonoBehaviour
@@ -37,49 +36,41 @@ public class DialogueBlip : MonoBehaviour
         if (!isActive || !char.IsLetterOrDigit(c)) return;
 
         float baseFreq = GetBaseFrequencyForCharacter();
-        float pitchOffset = GetEmotionPitchOffset(currentEmotion);
+
+        // Semitonos por emoción
+        int semitones = GetEmotionSemitoneOffset(currentEmotion);
+        float factor = Mathf.Pow(2f, semitones / 12f);
+        float finalFreq = Mathf.Clamp(baseFreq * factor, 180f, 850f);
         float duration = 0.05f;
 
-        blipGenerator.Play(baseFreq + pitchOffset, duration);
+        // ✅ aplicar preset emocional antes de sonar
+        blipGenerator.SetEmotion(currentEmotion);
+        blipGenerator.Play(finalFreq, duration);
     }
 
-    private float GetEmotionVolumeOffset(EmotionType emotion)
+    private int GetEmotionSemitoneOffset(EmotionType emotion)
     {
         switch (emotion)
         {
-            case EmotionType.Joy: return +profile.volumeVariationPerEmotion;
-            case EmotionType.Sadness: return -profile.volumeVariationPerEmotion * 0.5f;
-            case EmotionType.Anger: return +profile.volumeVariationPerEmotion * 1.5f;
-            case EmotionType.Fear: return -profile.volumeVariationPerEmotion * 0.3f;
-            case EmotionType.Calm: return 0f;
-            case EmotionType.Contempt: return -profile.volumeVariationPerEmotion;
-            case EmotionType.Confidence: return +profile.volumeVariationPerEmotion * 0.8f;
-            default: return 0f;
+            case EmotionType.Joy: return +3;      // menor tercera ↑
+            case EmotionType.Sadness: return -2;  // segunda ↓
+            case EmotionType.Anger: return +7;    // quinta justa ↑
+            case EmotionType.Fear: return +1;     // semitono ↑
+            case EmotionType.Calm: return 0;      // sin cambio
+            case EmotionType.Contempt: return -3; // menor tercera ↓
+            case EmotionType.Confidence: return +5; // cuarta justa ↑
+            default: return 0;
         }
     }
-    private float GetEmotionPitchOffset(EmotionType emotion)
-    {
-        switch (emotion)
-        {
-            case EmotionType.Joy: return 100f;
-            case EmotionType.Sadness: return -50f;
-            case EmotionType.Anger: return 150f;
-            case EmotionType.Fear: return 75f;
-            case EmotionType.Calm: return 0f;
-            case EmotionType.Contempt: return -25f;
-            case EmotionType.Confidence: return 50f;
-            default: return 0f;
-        }
-    }
+
     private float GetBaseFrequencyForCharacter()
     {
-        return profile != null ? profile.baseFrequency : 440f; // fallback: A4
+        return profile != null ? profile.baseFrequency : 440f; // A4 por defecto
     }
 }
 
-
-
-public enum EmotionType {
+public enum EmotionType
+{
     Joy = 0,
     Sadness = 1,
     Anger = 2,
@@ -98,5 +89,3 @@ public class CharacterBlipProfile
     public float baseVolume = 1f;
     public float volumeVariationPerEmotion = 0.1f;
 }
-
-

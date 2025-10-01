@@ -48,7 +48,6 @@ public class Shard : MonoBehaviour
         // Colocar el fragmento en su interactor
     }
 
-
     public void SetInMirror()
     {
         itemInteractor.Shard=null;
@@ -63,7 +62,7 @@ public class Shard : MonoBehaviour
             itemInteractor.Shard=this;
             Transform interactorTransform = itemInteractor.transform;
             transform.SetParent(interactorTransform);
-            transform.position = new Vector3(interactorTransform.position.x,interactorTransform.position.y+1f,interactorTransform.position.z);
+            transform.position = new Vector3(interactorTransform.position.x,interactorTransform.position.y+1.5f,interactorTransform.position.z+3f);
             transform.localScale *= 3f;
         }
     }

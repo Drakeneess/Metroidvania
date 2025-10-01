@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -11,6 +10,7 @@ public class OptionDialogueElement : MonoBehaviour
     public Button Button { get => button; }
     private TextMeshProUGUI textMesh;
     private GameObject optionDialogueObject;
+    private LocalizedDecision currentDecision; // ✅ Guardamos la decisión asociada
 
     public void SetButton(LocalizedDecision decisionText, GameObject optionDialogue)
     {
@@ -21,6 +21,7 @@ public class OptionDialogueElement : MonoBehaviour
         button.onClick.AddListener(OnPressedAction);
 
         optionDialogueObject = optionDialogue;
+        currentDecision = decisionText; // ✅ Asignamos la decisión aquí
 
         // Configurar el botón para usar navegación automática
         Navigation nav = new Navigation { mode = Navigation.Mode.Automatic };
@@ -31,14 +32,14 @@ public class OptionDialogueElement : MonoBehaviour
     {
         if (button == null)
         {
-            Debug.LogError("Button no ha sido inicializado en OptionDialogueElement.");
+            Debug.LogError("❌ Button no ha sido inicializado en OptionDialogueElement.");
             return;
         }
 
         // Asegurar que el EventSystem está activo
         if (EventSystem.current == null)
         {
-            Debug.LogError("No hay un EventSystem activo en la escena.");
+            Debug.LogError("❌ No hay un EventSystem activo en la escena.");
             return;
         }
 
@@ -53,19 +54,31 @@ public class OptionDialogueElement : MonoBehaviour
         ExecuteEvents.Execute(button.gameObject, new PointerEventData(EventSystem.current), ExecuteEvents.pointerDownHandler);
         ExecuteEvents.Execute(button.gameObject, new PointerEventData(EventSystem.current), ExecuteEvents.pointerUpHandler);
 
-        button.onClick.Invoke();
+        //button.onClick.Invoke();
     }
 
     private void OnPressedAction()
     {
-        StartCoroutine(ShowNextDialogue());   
+        // ✅ Enviar al backend la decisión tomada
+        if (BdiTestResultManager.Instance != null && currentDecision != null)
+        {
+            BdiTestResultManager.Instance.SendDecision(currentDecision.idDecision);
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ No se pudo enviar la decisión: Manager o decisión nula.");
+        }
+
+        // Continuar diálogo
+        StartCoroutine(ShowNextDialogue());
     }
 
-    private IEnumerator ShowNextDialogue(){
+    private IEnumerator ShowNextDialogue()
+    {
         yield return new WaitForSeconds(0.2f);
         DialogueSystem.IsOptionActive = false;
         DialogueSystem.Instance.ShowNextDialogue();
-        
+
         optionDialogueObject.SetActive(false);
     }
 }

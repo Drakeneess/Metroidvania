@@ -24,6 +24,8 @@ public class SaveData
     public List<string> checkpointsUnlocked = new List<string>();
     public List<string> roomVisited = new List<string>();
 
+    public int currentStoryEvent = 0;
+
     public List<IntIntPair> conversationsCompleted = new List<IntIntPair>();
 
     public int studentID = -1;

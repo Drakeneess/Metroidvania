@@ -38,7 +38,7 @@ public class PlayerProximityDetector : MonoBehaviour
             float distance = Vector3.Distance(player.position, interactable.transform.position);
             bool isInRange = distance <= interactable.distanceToPlayer;
 
-            interactable.UpdateProximity(isInRange);
+            //interactable.UpdateProximity(isInRange);
         }
     }
 }

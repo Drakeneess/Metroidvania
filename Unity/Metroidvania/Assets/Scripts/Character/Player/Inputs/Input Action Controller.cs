@@ -23,15 +23,7 @@ public class InputActionController : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
+        Instance = this;
     }
 
     private void Start()
@@ -70,6 +62,7 @@ public class InputActionController : MonoBehaviour
         inputActions.Dialogue.Navigate.canceled += _ => OnFloatInput?.Invoke("OptionMovement", 0f);
 
         inputActions.Menu.Navigation.performed += ctx => OnVector2Input?.Invoke("Navigation", ctx.ReadValue<Vector2>());
+        inputActions.Menu.Navigation.canceled += ctx => OnVector2Input?.Invoke("Navigation", Vector2.zero);
 
         inputActions.ToolMenu.Rotate.performed += ctx => OnVector2Input?.Invoke("RotateTool", ctx.ReadValue<Vector2>());
         inputActions.ToolMenu.Rotate.canceled += _ => OnVector2Input?.Invoke("RotateTool", Vector2.zero);
@@ -85,6 +78,7 @@ public class InputActionController : MonoBehaviour
         RegisterBufferedAction(inputActions.Game.LightAttack, "LightAttack");
         RegisterBufferedAction(inputActions.Game.Interact, "InteractPressed");
         RegisterBufferedAction(inputActions.Game.Map, "Map");
+        RegisterBufferedAction(inputActions.Game.Cure, "Cure");
 
         RegisterBufferedAction(inputActions.Menu.Select, "Select");
         RegisterBufferedAction(inputActions.Menu.Back, "Back");
@@ -159,6 +153,7 @@ public class InputActionController : MonoBehaviour
         inputActions.Dialogue.Navigate.canceled -= _ => OnFloatInput?.Invoke("OptionMovement", 0f);
 
         inputActions.Menu.Navigation.performed -= ctx => OnVector2Input?.Invoke("Navigation", ctx.ReadValue<Vector2>());
+        inputActions.Menu.Navigation.canceled -= ctx => OnVector2Input?.Invoke("Navigation", Vector2.zero);
 
         inputActions.ToolMenu.Rotate.performed -= ctx => OnVector2Input?.Invoke("RotateTool", ctx.ReadValue<Vector2>());
         inputActions.ToolMenu.Rotate.canceled -= _ => OnVector2Input?.Invoke("RotateTool", Vector2.zero);
@@ -174,6 +169,7 @@ public class InputActionController : MonoBehaviour
         UnregisterBufferedAction(inputActions.Game.LightAttack, "LightAttack");
         UnregisterBufferedAction(inputActions.Game.Interact, "InteractPressed");
         UnregisterBufferedAction(inputActions.Game.Map, "Map");
+        UnregisterBufferedAction(inputActions.Game.Cure, "Cure");
 
         UnregisterBufferedAction(inputActions.Menu.Select, "Select");
         UnregisterBufferedAction(inputActions.Menu.Back, "Back");

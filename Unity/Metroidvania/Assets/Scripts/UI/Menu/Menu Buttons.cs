@@ -22,10 +22,10 @@ public class MenuButtons : MonoBehaviour
     public float navigationDelay = 0.2f; // Tiempo de delay entre navegaciones
     private float navigationCooldown = 0f; // Temporizador para controlar el delay
     private int columns = 3; // Número de columnas en el menú de tipo matriz
-    private Coroutine[] animationCoroutines;
+    protected Coroutine[] animationCoroutines;
 
-    public Color normalColor = Color.white; // Color por defecto
-    public Color selectedColor = Color.yellow; // Color de selección
+    public Color normalColor = new Color(0.4f, 0.4f, 0.4f, 1f); // Color por defecto
+    public Color selectedColor = Color.white; // Color de selección
 
     protected virtual void Awake() {
         
@@ -33,9 +33,6 @@ public class MenuButtons : MonoBehaviour
 
     protected virtual void Start()
     {
-        inputs = new Input();
-        inputs.Menu.Enable();
-
         // Inicializar corrutinas para cada botón
         animationCoroutines = new Coroutine[buttons.Length];
 
@@ -52,15 +49,26 @@ public class MenuButtons : MonoBehaviour
             trigger.triggers.Add(entry);
         }
         menu = GetComponent<Menu>();
-
-        // Inicializar la selección
         UpdateButtonSelection();
-
-        // Asignar las acciones de entrada
-        inputs.Menu.Navigation.performed += ctx => Navigate(ctx.ReadValue<Vector2>());
-        inputs.Menu.Select.performed += ctx => Select();
     }
 
+    protected virtual void OnEnable()
+    {
+        // Inicializar la selección
+        // Asignar las acciones de entrada
+        InputActionController.Instance.OnVector2Input += Navigate;
+        InputActionController.Instance.OnActionTriggered += Select;
+        if (menu == null)
+        {
+            menu = GetComponent<Menu>();
+        }
+    }
+    protected virtual void OnDisable()
+    {
+        InputActionController.Instance.OnVector2Input -= Navigate;
+        InputActionController.Instance.OnActionTriggered -= Select;
+        currentSelection = 0;
+    }
     protected void UpdateButtonSelection()
     {
         if (menu.AreOptionsDeployed)
@@ -102,8 +110,9 @@ public class MenuButtons : MonoBehaviour
         buttonImage.color = targetColor; // Asegurar el color final
     }
 
-    private void Navigate(Vector2 direction)
+    private void Navigate(string actionName, Vector2 direction)
     {
+        if (actionName != "Navigation") return;
         if (navigationCooldown <= 0f)
         {
             switch (menuType)
@@ -168,11 +177,15 @@ public class MenuButtons : MonoBehaviour
         UpdateButtonSelection();
     }
 
-    private void Select()
+    protected virtual void Select(string actionName)
     {
-        if (currentSelection >= 0 && currentSelection < buttons.Length && menu.AreOptionsDeployed)
+        if (actionName == "Select")
         {
-            buttons[currentSelection].onClick.Invoke();
+
+            if (currentSelection >= 0 && currentSelection < buttons.Length && menu.AreOptionsDeployed)
+            {
+                buttons[currentSelection].onClick.Invoke();
+            }
         }
     }
 
@@ -189,10 +202,5 @@ public class MenuButtons : MonoBehaviour
         {
             navigationCooldown -= Time.deltaTime;
         }
-    }
-
-    private void OnDisable()
-    {
-        inputs.Menu.Disable();
     }
 }

@@ -16,7 +16,7 @@ public class FrameRateController : MonoBehaviour
 
     void Update()
     {
-        float porcentajeVida = Mathf.Clamp01(player.GetCurrentHealth(HealthType.Physical) / player.physicalHealth);
+        float porcentajeVida = Mathf.Clamp01(player.Health.GetPercent(HealthType.Physical));
         int fpsActual = Mathf.RoundToInt(Mathf.Lerp(minFPS, maxFPS, porcentajeVida));
 
         Application.targetFrameRate = fpsActual;

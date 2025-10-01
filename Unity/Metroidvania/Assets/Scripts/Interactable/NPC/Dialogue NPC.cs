@@ -23,11 +23,18 @@ public class DialogueNPC : Interactable
         characterName = characterDialogue.ToString();
         idCharacter = ((int)characterDialogue).ToString(); // Obtener el índice como string
     }
-    
+
     protected override void Action()
     {
         base.Action();
 
+        var extras = new List<string>
+        {
+            $"NPC: {characterName}",
+            $"DialogueIndex: {dialogueIndex}"
+        };
+        LogBegin(extras);
+        BehaviorManager.Instance.AddSocial();
         // Obtener el objeto Dialogue
         Dialogue dialogue = DialogueLoader.GetDialogue(idCharacter, dialogueIndex);
 
@@ -38,6 +45,10 @@ public class DialogueNPC : Interactable
             EmotionType emotion = dialogue.GetEmotionForLine(dialogueIndex);
             dialogueBlip.SetActive(true);
             dialogueBlip.SetEmotion(emotion);
+            if (dialogueIndex == 1)
+            {
+                dialogueIndex++;
+            }
         }
         else
         {

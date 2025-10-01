@@ -27,5 +27,6 @@ public class CharacterMap : MonoBehaviour
         if (actionName != "Map") return;
 
         mapUIController.gameObject.SetActive(true);
+        PlayerActionLogger.Instance.Log("Open Map");
     }
 }

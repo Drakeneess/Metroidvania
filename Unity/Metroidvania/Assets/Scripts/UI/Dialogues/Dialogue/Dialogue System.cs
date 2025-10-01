@@ -1,97 +1,84 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
-using System.Collections.Generic;
-using System;
 
-public class DialogueSystem : MonoBehaviour
+public class DialogueSystem : TypewriterPanelBase
 {
     public static DialogueSystem Instance { get; private set; } 
     public static bool IsDialogueActive { get; private set; } 
+
     public delegate void OnLetterTypedDelegate(char c);
     public static event OnLetterTypedDelegate OnLetterTyped;
-    public TextMeshProUGUI dialogueText;
+
+    [Header("UI extra")]
     public TextMeshProUGUI nameText;
-    public GameObject dialoguePanel;
-    public float typingSpeed = 0.05f;
     public OptionDialogue optionDialogue;
 
     private DialogueBlip[] allBlips;
-    private Dialogue currentDialogue; // Almacena el diálogo actual
+    private Dialogue currentDialogue; 
     private string[] dialogues; 
     private int currentDialogueIndex = 0;
-    
+
     private static bool isOptionActive = false;
     public static bool IsOptionActive { get => isOptionActive; set => isOptionActive = value; } 
 
-    private void Awake()
+    protected override void Awake()
     {
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
+            return;
         }
-        else
-        {
-            Instance = this;
-        }
+        Instance = this;
+
+        base.Awake();
     }
 
     private void Start()
     {
         allBlips = FindObjectsOfType<DialogueBlip>();
-        EndDialogue();
     }
 
-    /// <summary>
-    /// Comienza un nuevo diálogo y muestra el primer mensaje.
-    /// </summary>
     public void StartDialogue(string name, Dialogue dialogue)
     {
         currentDialogue = dialogue;
-        dialogues = dialogue.GetLocalizedText(DialogueLoader.Instance.currentLanguage);
+        dialogues = dialogue.GetLocalizedText();
         currentDialogueIndex = 0;
-        
-        nameText.text = name;
-        dialoguePanel.SetActive(true);
+
+        if (nameText) nameText.text = name;
+
+        PanelManager.Instance?.ShowDialogue(); // 🔹 usa el manager
         GameMenuController.CurrentMode = GameMode.Selection;
-        
+        IsDialogueActive = true;
+
         ShowNextDialogue();
     }
 
-    
-    /// <summary>
-    /// Muestra el siguiente mensaje del diálogo o termina el diálogo si no hay más mensajes.
-    /// </summary>
     public void ShowNextDialogue()
     {
-        if (IsOptionActive) return; // No avanzar si las opciones están activas
+        if (IsOptionActive) return; 
 
-        if (currentDialogueIndex < dialogues.Length)
+        if (currentDialogueIndex < (dialogues?.Length ?? 0))
         {
             string sentence = dialogues[currentDialogueIndex];
 
-            // Verificar si el texto es una pregunta con opciones (marcador [])
             if (sentence.StartsWith("[") && sentence.EndsWith("]"))
             {
-                // Mostrar el texto sin los corchetes
                 sentence = sentence.Substring(1, sentence.Length - 2);
-                StopAllCoroutines();
-                StartCoroutine(TypeSentence(sentence));
+                TypeText(sentence);
 
-                // Obtener las decisiones y mostrarlas
-                List<LocalizedDecision> decisions = currentDialogue.GetLocalizedDecisions(DialogueLoader.Instance.currentLanguage);
+                List<LocalizedDecision> decisions = currentDialogue.GetLocalizedDecisions();
                 if (decisions.Count > 0)
                 {
                     ShowDecisions(decisions);
                     currentDialogueIndex++;
-                    return; // No continuar con el siguiente diálogo hasta que se elija una opción
+                    return; 
                 }
-                print(currentDialogueIndex);
             }
             else
             {
-                StopAllCoroutines();
-                StartCoroutine(TypeSentence(sentence));
+                TypeText(sentence);
                 currentDialogueIndex++;
             }
         }
@@ -101,39 +88,45 @@ public class DialogueSystem : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Escribe el texto del diálogo letra por letra.
-    /// </summary>
-    private IEnumerator TypeSentence(string sentence)
-    {
-        dialogueText.text = "";
-        foreach (char letter in sentence.ToCharArray())
-        {
-            dialogueText.text += letter;
-            OnLetterTyped?.Invoke(letter);
-            yield return new WaitForSeconds(typingSpeed);
-        }
-    }
-
-    /// <summary>
-    /// Finaliza el diálogo y oculta el panel.
-    /// </summary>
     private void EndDialogue()
     {
-        foreach (var blip in allBlips)
+        if (allBlips != null)
         {
-            blip.SetActive(false);
+            foreach (var blip in allBlips)
+                blip.SetActive(false);
         }
-        dialoguePanel.SetActive(false);
+
+        PanelManager.Instance?.HideAll(); // 🔹 apaga todo
         GameMenuController.CurrentMode = GameMode.Game;
+        IsDialogueActive = false;
+
+        var extras = new List<string> { $"Dialogue: {currentDialogue?.idConversation ?? "Unknown"}" };
+        PlayerActionLogger.Instance.Log("EndInteraction", extras);
     }
 
-    /// <summary>
-    /// Muestra las opciones de decisión si están disponibles.
-    /// </summary>
     public void ShowDecisions(List<LocalizedDecision> decisions)
     {
-        optionDialogue.gameObject.SetActive(true);
-        optionDialogue.SetOptions(decisions);
+            optionDialogue.gameObject.SetActive(true);
+            optionDialogue.SetOptions(decisions);
+        }
+    
+
+    protected override void OnLanguageChanged()
+    {
+        if (currentDialogue != null && isShowing)
+        {
+            dialogues = currentDialogue.GetLocalizedText();
+
+            if (currentDialogueIndex < dialogues.Length)
+            {
+                string line = dialogues[currentDialogueIndex];
+                TypeText(line);
+            }
+        }
+    }
+
+    protected override void OnCharTyped(char c)
+    {
+        OnLetterTyped?.Invoke(c);
     }
 }

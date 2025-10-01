@@ -1,10 +1,14 @@
+// src/firebaseAdmin.js
 import admin from "firebase-admin";
+import serviceAccount from "../secrets.json" with { type: "json" };
 
-// Inicializar Firebase Admin con Service Account o con GOOGLE_APPLICATION_CREDENTIALS
+// Inicialización única del Admin SDK (Auth + Firestore)
 if (!admin.apps.length) {
   admin.initializeApp({
-    projectId: process.env.FIREBASE_PROJECT_ID, // ej: "shadowofsouls-8c119"
+    credential: admin.credential.cert(serviceAccount),
   });
+  console.log("✅ Firebase Admin inicializado");
 }
 
 export const authAdmin = admin.auth();
+export const db = admin.firestore();

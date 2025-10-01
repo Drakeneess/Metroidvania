@@ -22,13 +22,11 @@ public class InputController : MonoBehaviour
             instance = this;
             DontDestroyOnLoad(gameObject);
             inputActions = new Input();
-            EnableInputActions();  // Llamamos a un método para habilitar las acciones
         }
         else
         {
-            Destroy(gameObject);
+            
         }
-
         // Suscripción al cambio de acción de entrada
         InputSystem.onActionChange += OnInputActionChange;
     }
@@ -36,18 +34,6 @@ public class InputController : MonoBehaviour
     private void OnDestroy()
     {
         InputSystem.onActionChange -= OnInputActionChange;
-    }
-
-    private void EnableInputActions()
-    {
-        inputActions.Game.Enable();
-        inputActions.Menu.Enable();
-    }
-
-    private void DisableInputActions()
-    {
-        inputActions.Game.Disable();
-        inputActions.Menu.Disable();
     }
 
     private void OnInputActionChange(object obj, InputActionChange change)

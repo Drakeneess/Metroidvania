@@ -1,27 +1,27 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Enemy : Character
 {
-    // Start is called before the first frame update
-    protected override void Start()
+    public float damage = 10f;
+
+    private void OnCollisionEnter(Collision collision)
     {
-        base.Start();
+        Player player = collision.gameObject.GetComponent<Player>();
+        if (player != null)
+            player.TakePhysicalDamage(damage, this);
     }
 
-    protected override void Update()
-    {
-        base.Update();
-    }
-
-    public override void TakePhysicalDamage(float damage)
-    {
-        base.TakePhysicalDamage(damage);
-    }
     protected override void Die()
     {
-        base.Die();
         Destroy(gameObject);
+    }
+
+    public override void TakePhysicalDamage(float dmg, Character damager)
+    {
+        base.TakePhysicalDamage(dmg, damager);
+        
+        FeedbackManager.Instance.TriggerHitStop(0.1f);
+        CameraShaker.Instance.Shake(0.05f,0.1f);
     }
 }

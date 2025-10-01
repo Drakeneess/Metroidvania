@@ -17,15 +17,7 @@ public class SaveDataController : MonoBehaviour
 
     private void Awake() 
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject); // Destruye este objeto si ya existe una instancia
-        }
-        else
-        {
-            Instance = this; // Asigna la instancia
-        }
-
+        Instance = this;
         saveFilePath = GetSavePath();
         
         // Comprobamos si los datos guardados existen

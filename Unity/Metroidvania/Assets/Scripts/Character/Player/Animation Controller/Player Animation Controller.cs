@@ -1,229 +1,100 @@
-using System;
-using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerAnimationController : CharacterAnimationController
+public class PlayerAnimationController : CharacterAnimationController, IPlayerAnimator
 {
     public static PlayerAnimationController Instance { get; private set; }
 
+    [Header("Config")]
+    [SerializeField] private AnimationStateRegistryAsset stateRegistry;
+
+    // Handlers existentes
     private IdleAnimationHandler idleHandler;
     private WalkAnimationHandler walkHandler;
-    private CombatAnimationHandler combatHandler;
-    private PlayerAnimationState currentState;
-    private PlayerAnimationState previousState = PlayerAnimationState.Idle;
 
+    // FSM
+    private AnimStateMachine fsm;
+    private readonly Dictionary<PlayerAnimationState, IAnimState> states = new();
 
-    private Coroutine revertCoroutine;
-
-    void Awake()
-    {
-
-    }
     protected override void Start()
     {
         base.Start();
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject); // Destruye este objeto si ya existe una instancia
-            return;
-        }
-        // Se establece la instancia como la única existente
+
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
 
+        if (!animator)
+        {
+            Debug.LogError("[PlayerAnimationController] Animator no encontrado.");
+            enabled = false; return;
+        }
+        if (!stateRegistry)
+        {
+            Debug.LogError("[PlayerAnimationController] Falta StateRegistry (ScriptableObject).");
+            enabled = false; return;
+        }
+
+        // Handlers
         idleHandler = new IdleAnimationHandler(animator, this, 5f);
         walkHandler = new WalkAnimationHandler(animator, this);
-        Instance = this;
+
+        // Estados
+        states[PlayerAnimationState.Idle]         = new IdleState(idleHandler, walkHandler);
+        states[PlayerAnimationState.Walk]         = new WalkState(idleHandler, walkHandler);
+        states[PlayerAnimationState.Blocking]     = new BlockingState(animator);
+        states[PlayerAnimationState.Rest]         = new RestState(animator);
+        states[PlayerAnimationState.Attacking]    = new AttackState(animator);
+        states[PlayerAnimationState.Jumping]      = new JumpState(animator);
+        states[PlayerAnimationState.Evading]      = new EvadeState(animator);
+        states[PlayerAnimationState.Curing]       = new CureState(animator);
+        states[PlayerAnimationState.TakingDamage] = new TakingDamageState(animator);
+        states[PlayerAnimationState.Die]          = new DieState(animator);
+
+        // FSM
+        fsm = new AnimStateMachine(this, stateRegistry, s => states.TryGetValue(s, out var st) ? st : null);
+        fsm.Request(PlayerAnimationState.Idle, force: true);
+
+        // Enlaza fachada
+        PlayerAnim.Bind(this);
     }
 
-    void OnEnable()
+    // ========= Implementación IPlayerAnimator =========
+    void IPlayerAnimator.SetCurrentHealthPercentage(float v) => animator.SetFloat(AnimParams.CurrentHealthPercentage, v);
+    void IPlayerAnimator.SetOnAir(bool v) => animator.SetBool(AnimParams.IsOnAir, v);
+    void IPlayerAnimator.SetWalkState(bool isWalking, bool force) => fsm.Request(isWalking ? PlayerAnimationState.Walk : PlayerAnimationState.Idle, force);
+    void IPlayerAnimator.SetBlocking() => fsm.Request(PlayerAnimationState.Blocking);
+    void IPlayerAnimator.SetMoving(bool v) => animator.SetBool(AnimParams.IsMoving, v);
+    void IPlayerAnimator.StartJumping() => fsm.Request(PlayerAnimationState.Jumping);
+    void IPlayerAnimator.SetResting() => fsm.Request(PlayerAnimationState.Rest);
+    void IPlayerAnimator.SetAttackState(bool force) => fsm.Request(PlayerAnimationState.Attacking, force);
+    void IPlayerAnimator.SetAttackComboState(int combo) => animator.SetInteger(AnimParams.ComboState, combo);
+    void IPlayerAnimator.SetHeavyAttack(bool v) => animator.SetBool(AnimParams.IsHeavyAttack, v);
+    void IPlayerAnimator.SetEvading() => fsm.Request(PlayerAnimationState.Evading);
+    void IPlayerAnimator.SetCuring() => fsm.Request(PlayerAnimationState.Curing);
+    void IPlayerAnimator.SetDying() => fsm.Request(PlayerAnimationState.Die);
+    void IPlayerAnimator.SetTakingDamage() => fsm.Request(PlayerAnimationState.TakingDamage);
+
+    void IPlayerAnimator.NotifyTransientFinished() => fsm.NotifyTransientFinished();
+
+    // ========= Compat: API estática original =========
+    public static void SetCurrentHealthPercentage(float v) { if (Instance) PlayerAnim.SetCurrentHealthPercentage(v); }
+    public static void IsOnAir(bool v) { if (Instance) PlayerAnim.IsOnAir(v); }
+    public static void SetWalkState(bool w, bool force=false) { if (Instance) PlayerAnim.SetWalkState(w, force); }
+    public static void SetBlocking() { if (Instance) PlayerAnim.SetBlocking(); }
+    public static void SetMoving(bool v) { if (Instance) PlayerAnim.SetMoving(v); }
+    public static void StartJumping() { if (Instance) PlayerAnim.StartJumping(); }
+    public static void SetResting() { if (Instance) PlayerAnim.SetResting(); }
+    public static void SetAttackState() { if (Instance) PlayerAnim.SetAttackState(true); }
+    public static void SetAttackComboState(int combo) { if (Instance) PlayerAnim.SetAttackComboState(combo); }
+    public static void SetHeavyAttack(bool v) { if (Instance) PlayerAnim.SetHeavyAttack(v); }
+    public static void SetEvading() { if (Instance) PlayerAnim.SetEvading(); }
+    public static void SetCuring() { if (Instance) PlayerAnim.SetCuring(); }
+    public static void SetDying() { if (Instance) PlayerAnim.SetDying(); }
+    public static void SetTakingDamage() { if (Instance) PlayerAnim.SetTakingDamage(); }
+
+    // Llama esto desde Animation Events al final de clips transitorios con duración=0
+    public static void AnimEvent_EndTransient()
     {
-
+        if (Instance) PlayerAnim.NotifyTransientFinished();
     }
-
-    void OnDisable()
-    {
-
-    }
-    public void SetAnimationState(PlayerAnimationState newState, bool force = false)
-    {
-        bool isSameState = newState == currentState;
-
-        var newMeta = AnimationStateRegistry.Get(newState);
-        var currentMeta = AnimationStateRegistry.Get(currentState);
-
-        if (!force && isSameState)
-            return;
-
-        if (!force && newMeta.Priority < currentMeta.Priority)
-            return;
-
-        if (newMeta.Type == AnimationStateType.Transient)
-            previousState = currentState;
-
-        if (!isSameState)
-        {
-            ExitState(currentState);
-            currentState = newState;
-            EnterState(newState);
-        }
-        else if (force)
-        {
-            EnterState(newState);
-        }
-
-        if (newMeta.Type == AnimationStateType.Transient)
-            StartRevertCoroutine(newMeta.Duration);
-    }
-
-    private void StartRevertCoroutine(float delay)
-    {
-        if (revertCoroutine != null)
-            StopCoroutine(revertCoroutine);
-
-        revertCoroutine = StartCoroutine(RevertAfterDelay(delay));
-    }
-
-    private IEnumerator RevertAfterDelay(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-
-        if (currentState == PlayerAnimationState.Jumping ||
-            currentState == PlayerAnimationState.Attacking ||
-            currentState == PlayerAnimationState.TakingDamage ||
-            currentState == PlayerAnimationState.Evading)
-        {
-            SetAnimationState(previousState, force: true);
-        }
-
-        revertCoroutine = null;
-    }
-
-    private void EnterState(PlayerAnimationState state)
-    {
-        switch (state)
-        {
-            case PlayerAnimationState.Idle:
-                idleHandler.StartIdle();
-                walkHandler.StopWalk();
-                break;
-
-            case PlayerAnimationState.Walk:
-                walkHandler.StartWalk();
-                idleHandler.StopIdle();
-                break;
-
-            case PlayerAnimationState.Jumping:
-                animator.SetTrigger("isJumping");
-                break;
-
-            case PlayerAnimationState.Attacking:
-                animator.SetBool("isAttacking", true);
-                break;
-
-            case PlayerAnimationState.Blocking:
-                animator.SetBool("isBlocking", true);
-                break;
-
-            case PlayerAnimationState.Evading:
-                animator.SetTrigger("isEvading");
-                break;
-
-            case PlayerAnimationState.TakingDamage:
-                animator.SetTrigger("Hit");
-                break;
-
-            case PlayerAnimationState.Die:
-                animator.SetTrigger("Die");
-                break;
-
-            case PlayerAnimationState.Rest:
-                animator.SetBool("isResting", true);
-                break;
-        }
-    }
-
-    private void ExitState(PlayerAnimationState state)
-    {
-        switch (state)
-        {
-            case PlayerAnimationState.Idle:
-                idleHandler.StopIdle();
-                break;
-
-            case PlayerAnimationState.Walk:
-                walkHandler.StopWalk();
-                break;
-
-            case PlayerAnimationState.Blocking:
-                animator.SetBool("isBlocking", false);
-                break;
-
-            case PlayerAnimationState.Rest:
-                animator.SetBool("isResting", false);
-                break;
-            case PlayerAnimationState.Attacking:
-                animator.SetBool("isAttacking", false);
-                break;
-        }
-    }
-
-    #region Animation Controllers
-    public static void SetCurrentHealthPercentage(float currentPlayerHealth)
-    {
-        Instance.animator.SetFloat("CurrentHealthPercentage", currentPlayerHealth);
-    }
-    public static void IsOnAir(bool onAir)
-    {
-        Instance.animator.SetBool("isOnAir", onAir);
-    }
-
-    public static void SetWalkState(bool isWalking, bool force = false)
-    {
-        if (isWalking)
-        {
-            Instance.SetAnimationState(PlayerAnimationState.Walk, force);
-        }
-        else
-        {
-            Instance.SetAnimationState(PlayerAnimationState.Idle, force);
-        }
-    }
-
-    public static void SetBlocking()
-    {
-        Instance.SetAnimationState(PlayerAnimationState.Blocking);
-    }
-
-    public static void SetMoving(bool state)
-    {
-        Instance.animator.SetBool("isMoving", state);
-    }
-    public static void StartJumping()
-    {
-        Instance.SetAnimationState(PlayerAnimationState.Jumping);
-    }
-
-    public static void SetResting()
-    {
-        Instance.SetAnimationState(PlayerAnimationState.Rest);
-    }
-
-    public static void SetAttackState()
-    {
-        Instance.SetAnimationState(PlayerAnimationState.Attacking, true);
-    }
-    public static void SetAttackComboState(int combo)
-    {
-        Instance.animator.SetInteger("Combo State", combo);
-    }
-    public static void SetHeavyAttack(bool isHeavy)
-    {
-        Instance.animator.SetBool("isHeavyAttack", isHeavy);
-    }
-    public static void SetEvading()
-    {
-        Instance.SetAnimationState(PlayerAnimationState.Evading);
-    }
-
-    #endregion
 }

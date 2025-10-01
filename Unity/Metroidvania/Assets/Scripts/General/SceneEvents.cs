@@ -19,7 +19,6 @@ public class SceneEvents : MonoBehaviour
             return;
         }
         Instance = this;
-        DontDestroyOnLoad(gameObject);
 
         // Suscribir al evento nativo de Unity
         SceneManager.sceneLoaded += HandleSceneLoaded;

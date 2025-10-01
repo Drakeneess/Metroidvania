@@ -125,6 +125,15 @@ public partial class @Input: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""Cure"",
+                    ""type"": ""Button"",
+                    ""id"": ""7295359b-0fc6-4976-9b31-e659c395725c"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -512,6 +521,28 @@ public partial class @Input: IInputActionCollection2, IDisposable
                     ""action"": ""Map"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""dd53be47-fc5e-4e3d-a8fe-06306344918d"",
+                    ""path"": ""<Keyboard>/c"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Cure"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""091822b1-d976-421c-9515-2400a6b3d177"",
+                    ""path"": ""<Gamepad>/buttonNorth"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Cure"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -798,6 +829,61 @@ public partial class @Input: IInputActionCollection2, IDisposable
                     ""action"": ""Navigation"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""Keyboard Arrows"",
+                    ""id"": ""5fb5ad5c-1b58-4245-9cbe-dbc542b47082"",
+                    ""path"": ""2DVector"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Navigation"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""up"",
+                    ""id"": ""260f138b-a97a-49a7-a520-724e550cf4dd"",
+                    ""path"": ""<Keyboard>/upArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Navigation"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""down"",
+                    ""id"": ""46a6751b-935b-493a-9e82-f1b95a550984"",
+                    ""path"": ""<Keyboard>/downArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Navigation"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""left"",
+                    ""id"": ""1c814dad-c067-4893-86f4-41af1ef5280b"",
+                    ""path"": ""<Keyboard>/leftArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Navigation"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""right"",
+                    ""id"": ""cc70cdf3-d3d3-4be4-b5ff-589ec865cb66"",
+                    ""path"": ""<Keyboard>/rightArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Navigation"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
                 }
             ]
         },
@@ -839,7 +925,7 @@ public partial class @Input: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""df5e43c9-8c7a-45a6-b86d-afe3054f5c46"",
-                    ""path"": ""<Gamepad>/buttonSouth"",
+                    ""path"": ""<Gamepad>/buttonWest"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -1597,6 +1683,7 @@ public partial class @Input: IInputActionCollection2, IDisposable
         m_Game_ChangeWeapon = m_Game.FindAction("Change Weapon", throwIfNotFound: true);
         m_Game_Block = m_Game.FindAction("Block", throwIfNotFound: true);
         m_Game_Map = m_Game.FindAction("Map", throwIfNotFound: true);
+        m_Game_Cure = m_Game.FindAction("Cure", throwIfNotFound: true);
         // Menu
         m_Menu = asset.FindActionMap("Menu", throwIfNotFound: true);
         m_Menu_Select = m_Menu.FindAction("Select", throwIfNotFound: true);
@@ -1688,6 +1775,7 @@ public partial class @Input: IInputActionCollection2, IDisposable
     private readonly InputAction m_Game_ChangeWeapon;
     private readonly InputAction m_Game_Block;
     private readonly InputAction m_Game_Map;
+    private readonly InputAction m_Game_Cure;
     public struct GameActions
     {
         private @Input m_Wrapper;
@@ -1703,6 +1791,7 @@ public partial class @Input: IInputActionCollection2, IDisposable
         public InputAction @ChangeWeapon => m_Wrapper.m_Game_ChangeWeapon;
         public InputAction @Block => m_Wrapper.m_Game_Block;
         public InputAction @Map => m_Wrapper.m_Game_Map;
+        public InputAction @Cure => m_Wrapper.m_Game_Cure;
         public InputActionMap Get() { return m_Wrapper.m_Game; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -1745,6 +1834,9 @@ public partial class @Input: IInputActionCollection2, IDisposable
             @Map.started += instance.OnMap;
             @Map.performed += instance.OnMap;
             @Map.canceled += instance.OnMap;
+            @Cure.started += instance.OnCure;
+            @Cure.performed += instance.OnCure;
+            @Cure.canceled += instance.OnCure;
         }
 
         private void UnregisterCallbacks(IGameActions instance)
@@ -1782,6 +1874,9 @@ public partial class @Input: IInputActionCollection2, IDisposable
             @Map.started -= instance.OnMap;
             @Map.performed -= instance.OnMap;
             @Map.canceled -= instance.OnMap;
+            @Cure.started -= instance.OnCure;
+            @Cure.performed -= instance.OnCure;
+            @Cure.canceled -= instance.OnCure;
         }
 
         public void RemoveCallbacks(IGameActions instance)
@@ -2070,6 +2165,7 @@ public partial class @Input: IInputActionCollection2, IDisposable
         void OnChangeWeapon(InputAction.CallbackContext context);
         void OnBlock(InputAction.CallbackContext context);
         void OnMap(InputAction.CallbackContext context);
+        void OnCure(InputAction.CallbackContext context);
     }
     public interface IMenuActions
     {

@@ -5,11 +5,13 @@ using UnityEngine;
 
 public class CharacterBlocking : MonoBehaviour
 {
-    CharacterMovement characterMovement;
+    private CharacterMovement characterMovement;
+    private Player player;
     // Start is called before the first frame update
     void Start()
     {
         characterMovement = GetComponent<CharacterMovement>();
+        player = GetComponent<Player>();
     }
 
     // Update is called once per frame
@@ -29,7 +31,7 @@ public class CharacterBlocking : MonoBehaviour
     private void OnDisable() {
         if (InputActionController.Instance != null)
         {
-            InputActionController.Instance.OnFloatInput += HandleBlockInput;
+            InputActionController.Instance.OnFloatInput -= HandleBlockInput;
         }
     }
 
@@ -40,10 +42,12 @@ public class CharacterBlocking : MonoBehaviour
             if (value != 0)
             {
                 PlayerAnimationController.SetBlocking();
+                PlayerActionLogger.Instance.Log("BlockStart");
             }
             else
             {
-                PlayerAnimationController.SetWalkState(characterMovement.HorizontalInput!=0, true);
+                PlayerAnimationController.SetWalkState(characterMovement.HorizontalInput != 0, true);
+                PlayerActionLogger.Instance.Log("BlockEnd");
             }
         }
     }

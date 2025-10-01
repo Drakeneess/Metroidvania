@@ -6,16 +6,17 @@ import RequireAuth from "./assets/auth/RequireAuth";
 import AppNav from "./assets/components/AppNav";
 import LoginForm from "./assets/components/LoginForm";
 import Dashboard from "./assets/components/Dashboard";
-import AdminDashboard from "./assets/components/AdminDashboard";
-import PsychologistDashboard from "./assets/components/PsychologistDashboard";
-import TeacherDashboard from "./assets/components/TeacherDashboard";
+import AdminDashboard from "./assets/pages/AdminDashboard";
+import PsychologistDashboard from "./assets/pages/PsychologistDashboard";
+import TeacherDashboard from "./assets/pages/TeacherDashboard";
 import Forbidden from "./assets/components/Forbidden";
 
 export default function App() {
   return (
     <AuthProvider>
       <Router>
-        <Box minH="100vh" bg="linear-gradient(to right, #6B46C1, #000000)" color="white">
+        <Box minH="100vh" bg="linear-gradient(135deg, #6B46C1 0%, #1A202C 50%, #000000 100%)"
+          >
           <AppNav />
           <Routes>
             <Route path="/" element={<LoginForm />} />
@@ -36,14 +37,14 @@ export default function App() {
 
             {/* Exclusivo PSYCHOLOGIST */}
             <Route path="/dashboard/psychologist" element={
-              <RequireAuth roles={["psychologist"]}>
+              <RequireAuth roles={["psychologist", "admin"]}>
                 <PsychologistDashboard />
               </RequireAuth>
             }/>
 
             {/* Exclusivo TEACHER */}
             <Route path="/dashboard/teacher" element={
-              <RequireAuth roles={["teacher"]}>
+              <RequireAuth roles={["teacher", "admin"]}>
                 <TeacherDashboard />
               </RequireAuth>
             }/>

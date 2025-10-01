@@ -8,30 +8,43 @@ public class Weapon : ShardTool
     [SerializeField] protected ComboPose[] comboAnimations;
 
     protected bool isAttacking = false;
-
-    protected Quaternion originalRotation;
-
     protected WeaponData WeaponData => shardToolData as WeaponData;
+    protected CombatController combatController;
 
     protected override void Start()
     {
         base.Start();
-        originalRotation = transform.localRotation;
+        originalRotation = Quaternion.identity;
     }
 
-    public void SetAsCurrentWeapon()
+    public virtual void LightAttack(int comboIndex) { }
+    public virtual void HeavyAttack(float chargeFactor) { }
+
+    // Animación de preparación para Heavy Attack
+    public virtual void PlayChargePose()
     {
-        // Lógica futura para convertirla en el arma activa
+        if (isAttacking) return;
+        StartCoroutine(ChargeRoutine());
     }
 
-    public virtual void LightAttack(int comboIndex)
+    private IEnumerator ChargeRoutine()
     {
-        ActivateDamageArea();
-    }
+        isAttacking = true;
 
-    public virtual void HeavyAttack(float damage)
-    {
-        ActivateDamageArea();
+        Quaternion startRot = transform.localRotation;
+        Quaternion chargeRot = startRot * Quaternion.Euler(0f, 0f, -30f);
+
+        float chargeTime = 0.3f;
+        float t = 0f;
+        while (t < 1f)
+        {
+            transform.localRotation = Quaternion.Slerp(startRot, chargeRot, t);
+            t += Time.deltaTime / chargeTime;
+            yield return null;
+        }
+        transform.localRotation = chargeRot;
+
+        isAttacking = false;
     }
 
     public virtual void ResetWeaponPosition()
@@ -39,37 +52,10 @@ public class Weapon : ShardTool
         transform.localRotation = originalRotation;
     }
 
-    protected IEnumerator RotateWeapon(Quaternion startRot, Quaternion endRot, Vector3 startPos, Vector3 endPos, float speed)
-    {
-        isAttacking = true;
-
-        float elapsedTime = 0f;
-        while (elapsedTime < 1f)
-        {
-            float t = elapsedTime / WeaponData.attackSpeed;
-            t = Mathf.SmoothStep(0f, 1f, t); // O AnimationCurve si querés más control
-
-
-            transform.localRotation = Quaternion.Slerp(startRot, endRot, t);
-            transform.localPosition = Vector3.Lerp(startPos, endPos, t);
-
-            elapsedTime += Time.deltaTime * speed;
-            yield return null;
-        }
-
-        transform.localRotation = endRot;
-        transform.localPosition = endPos;
-
-        yield return new WaitForSeconds(GetRecoveryTime());
-
-        StartCoroutine(SmoothReset(0.2f)); // Vuelve a la posición original con suavidad
-        isAttacking = false;
-    }
-
     protected IEnumerator SmoothReset(float duration)
     {
         Quaternion currentRot = transform.localRotation;
-        Vector3 currentPos = transform.localPosition;
+        Vector3 currentPos    = transform.localPosition;
 
         float t = 0f;
         while (t < 1f)
@@ -84,41 +70,71 @@ public class Weapon : ShardTool
         transform.localPosition = Vector3.zero;
     }
 
-    private void ActivateDamageArea()
+    // 🔹 Ataque con daño + knockback
+    protected void ActivateDamageArea(bool isHeavy = false, float chargeFactor = 1f)
     {
-        Collider[] enemiesInRange = Physics.OverlapSphere(transform.position, GetDamageRange(), characterMask);
+        int facing = GetFacingDirection();               // +1 derecha, -1 izquierda
+        Vector3 forward2D = Vector3.right * facing;      // “frente” en 2.5D (eje X)
 
-        foreach (var enemy in enemiesInRange)
+        Collider[] hits = Physics.OverlapSphere(transform.position, GetDamageRange(), characterMask);
+
+        foreach (var col in hits)
         {
-            if (enemy.CompareTag("Enemy"))
-            {
-                float distance = Vector3.Distance(transform.position, enemy.transform.position);
-                float damage = CalculateDamage(distance);
-                enemy.GetComponent<Enemy>().TakePhysicalDamage(damage);
-            }
+            if (!col.CompareTag("Enemy")) continue;
+
+            // Vector hacia el enemigo, a piso (evita empuje vertical)
+            Vector3 toEnemy = col.transform.position - transform.position;
+            toEnemy.y = 0f;
+
+            // ✅ Solo enemigos delante (dot > 0 => delante)
+            if (toEnemy.sqrMagnitude < 0.0001f) continue;
+            float frontDot = Vector3.Dot(toEnemy.normalized, forward2D);
+            if (frontDot <= 0f) continue;
+
+            // Daño con distancia + heavy/charge
+            float distance = toEnemy.magnitude;
+            float damage   = CalculateDamage(distance, isHeavy, chargeFactor);
+
+            var e = col.GetComponent<Enemy>();
+            if (e == null) continue;
+
+            e.TakePhysicalDamage(damage,null);
+
+            // ✅ Knockback siempre horizontal hacia el frente del ataque
+            float knockForce = Mathf.Max(0f, WeaponData.knockback * (1f - (distance / GetDamageRange())));
+            Vector3 pushDir = forward2D;   // pura X, sin Y/Z
+            e.ApplyKnockback(pushDir, knockForce, 0.15f);
         }
     }
-    public override void UnlockTool()
+
+    private float CalculateDamage(float distance, bool isHeavy = false, float chargeFactor = 1f)
     {
-        base.UnlockTool();
-        WeaponController.Instance.CurrentWeapon=this;
+        float factorDist = Mathf.Max(0.5f, 1f - (distance / GetDamageRange()));
+        float typeMult   = isHeavy ? 1.75f : 1f;
+        float chargeMult = Mathf.Lerp(0.8f, 2f, chargeFactor);
+        return GetDamage() * factorDist * typeMult * chargeMult;
     }
 
-    private float CalculateDamage(float distance)
+    public void SetCombatController(CombatController controller)
     {
-        float damage = GetDamage() * (1 - (distance / GetDamageRange()));
-        return Mathf.Max(damage, 0);
+        combatController = controller;
     }
 
-    // Acceso a datos específicos de WeaponData
-    public float GetDamage() => WeaponData.damage;
-    public float GetRange() => WeaponData.range;
-    public float GetDamageRange() => WeaponData.damageRange;
+    protected override void OnDisable()
+    {
+        base.OnDisable();
+        transform.localRotation = Quaternion.identity;
+        transform.localPosition = Vector3.zero;
+    }
 
-    public int GetMaxCombo() => WeaponData.maxCombo;
+    // Accessors
+    public float GetDamage()               => WeaponData.damage;
+    public float GetRange()                => WeaponData.range;
+    public float GetDamageRange()          => WeaponData.damageRange;
+    public int   GetMaxCombo()             => WeaponData.maxCombo;
     public float GetMaxTimeChargedAttack() => WeaponData.maxTimeChargedAttack;
-    public float GetRecoveryTime() => WeaponData.recoveryTime;
-    public float GetComboResetTime() => WeaponData.comboResetTime;
-
-    public override Sprite GetToolImage() => WeaponData.toolImageUI; // por si difiere
+    public float GetExecutionTime()        => WeaponData.executionTime;
+    public float GetRecoveryTime()         => WeaponData.recoveryTime;
+    public float GetComboResetTime()       => WeaponData.comboResetTime;
+    public override Sprite GetToolImage()  => WeaponData.toolImageUI;
 }

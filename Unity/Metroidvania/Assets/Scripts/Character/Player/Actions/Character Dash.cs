@@ -38,17 +38,18 @@ public class CharacterDash : MonoBehaviour
     private void HandleDashInput(string actionName)
     {
         if (actionName == "Dash"){
-            if (!isDashing && player.GetCurrentHealth(HealthType.Mental) > 0f) // Evita que se active el dash si ya está en proceso
+            if (!isDashing && player.Health.Get(HealthType.Mental) > 0f) // Evita que se active el dash si ya está en proceso
             {
                 if (characterMovement.IsOnAir) return;
                 StartCoroutine(Dash());
+                PlayerActionLogger.Instance.Log("Dash");
             }
         }
     }
 
     private IEnumerator Dash()
     {
-        player.CanTakePhysicalDamage = false;
+        player.Health.canTakePhysicalDamage = false;
         isDashing = true;
         player.UseMentalPulse(5f);
         PlayerAnimationController.SetEvading();
@@ -70,6 +71,6 @@ public class CharacterDash : MonoBehaviour
         // Restablecemos la velocidad a su valor normal después del dash
         rb.velocity = Vector3.zero;
         isDashing = false;
-        player.CanTakePhysicalDamage = true;
+        player.Health.canTakePhysicalDamage = true;
     }
 }

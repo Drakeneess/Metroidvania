@@ -2,8 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MainMenuButtons : MenuButtons{
-    private bool WaitForSelect=true;
+public class MainMenuButtons : MenuButtons
+{
+    [SerializeField] private MenuContainer settingsContainer;
+    [SerializeField] private MenuContainer menuButtonsContainer;
+    private bool WaitForSelect = true;
+    
     protected override void Awake()
     {
         base.Awake();
@@ -12,8 +16,10 @@ public class MainMenuButtons : MenuButtons{
         buttons[2].onClick.AddListener(Options);
         buttons[3].onClick.AddListener(QuitGame);
     }
-    protected override void Start() {
+    protected override void Start()
+    {
         base.Start();
+        MenuTransition.Instance.SetInitial(menuButtonsContainer);
     }
     protected override void Update()
     {
@@ -33,7 +39,7 @@ public class MainMenuButtons : MenuButtons{
         BeginGame();
     }
     private void Options() {
-        print("Options");
+        MenuTransition.Instance.SwitchTo(settingsContainer);
     }
     private void QuitGame() {
         print("Quit game");

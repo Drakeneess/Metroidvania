@@ -78,6 +78,7 @@ public class StudentManager : MonoBehaviour
                 {
                     SaveDataController.Instance.saveData.studentID = studentId;
                     PlaythroughManager.Instance.FindPlaythroughID(studentId);
+                    MainMenuFlowController.Instance.StartMenuFlow();
                     StartCoroutine(FadeOutAndDisable(gameObject, 0.75f));
                 }
                 else
@@ -139,7 +140,6 @@ public class StudentManager : MonoBehaviour
     {
         yield return StartCoroutine(FadeElement(element, duration, 0f));
         element.SetActive(false);
-        SceneController.instance.ActivateSceneManually();
         gameObject.SetActive(false);
     }
     private void ShowError(string message)

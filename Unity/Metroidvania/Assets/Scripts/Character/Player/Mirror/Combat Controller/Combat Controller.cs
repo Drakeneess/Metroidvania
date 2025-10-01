@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,129 +11,160 @@ public class CombatController : MonoBehaviour
 
     public ComboController comboController { get; private set; }
     private MovementControl movementControl;
-    private WeaponContext weaponContext;
+    public  WeaponContext   weaponContext;
+
     private Coroutine recoveryCoroutine;
     private bool inputReceivedInWindow = false;
-
     private bool canChangeWeapon = true;
+    private bool isStringActive = false;
+    private Weapon pendingWeapon;
+
     public CombatState CurrentState { get; private set; }
     public bool CanChangeWeapon => canChangeWeapon;
-    public float ComboResetTime { get; set; }
-    public float RecoveryTime { get; set; }
-    public float WeaponMentalHealthUsage { get; set; }
-    public bool isHeavyAttackActive { get;  set; }
+
+    // Timings por arma activa
+    public float ComboResetTime { get; private set; } // ventana total (exec + window)
+    public float RecoveryTime   { get; private set; } // cooldown de ataque (gating de input)
+    public float WeaponMentalHealthUsage { get; private set; }
+
+    public bool isHeavyAttackActive { get; set; }
+
+    // === Recovery (estado) fijo + Cooldown de ataque por arma ===
+    [SerializeField] private float recoveryStateDuration = 0.20f; // duración del estado Recovery (visual)
+    private float attackCooldownEndTime = 0f;                     // gating de input
+
+    public bool  IsAttackOnCooldown      => Time.time < attackCooldownEndTime;
+    public float AttackCooldownRemaining => Mathf.Max(0f, attackCooldownEndTime - Time.time);
+
+    // === Marcadores de tiempo (debug) ===
+    private float stateStartTime;
+    private float execEndTime;
+    private float windowEndTime;
+    private float lastExecDuration;
+    private float lastWindowDuration;
+    private float lastRecoveryDuration;
+
+    public float StateElapsed      => Time.time - stateStartTime;
+    public float ExecRemaining     => execEndTime  > Time.time ? execEndTime  - Time.time : 0f;
+    public float WindowRemaining   => windowEndTime> Time.time ? windowEndTime- Time.time : 0f;
+    public float LastExecDuration  => lastExecDuration;
+    public float LastWindowDuration=> lastWindowDuration;
+    public float LastRecoveryDuration => lastRecoveryDuration;
+    public bool  IsWindowOpen      => windowEndTime > Time.time;
 
     void Awake()
     {
         comboController = new ComboController();
-        weaponContext = new WeaponContext();
+        weaponContext   = new WeaponContext();
     }
 
-    private void Start()
+    void Start()
     {
         if (player == null) player = FindObjectOfType<Player>();
         movementControl = player.GetComponent<MovementControl>();
 
-        weaponContext.player = player;
-        weaponContext.movementControl = movementControl;
+        weaponContext.player           = player;
+        weaponContext.movementControl  = movementControl;
         weaponContext.combatController = this;
-        weaponContext.comboController = comboController;
+        weaponContext.comboController  = comboController;
 
         lightAttack.Init(weaponContext);
         heavyAttack.Init(weaponContext);
     }
 
-    private void OnEnable()
+    void OnEnable()
     {
         var input = InputActionController.Instance;
         if (input != null)
         {
             input.OnActionTriggered += LightAttackInput;
-            input.OnFloatInput += HeavyAttackInput;
+            input.OnFloatInput      += HeavyAttackInput;
         }
     }
 
-    private void OnDisable()
+    void OnDisable()
     {
         var input = InputActionController.Instance;
         if (input != null)
         {
             input.OnActionTriggered -= LightAttackInput;
-            input.OnFloatInput -= HeavyAttackInput;
+            input.OnFloatInput      -= HeavyAttackInput;
         }
     }
 
     private void LightAttackInput(string actionName)
     {
-        if (actionName == "LightAttack")
-        {
-            lightAttack.Execute();
-            inputReceivedInWindow = true;
-        }
+        if (actionName != "LightAttack") return;
+        if (!CanAcceptAttackInput())     return;
+
+        PlayerActionLogger.Instance.Log("Light Attacking",new List<string> { $"Current Weapon: {weaponContext.weapon.GetToolName()}", $"Current Combo: {comboController.GetCombo()}" },true);
+
+        lightAttack.Execute();
+
+        if (recoveryCoroutine != null) inputReceivedInWindow = true;
     }
 
     private void HeavyAttackInput(string actionName, float value)
     {
         if (actionName != "HeavyAttack") return;
-        if (value > 0.5f) heavyAttack.StartCharge();
-        else heavyAttack.Release();
+        if (!CanAcceptAttackInput() )     return;
+
+        if (value > 0.5f)
+        {
+            heavyAttack.StartCharge();
+            PlayerActionLogger.Instance.Log("Heavy Attack Charge", new List<string>{ $"Current Weapon: {weaponContext.weapon.GetToolName()}" }, true);
+        }
+        else
+        {
+            heavyAttack.Release();
+            PlayerActionLogger.Instance.Log("Heavy Attack Release", new List<string> { $"Current Weapon: {weaponContext.weapon.GetToolName()}" }, true);
+        }
+
+        if (recoveryCoroutine != null) inputReceivedInWindow = true;
     }
 
-    public void ChangeState(CombatState newState) => CurrentState = newState;
+    private bool CanAcceptAttackInput()
+    {
+        if (CurrentState == CombatState.Recovery) return false;
+        if (IsAttackOnCooldown) return false;
+
+        // 🚫 Si hay ventana pero NO queda combo, no aceptar input (evita combo infinito)
+        if (IsWindowOpen && !comboController.canContinueCombo) return false;
+
+        return true;
+    }
 
     public void TriggerAttack(bool keepWeaponActive)
     {
-        mirrorVisual.Mirror.SetAttackingState(false);
         PlayerAnimationController.SetAttackState();
-        PlayerAnimationController.SetAttackComboState(comboController.GetCombo());
 
-        mirrorVisual.SetMirrorState(false); // Solo desactiva si es LightAttack
+        // 🔹 Usamos el índice planeado en vez de GetCombo()
+        int plannedIndex = comboController.GetPlannedComboIndex();
 
-        mirrorVisual.ResetActivationTimer(true, () => isHeavyAttackActive);
+        PlayerAnimationController.SetAttackComboState(plannedIndex);
+        mirrorVisual.Mirror.SetAttackingState(true);
 
-        if (!keepWeaponActive)
-            StartCoroutine(RecoverFromAttack());
+        if (!isStringActive && mirrorVisual.IsMirrorActive)
+        {
+            mirrorVisual.TransitionMirrorToWeapon();
+            isStringActive = true;
+        }
     }
 
-    public IEnumerator RecoverFromAttack()
+    public void StartRecoveryWindow(float windowSeconds)
     {
-        print("En recuperacion");
-        yield return new WaitForSeconds(ComboResetTime);
-        
-        ChangeState(CombatState.Recovery);
-        yield return new WaitForSeconds(RecoveryTime);
-        PlayerAnimationController.SetWalkState(movementControl.isMoving, true);
-        PlayerAnimationController.SetAttackComboState(0);
-        ChangeState(CombatState.Idle);
-        comboController.ResetCombo();
-        canChangeWeapon = true;
+        if (recoveryCoroutine != null) StopCoroutine(recoveryCoroutine);
+        recoveryCoroutine = StartCoroutine(RecoveryWindowCoroutine(windowSeconds));
     }
 
-    public void StartRecoveryWindow()
-    {
-        // Cancelar ventana anterior
-        if (recoveryCoroutine != null)
-            StopCoroutine(recoveryCoroutine);
-
-        // Iniciar nueva ventana
-        recoveryCoroutine = StartCoroutine(RecoveryWindowCoroutine());
-    }
-
-    private IEnumerator RecoveryWindowCoroutine()
+    private IEnumerator RecoveryWindowCoroutine(float windowSeconds)
     {
         inputReceivedInWindow = false;
-
         float elapsed = 0f;
-        while (elapsed < ComboResetTime)
-        {
-            // Si ya no puede continuar combo, se cierra inmediatamente
-            if (!comboController.canContinueCombo)
-            {
-                EndCombo();
-                yield break;
-            }
 
-            // Si llegó input y todavía hay combo disponible, reinicia el timer
+        while (elapsed < windowSeconds)
+        {
+            // Si llega input y AÚN queda combo, reinicia ventana
             if (inputReceivedInWindow && comboController.canContinueCombo)
             {
                 inputReceivedInWindow = false;
@@ -145,14 +175,49 @@ public class CombatController : MonoBehaviour
             yield return null;
         }
 
-        // Se acabó la ventana sin más inputs
-        EndCombo();
+        EndCombo(); // ventana terminó: recién aquí volvemos al espejo
     }
-
 
     public void EndCombo()
     {
+        mirrorVisual.TransitionWeaponToMirror();
+        isStringActive = false;
+
+        // Aplica cambio en cola (si lo hay)
+        if (pendingWeapon != null)
+        {
+            var w = pendingWeapon;
+            pendingWeapon = null;
+            SetActiveWeapon(w);
+
+            // (UI) -> si manejas UI diferido, notifícalo aquí
+            // WeaponController.Instance?.ApplyWeaponChange(w);
+        }
+
+        // Cooldown por arma
+        attackCooldownEndTime = Time.time + RecoveryTime;
+
         StartCoroutine(RecoverFromAttack());
+    }
+
+    public IEnumerator RecoverFromAttack()
+    {
+        float recStart = Time.time;
+        if (recoveryStateDuration > 0f)
+            yield return new WaitForSeconds(recoveryStateDuration);
+        lastRecoveryDuration = Time.time - recStart;
+
+        PlayerAnimationController.SetWalkState(movementControl.isMoving, true);
+        PlayerAnimationController.SetAttackComboState(0);
+
+        comboController.ResetCombo();
+        canChangeWeapon = true;
+
+        if (recoveryCoroutine != null)
+        {
+            StopCoroutine(recoveryCoroutine);
+            recoveryCoroutine = null;
+        }
     }
 
     public void SetActiveWeapon(Weapon weapon)
@@ -162,18 +227,20 @@ public class CombatController : MonoBehaviour
         weaponContext.weapon = weapon;
         mirrorVisual.SetNewWeapon(weapon);
         mirrorVisual.Mirror.attackRange = weapon.GetRange();
-        mirrorVisual.ReactivateDelay = weapon.GetComboResetTime();
+        weapon.SetCombatController(this);
+
         comboController.SetNewMaxCombo(weapon.GetMaxCombo());
         WeaponMentalHealthUsage = weapon.GetMentalHealthUsage();
-        RecoveryTime = weapon.GetRecoveryTime();
+
         ComboResetTime = weapon.GetComboResetTime();
+        RecoveryTime   = weapon.GetRecoveryTime();
     }
 }
-
 
 public enum CombatState
 {
     Idle,
+    Preparing,
     LightAttacking,
     HeavyAttacking,
     Recovery
@@ -187,4 +254,3 @@ public class WeaponContext
     public ComboController comboController;
     public Weapon weapon;
 }
-

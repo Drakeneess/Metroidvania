@@ -1,49 +1,120 @@
-using System;
 using System.Collections;
 using UnityEngine;
 
+[DisallowMultipleComponent]
 public class MainMenuFlowController : MonoBehaviour
 {
-    public float beginDelay; // Retraso antes de comenzar la animación
-    private MainMenu mainMenu;
+    [Header("Config")]
+    public bool autoStart = true;
+    public float beginDelay = 0f;
+    public MainMenu mainMenu;
+
+    public static MainMenuFlowController Instance { get; private set; }
 
     private Coroutine titleCoroutine;
-    private bool isSkipping = false; // Control para saber si se está saltando la animación
-    private bool buttonsReady = false; // Control para saber si los botones están listos
+    private bool isSkipping = false;
+    private bool buttonsReady = false;
+    private bool startedBySceneEvent = false;
+    private bool startedManuallyFallback = false;
+    private bool flowStarted = false; // 🔹 evita arranques múltiples
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(this);
+            return;
+        }
+        Instance = this;
+    }
 
     private void OnEnable()
     {
-        // Suscribirse a los eventos de entrada
         if (InputActionController.Instance != null)
         {
             InputActionController.Instance.OnActionTriggered += HandleActionTriggered;
         }
+
         SceneController.OnSceneActivated += HandleSceneActivated;
+        MainMenuEvents.OnTitleComplete += HandleTitleComplete;
+        MainMenuEvents.OnButtonsReady += HandleButtonsReady;
+        MainMenuEvents.OnMenuActivated += HandleMenuActivated;
+
+        
     }
 
     private void OnDisable()
     {
-        // Desuscribirse de los eventos
         if (InputActionController.Instance != null)
         {
             InputActionController.Instance.OnActionTriggered -= HandleActionTriggered;
         }
+
         SceneController.OnSceneActivated -= HandleSceneActivated;
+        MainMenuEvents.OnTitleComplete -= HandleTitleComplete;
+        MainMenuEvents.OnButtonsReady -= HandleButtonsReady;
+        MainMenuEvents.OnMenuActivated -= HandleMenuActivated;
+    }
+
+    private IEnumerator FallbackKickoff()
+    {
+        startedManuallyFallback = true;
+        yield return null;
+        StartMenuFlow();
+    }
+
+    void Start()
+    {
+        if (SaveDataController.AreSavedData()) autoStart = true;
+
+        if (autoStart && !startedBySceneEvent && !startedManuallyFallback)
+        {
+            if (!mainMenu) mainMenu = GetComponent<MainMenu>();
+            if (mainMenu != null)
+            {
+                StartCoroutine(FallbackKickoff());
+            }
+        }
+    }
+
+    private void HandleMenuActivated()
+    {
+        // Podés enganchar lógica extra si querés
     }
 
     private void HandleSceneActivated()
     {
-        mainMenu = GetComponent<MainMenu>();
-        if (mainMenu != null)
+        startedBySceneEvent = true;
+        if (!mainMenu) mainMenu = GetComponent<MainMenu>();
+        if (mainMenu != null && autoStart)
         {
-            // Inicia la secuencia de título cuando la escena esté realmente lista
-            StartCoroutine(BeginTitle());
+            MainMenuEvents.TriggerMenuActivated();
+            StartCoroutine(DelayedTitleStart());
         }
+    }
+
+    private IEnumerator DelayedTitleStart()
+    {
+        yield return new WaitForSeconds(beginDelay);
+        StartMenuFlow();
+    }
+
+    // 🔹 MÉTODO PÚBLICO
+    public void StartMenuFlow()
+    {
+        if (flowStarted) return;
+        flowStarted = true;
+
+        if (!mainMenu) mainMenu = GetComponent<MainMenu>();
+        if (mainMenu == null) return;
+
+        titleCoroutine = StartCoroutine(mainMenu.StartTittleFadeIn());
     }
 
     private void HandleActionTriggered(string action)
     {
-        switch(action){
+        switch (action)
+        {
             case "PAButton":
                 SkipTitleAnimation();
                 break;
@@ -53,68 +124,58 @@ public class MainMenuFlowController : MonoBehaviour
         }
     }
 
-    void Start()
-    {
-
-    }
-
-    /// <summary>
-    /// Comienza la animación del título tras el retraso inicial.
-    /// </summary>
-    private IEnumerator BeginTitle()
-    {
-        yield return new WaitForSeconds(beginDelay); // Espera el retraso
-        titleCoroutine = StartCoroutine(mainMenu.StartTittleFadeIn()); // Inicia la animación del título
-    }
-
-    /// <summary>
-    /// Salta la animación del título y la completa de inmediato.
-    /// </summary>
     private void SkipTitleAnimation()
     {
-        if (isSkipping || titleCoroutine == null) return;
+        if (isSkipping || titleCoroutine == null)
+            return;
 
         isSkipping = true;
-
-        // Detiene la corutina actual del título
         StopCoroutine(titleCoroutine);
 
-        // Completa el fade-in del título de inmediato
-        mainMenu.CompleteFadeIn(mainMenu.titleContent);
+        if (mainMenu != null)
+            mainMenu.CompleteFadeIn(mainMenu.titleContent);
 
-        // Vibración al saltar la animación
         RumbleController.RumblePulse(0.1f, 0.2f, 1f);
+        MainMenuEvents.TriggerTitleComplete();
+    }
 
-        // Espera 2 segundos antes de habilitar los botones
+    private void HandleTitleComplete()
+    {
         StartCoroutine(WaitBeforeEnablingButtons());
     }
 
-    /// <summary>
-    /// Espera 2 segundos antes de habilitar los botones del menú.
-    /// </summary>
     private IEnumerator WaitBeforeEnablingButtons()
     {
         yield return new WaitForSeconds(2f);
+        MainMenuEvents.TriggerButtonsReady();
+    }
+
+    private void HandleButtonsReady()
+    {
         buttonsReady = true;
     }
 
-    /// <summary>
-    /// Se llama cuando la animación del título ha terminado.
-    /// </summary>
-    public void OnTitleAnimationComplete()
-    {
-        StartCoroutine(WaitBeforeEnablingButtons());
-    }
-
-    /// <summary>
-    /// Activa los botones del menú si están listos.
-    /// </summary>
     private void ActivateMenuButtons()
     {
-        if (!buttonsReady) return;
+        bool visible = (mainMenu != null && mainMenu.AreButtonsVisible());
+
+        if (!buttonsReady && !visible)
+        {
+            RumbleController.RumblePulse(0.1f, 0.1f, 0.2f);
+            return;
+        }
+
+        if (visible)
+        {
+            buttonsReady = true;
+            return;
+        }
 
         RumbleController.RumblePulse(0.5f, 1f, 0.2f);
-        mainMenu.StartCoroutine(mainMenu.ButtonsFadeIn());
-        buttonsReady = false; // Evita que se repita el proceso
+
+        if (mainMenu != null)
+            mainMenu.StartCoroutine(mainMenu.ButtonsFadeIn());
+
+        buttonsReady = false;
     }
 }

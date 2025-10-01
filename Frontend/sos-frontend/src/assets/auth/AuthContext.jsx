@@ -1,47 +1,44 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import axios from "axios";
+import { endSessionBeacon, restoreSessionIdFromStorage, setToken, startSession } from "../../ingest/sessionIngest";
 
 const AuthContext = createContext(null);
 export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);   // { id, full_name, email, role, state }
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Cargar sesión desde token (opción A: confiar en lo que guardaste al login)
   useEffect(() => {
     const token = localStorage.getItem("token");
     const cached = localStorage.getItem("user");
+    if (token) setToken(token);
+    restoreSessionIdFromStorage();
     if (token && cached) {
-      try {
-        setUser(JSON.parse(cached));
-      } catch {}
+      try { setUser(JSON.parse(cached)); } catch (e) {}
     }
     setLoading(false);
+
+    const onUnload = () => endSessionBeacon();
+    window.addEventListener("beforeunload", onUnload);
+    return () => window.removeEventListener("beforeunload", onUnload);
   }, []);
 
-  // Opción B: validar con backend (descomenta si tienes /api/me)
-  // useEffect(() => {
-  //   const token = localStorage.getItem("token");
-  //   if (!token) { setUser(null); setLoading(false); return; }
-  //   axios.get("http://localhost:4000/api/me", {
-  //     headers: { Authorization: `Bearer ${token}` }
-  //   }).then(res => {
-  //     setUser(res.data); // asegúrate que devuelva {id, full_name, email, role, state}
-  //   }).catch(() => setUser(null)).finally(() => setLoading(false));
-  // }, []);
-
-  const login = (data) => {
-    // data: { token, user: { id, full_name, email, role, state } }
+  const login = async (data) => {
+    // data: { token, user: {...} }
     localStorage.setItem("token", data.token);
     localStorage.setItem("user", JSON.stringify(data.user));
     setUser(data.user);
+    setToken(data.token);
+
+    await startSession(); // guarda sessionId
   };
 
   const logout = () => {
+    endSessionBeacon();
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);
+    setToken(null);
   };
 
   return (

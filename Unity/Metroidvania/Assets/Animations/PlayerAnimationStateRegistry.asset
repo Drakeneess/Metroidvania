@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e32a017c9c23c74da197c372cd62ced, type: 3}
+  m_Name: PlayerAnimationStateRegistry
+  m_EditorClassIdentifier: 
+  states:
+  - state: 0
+    type: 0
+    priority: 10
+    duration: 0
+  - state: 1
+    type: 0
+    priority: 10
+    duration: 0
+  - state: 2
+    type: 1
+    priority: 50
+    duration: 1.1833334
+  - state: 3
+    type: 0
+    priority: 60
+    duration: 0
+  - state: 4
+    type: 1
+    priority: 70
+    duration: 0.6
+  - state: 5
+    type: 1
+    priority: 90
+    duration: 4.925926
+  - state: 6
+    type: 1
+    priority: 200
+    duration: 0.7
+  - state: 7
+    type: 1
+    priority: 80
+    duration: 0.6862745
+  - state: 8
+    type: 0
+    priority: 210
+    duration: 0
+  - state: 9
+    type: 0
+    priority: 180
+    duration: 0

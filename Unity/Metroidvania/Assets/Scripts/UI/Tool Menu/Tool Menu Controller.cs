@@ -9,16 +9,7 @@ public class ToolMenuController : MonoBehaviour
 
     void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
-            return;
-        }
+        Instance = this;
     }
     public void ShowMenu(ShardTool shardTool){
         toolMenu.Initialize(shardTool);

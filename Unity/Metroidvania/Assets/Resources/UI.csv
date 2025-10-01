@@ -1,20 +1,36 @@
 Key,es,en
 Sword,Autojuicio,Self-Judgment
+Sword_Desc,,
 Claws,Desgarradores,Tearers
+Claws_Desc,,
 Spear,Destino vacio,Empty Fate
+Spear_Desc,,
 Scythe,Cegador,Blinder
+Scythe_Desc,,
 Shield,Anhedonia,Anhedonia
+Shield_Desc,,
 Rope,Asfixiador,Choker
-Orb,Desorientación,Disorientation
-Boots,Huida y Opresión,Flight and Weight
-Sword Ex,Hoja de Redención,Redemption Edge
+Rope_Desc,,
+Orb,DesorientaciÃ³n,Disorientation
+Orb_Desc,,
+Boots,Huida y OpresiÃ³n,Flight and Weight
+Boots_Desc,,
+Sword Ex,Hoja de RedenciÃ³n,Redemption Edge
+Sword Ex_Desc,,
 Claws Ex,Voluntad Desatada,Willshredders
+Claws Ex_Desc,,
 Spear Ex,Sendero Elegido,Chosen Path
+Spear Ex_Desc,,
 Scythe Ex,Clarividencia,Insight
+Scythe Ex_Desc,,
 Shield Ex,Guardia del Gozo,Joykeeper
+Shield Ex_Desc,,
 Rope Ex,Lazo del Control,Tether of Control
+Rope Ex_Desc,,
 Orb Ex,Luz Mental,Clarity
+Orb Ex_Desc,,
 Boots Ex,Pisada en Equilibrio,Stride of Balance
+Boots Ex_Desc,,
 ,,
 Title,Shadow of souls,Shadow of souls
 Subtitle,Facing the darkness within,Facing the darkness within
@@ -27,3 +43,11 @@ Select,Seleccionar,Select
 Back,Retroceder,Back
 Enter ID,Ingresa tu CI,Enter your ID
 Submit,Aceptar,Submit
+Rest,Descansar,Rest
+Travel,Viaje Rapido,Fast Travel
+Music,Musica,Music
+Fx,Efectos de sonido,Fx Sounds
+Lang,Idioma,Language
+Rumbling,Vibracion,Rumbling
+Resolution,Resolucion,Resolution
+Bright,Brillo,Brightness

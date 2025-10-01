@@ -11,16 +11,7 @@ public class LanguageMenu : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject); // Si ya hay una instancia, destrúyela
-        }
-        else
-        {
-            Instance = this; // Asigna esta instancia
-            DontDestroyOnLoad(gameObject); // No destruir entre escenas
-        }
-
+        Instance = this;
         // Subscribir a los cambios de idioma
         LanguageController.OnLanguageChanged += OnLanguageChanged;
     }
@@ -93,7 +84,7 @@ public class LanguageMenu : MonoBehaviour
     // Actualizar todos los textos del UI
     private void UpdateAllTexts()
     {
-        menuUITexts = FindObjectsOfType<MenuUIText>();
+        menuUITexts = FindObjectsOfType<MenuUIText>(true);
         foreach (MenuUIText uiText in menuUITexts)
         {
             uiText.UpdateText();

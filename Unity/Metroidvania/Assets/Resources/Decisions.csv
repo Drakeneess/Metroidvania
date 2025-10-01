@@ -1,4 +1,5 @@
-id_conversation,index,weight,es,en
-1,0,1,Prueba 1,Test 1
-1,1,2,Prueba 2,Test 2
-1,2,2.5,Prueba3,Test3
+id_conversation,index,id_response,es,en
+1,0,1,No estoy triste solo cansado.,I’m not sad just tired.
+1,1,2,Hay días en los que la tristeza me pesa.,There are days when sadness weighs on me.
+1,2,3,Últimamente la tristeza no me suelta.,Lately sadness never leaves me.
+1,3,4,Estoy tan hundido que no puedo soportarlo.,I’m so overwhelmed I can’t stand it.

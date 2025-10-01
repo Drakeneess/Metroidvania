@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Shield
   m_EditorClassIdentifier: 
   toolName: 
+  toolDescription: 
   mentalHealthUsage: 1
   unlocked: 0
   toolImageUI: {fileID: 0}

@@ -40,14 +40,7 @@ public class GameMenuController : MonoBehaviour
     /// </summary>
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject); // Destruye este objeto si ya existe una instancia
-        }
-        else
-        {
-            Instance = this; // Asigna la instancia
-        }
+        Instance = this; // Asigna la instancia
     }
 
     /// <summary>

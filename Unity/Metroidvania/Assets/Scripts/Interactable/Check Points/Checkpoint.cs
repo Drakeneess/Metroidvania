@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 public class Checkpoint : Interactable
 {
     [SerializeField] public CheckpointActivationController ActivationController;
+    [SerializeField] public string checkpointName;
     private int checkpointID;
     public int CheckpointID { get { return checkpointID; } }
     private Player player;
@@ -32,19 +33,49 @@ public class Checkpoint : Interactable
         base.Start();
 
         GetCheckpointID();
+        
+    }
 
+    protected override void OnEnable()
+    {
+        base.OnEnable();
     }
     protected override void Action()
     {
         base.Action();
-        player.RestOnRefugee(this);
+
+        var extras = new List<string>
+        {
+            $"InteractionType: {interactionType}",
+            $"CheckpointID: {checkpointID}",
+            $"CheckpointName: {checkpointName}"
+        };
+        LogBegin(extras);
+
+        player.SetOnRefugee(this);
         SaveDataController.Instance.saveData.lastCheckpointIndex = checkpointID;
+        if (!SaveDataController.Instance.saveData.checkpointsUnlocked.Contains(checkpointID.ToString()))
+        {
+            SaveDataController.Instance.saveData.checkpointsUnlocked.Add(checkpointID.ToString());
+        }
         SaveDataController.SaveData();
+        ActivateRefugee();
+        CheckpointMenuController.Instance.Open(player);
+    }
+    public void ActivateRefugee(bool auto=false)
+    {
         if (!isActivated)
         {
-            ActivationController.Activate(this);
+            if (auto)
+            {
+                ActivationController.Activate(this, 0);
+            }
+            else
+            {
+                ActivationController.Activate(this);
+            }
+            isActivated = true;
         }
-        isActivated = true;
     }
     public void SetPlayer(Player newPlayer)
     {

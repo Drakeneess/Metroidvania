@@ -13,14 +13,8 @@ public class RumbleController : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject); // Destruye este objeto si ya existe una instancia
-            return;
-        }
-
+        
         Instance = this;
-        DontDestroyOnLoad(gameObject); // Permite que el objeto persista entre escenas
     }
     private void Update() {
         if(isContinuousRumble){

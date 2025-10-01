@@ -9,4 +9,9 @@ public class Menu : MonoBehaviour
 
     public bool IsDeployed { get { return isDeployed; } }
     public bool AreOptionsDeployed { get { return areOptionsDeployed; } }
+
+    protected virtual void Start()
+    {
+        GameMenuController.CurrentMode = GameMode.Menu;
+    }
 }

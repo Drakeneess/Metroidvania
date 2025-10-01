@@ -10,8 +10,8 @@ public class ProceduralBlip : MonoBehaviour
 
     [Header("Vibrato")]
     public bool useVibrato = false;
-    public float vibratoFrequency = 6f;
-    public float vibratoIntensity = 10f;
+    public float vibratoFrequency = 6f;   // Hz
+    public float vibratoIntensity = 10f;  // Hz (±)
 
     [Header("Distorsión")]
     public bool useDistortion = false;
@@ -29,83 +29,88 @@ public class ProceduralBlip : MonoBehaviour
 
     private float frequency = 440f;
     private float duration = 0.05f;
-    private float sampleRate = 48000f;
-    private float phase;
-    private int samplesPlayed = 0;
     private int totalSamplesToPlay = 0;
+    private int samplesPlayed = 0;
     private bool isPlaying = false;
+
+    // ✅ usar sample rate real + tiempo en double para precisión
+    private int sampleRate;
+    private double time;         // segundos acumulados (resetea por blip)
+    private double dt;           // 1 / sampleRate
 
     public enum WaveType { Sine, Square, Triangle, Saw, Noise }
 
+    private void Awake()
+    {
+        sampleRate = AudioSettings.outputSampleRate;     // ✅ NO hardcodear 48000
+        if (sampleRate <= 0) sampleRate = 48000;
+        dt = 1.0 / sampleRate;
+    }
+
     public void Play(float freq, float dur)
     {
-        frequency = freq;
-        duration = dur;
+        // ✅ reset total por blip
+        frequency = Mathf.Clamp(freq, 120f, 900f);                  // rango seguro
+        duration  = Mathf.Clamp(dur, 0.02f, 0.15f);
+        totalSamplesToPlay = Mathf.CeilToInt((float)(sampleRate * duration));
         samplesPlayed = 0;
-        totalSamplesToPlay = Mathf.CeilToInt(sampleRate * duration);
+        time = 0.0;                                                 // ✅ reset tiempo
+        previousSample = 0f;
         isPlaying = true;
     }
 
     public void SetEmotion(EmotionType emotion)
     {
-        // Presets emocionales
+        // Presets emocionales (suaves por defecto)
         switch (emotion)
         {
             case EmotionType.Joy:
                 waveType = WaveType.Sine;
-                useVibrato = false;
+                useVibrato = true;  vibratoFrequency = 6f;  vibratoIntensity = 5f;
                 useDistortion = false;
                 useLowPass = false;
                 break;
 
             case EmotionType.Sadness:
                 waveType = WaveType.Triangle;
-                useVibrato = true;
-                vibratoIntensity = 5f;
+                useVibrato = true;  vibratoFrequency = 5f;  vibratoIntensity = 3f;
                 useDistortion = false;
-                useLowPass = true;
-                lowPassAmount = 0.4f;
+                useLowPass = true;  lowPassAmount = 0.45f;
                 break;
 
             case EmotionType.Anger:
                 waveType = WaveType.Square;
                 useVibrato = false;
-                useDistortion = true;
-                distortionAmount = 5f;
-                useLowPass = false;
+                useDistortion = true; distortionAmount = 3f;
+                useLowPass = true;  lowPassAmount = 0.25f; // ✅ recorta agudos
                 break;
 
             case EmotionType.Fear:
                 waveType = WaveType.Sine;
-                useVibrato = true;
-                vibratoIntensity = 15f;
-                vibratoFrequency = 10f;
+                useVibrato = true;  vibratoFrequency = 9f;  vibratoIntensity = 8f;
                 useDistortion = false;
-                useLowPass = true;
-                lowPassAmount = 0.3f;
+                useLowPass = true;  lowPassAmount = 0.35f;
                 break;
 
             case EmotionType.Calm:
                 waveType = WaveType.Sine;
                 useVibrato = false;
                 useDistortion = false;
-                useLowPass = true;
-                lowPassAmount = 0.5f;
+                useLowPass = true;  lowPassAmount = 0.55f;
                 break;
 
             case EmotionType.Contempt:
                 waveType = WaveType.Saw;
                 useVibrato = false;
-                useDistortion = true;
-                distortionAmount = 2f;
-                useLowPass = false;
+                useDistortion = true; distortionAmount = 2f;
+                useLowPass = true;  lowPassAmount = 0.35f; // ✅ recorta brillo
                 break;
 
             case EmotionType.Confidence:
                 waveType = WaveType.Square;
                 useVibrato = false;
                 useDistortion = false;
-                useLowPass = false;
+                useLowPass = true;  lowPassAmount = 0.2f;
                 break;
         }
     }
@@ -116,62 +121,58 @@ public class ProceduralBlip : MonoBehaviour
 
         for (int i = 0; i < data.Length; i += channels)
         {
-            float t = phase / sampleRate;
+            // ✅ vibrato en Hz, estable por tiempo
+            double vibHz = useVibrato ? System.Math.Sin(2.0 * System.Math.PI * vibratoFrequency * time) * vibratoIntensity : 0.0;
+            double f = System.Math.Max(1.0, frequency + vibHz);
+            double phaseAngle = 2.0 * System.Math.PI * f * time;
 
-            // Vibrato
-            float vibrato = useVibrato ? Mathf.Sin(2 * Mathf.PI * vibratoFrequency * t) * vibratoIntensity : 0f;
-            float rawPhase = (frequency + vibrato) * t;
-
-            // Onda base
-            float sample = 0f;
+            float sample;
             switch (waveType)
             {
                 case WaveType.Sine:
-                    sample = Mathf.Sin(2 * Mathf.PI * rawPhase);
+                    sample = (float)System.Math.Sin(phaseAngle);
                     break;
                 case WaveType.Square:
-                    sample = Mathf.Sign(Mathf.Sin(2 * Mathf.PI * rawPhase));
+                    sample = System.Math.Sin(phaseAngle) >= 0 ? 1f : -1f;
                     break;
                 case WaveType.Triangle:
-                    sample = Mathf.PingPong(2 * rawPhase, 1f) * 2f - 1f;
+                    sample = (float)(2.0 * System.Math.Asin(System.Math.Sin(phaseAngle)) / System.Math.PI);
                     break;
                 case WaveType.Saw:
-                    sample = 2f * (rawPhase - Mathf.Floor(rawPhase + 0.5f));
+                    sample = (float)(2.0 * (phaseAngle / (2.0 * System.Math.PI) - System.Math.Floor(phaseAngle / (2.0 * System.Math.PI) + 0.5)));
                     break;
-                case WaveType.Noise:
+                default: // Noise
                     sample = (float)(threadSafeRNG.NextDouble() * 2.0 - 1.0);
                     break;
             }
 
-            // Cuantización
+            // Cuantización 8-bit style
             sample = Mathf.Round(sample * amplitudeSteps) / amplitudeSteps;
 
-            // Ruido emocional
             if (addNoise)
             {
                 float noise = (float)(threadSafeRNG.NextDouble() * 2.0 - 1.0) * noiseAmount;
                 sample += noise;
             }
 
-            // Filtro low-pass
             if (useLowPass)
             {
                 sample = Mathf.Lerp(previousSample, sample, 1f - lowPassAmount);
                 previousSample = sample;
             }
 
-            // Distorsión suave
             if (useDistortion)
                 sample = (float)System.Math.Tanh(sample * distortionAmount);
 
-            // Fade-out para evitar clics
-            float fadeOut = Mathf.Clamp01((float)(totalSamplesToPlay - samplesPlayed) / 50f);
+            // Fade-out corto
+            float fadeOut = Mathf.Clamp01((float)(totalSamplesToPlay - samplesPlayed) / 64f);
             sample *= fadeOut;
 
             for (int c = 0; c < channels; c++)
                 data[i + c] = sample;
 
-            phase++;
+            // ✅ avanzar tiempo con dt estable
+            time += dt;
             samplesPlayed++;
 
             if (samplesPlayed >= totalSamplesToPlay)

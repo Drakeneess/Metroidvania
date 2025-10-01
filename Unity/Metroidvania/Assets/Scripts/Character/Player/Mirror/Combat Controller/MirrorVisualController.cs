@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class MirrorVisualController : MonoBehaviour
@@ -8,56 +6,52 @@ public class MirrorVisualController : MonoBehaviour
     [SerializeField] private ParticleSystem summonEffect;
     [SerializeField] private Mirror mirror;
 
+    private bool isMirrorActive = true;
     private Weapon currentWeapon;
-    private Coroutine reactivateCoroutine;
 
-    public float ReactivateDelay { get; set; }
-    public bool IsActive => mirrorComponents.activeSelf;
-    public Mirror Mirror => mirror;
+    public bool IsActive       => mirrorComponents && mirrorComponents.activeSelf;
+    public bool IsMirrorActive => isMirrorActive;
+    public Mirror Mirror       => mirror;
 
-    /// <summary>
-    /// Activa o desactiva el espejo visualmente y en su lógica.
-    /// </summary>
-    public void SetMirrorState(bool active)
+    public event System.Action OnMirrorShown; // Weapon -> Mirror (espejo visible)
+    public event System.Action OnWeaponShown; // Mirror -> Weapon (arma visible)
+
+    /// Transición Espejo -> Arma (partícula una sola vez).
+    public void TransitionMirrorToWeapon()
     {
-        mirrorComponents?.SetActive(active);
-        mirror?.SetAttackingState(!active);
+        if (!isMirrorActive) return; // ya estaba en arma
+        isMirrorActive = false;
 
-        if (currentWeapon != null)
-            currentWeapon.SetToolActive(!active);
+        mirrorComponents?.SetActive(false);
+        mirror?.SetAttackingState(true);
+        currentWeapon?.SetToolActive(true);
 
-        if (!active && summonEffect != null)
-            summonEffect.Play();
+        summonEffect?.Play();
+        OnWeaponShown?.Invoke();
     }
 
-    /// <summary>
-    /// Reinicia el temporizador para volver a activar el espejo.
-    /// </summary>
-    public void ResetActivationTimer(bool waitWhileHeavyAttack, System.Func<bool> isHeavyAttackActive)
+    /// Transición Arma -> Espejo (partícula una sola vez).
+    public void TransitionWeaponToMirror()
     {
-        if (reactivateCoroutine != null)
-            StopCoroutine(reactivateCoroutine);
+        if (isMirrorActive) return; // ya estaba en espejo
+        isMirrorActive = true;
 
-        reactivateCoroutine = StartCoroutine(ActivateAfterDelay(waitWhileHeavyAttack, isHeavyAttackActive));
-    }
+        mirrorComponents?.SetActive(true);
+        mirror?.SetAttackingState(false);
+        currentWeapon?.SetToolActive(false);
 
-    private IEnumerator ActivateAfterDelay(bool waitWhileHeavyAttack, System.Func<bool> isHeavyAttackActive)
-    {
-        if (waitWhileHeavyAttack)
-        {
-            // Esperar mientras el ataque pesado sigue activo
-            while (isHeavyAttackActive != null && isHeavyAttackActive())
-            {
-                yield return null;
-            }
-        }
-
-        yield return new WaitForSeconds(ReactivateDelay);
-        SetMirrorState(true);
+        summonEffect?.Play();
+        OnMirrorShown?.Invoke();
     }
 
     public void SetNewWeapon(Weapon newWeapon)
     {
+        if (currentWeapon != null && currentWeapon != newWeapon)
+            currentWeapon.SetToolActive(false); // cinturón y tirantes
+
         currentWeapon = newWeapon;
+
+        if (isMirrorActive)
+            currentWeapon.SetToolActive(false);
     }
 }

@@ -72,6 +72,7 @@ public class CharacterJump : MonoBehaviour
         wasGrounded = isGrounded;
         characterMovement.IsOnAir = !isGrounded;
         PlayerAnimationController.IsOnAir(!isGrounded);
+
     }
 
     /// <summary>
@@ -79,7 +80,7 @@ public class CharacterJump : MonoBehaviour
     /// </summary>
     private bool CanJump()
     {
-        bool enoughHealth = player.GetCurrentHealth(HealthType.Mental) > jumpUseCost;
+        bool enoughHealth = player.Health.Get(HealthType.Mental) > jumpUseCost;
 
         if (isGrounded)
         {
@@ -100,6 +101,7 @@ public class CharacterJump : MonoBehaviour
             if (CanJump())
             {
                 PerformJump();
+                PlayerActionLogger.Instance.Log("Jump",new List<string> { $"JumpCount:{jumpCount}" }, true);
             }
         }
     }
@@ -120,7 +122,6 @@ public class CharacterJump : MonoBehaviour
         {
             airJumpTimer = airJumpCooldown;
         }
-        player.TakePhysicalDamage(10);
     }
 
 

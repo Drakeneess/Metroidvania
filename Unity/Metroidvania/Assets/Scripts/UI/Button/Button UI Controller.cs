@@ -60,10 +60,6 @@ public class ButtonUIController : MonoBehaviour
         {
             buttonUI.SetButtonIcon(icons[actualScheme]);
         }
-        else
-        {
-            Debug.LogWarning($"Icon not found for {buttonUI.GetActionType()} or invalid scheme index. {buttonUI.transform.parent.parent.name}");
-        }
     }
 
     public static void UpdateButtonUI(int newScheme)
@@ -85,7 +81,7 @@ public class ControlSchemeIcons
     public Sprite[] icons; // Íconos para cada esquema de control
 }
 
-public enum ActionType
+public enum ActionInputType
 {
     Interaction,
     Movement,

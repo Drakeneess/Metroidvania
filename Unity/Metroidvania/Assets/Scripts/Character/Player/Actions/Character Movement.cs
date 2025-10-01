@@ -67,6 +67,20 @@ public class CharacterMovement : MonoBehaviour
     {
         horizontalInput = value;
         OnMovementInputChanged?.Invoke(horizontalInput);
+
+        string actionType;
+        string directionName;
+        if (value == 0)
+        {
+            actionType = "Stopped";
+            directionName = "None";
+        }
+        else
+        {
+            actionType = "Movement";
+            directionName = value > 0 ? "Right" : "Left";
+        }
+        PlayerActionLogger.Instance.Log(actionType,new List<string> { $"Direction: {directionName}" });
         PlayerAnimationController.SetMoving(value != 0);
         PlayerAnimationController.SetWalkState(value != 0);
     }

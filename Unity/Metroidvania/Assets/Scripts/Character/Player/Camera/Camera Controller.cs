@@ -48,7 +48,7 @@ public class CameraController : MonoBehaviour
     private void FollowPlayer()
     {
         if (player == null) return;
-        float healthPercent = Mathf.Clamp01(player.GetPercentageHealth(HealthType.Physical));
+        float healthPercent = Mathf.Clamp01(player.Health.GetPercent(HealthType.Physical));
 
         // Interpolamos el offset entre el cercano (offsetMin) y el lejano (offsetMax)
         Vector3 dynamicOffset = Vector3.Lerp(offsetMax, offsetMin, healthPercent);

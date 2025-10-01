@@ -14,14 +14,7 @@ public class SettingsValue : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
         Instance = this;
-        DontDestroyOnLoad(gameObject);
 
         settingsFilePath = Application.persistentDataPath + "/settings.json";
         LoadSettings();
@@ -62,8 +55,10 @@ public class SettingsValue : MonoBehaviour
 [System.Serializable]
 public class GameSettings
 {
-    public float rumbleValue = 1f;
-    public float volume = 0.5f;
+    public float rumbleValue = 0.5f;
+    public float fxSound = 0.5f;
+    public float music = 0.5f;
+    public float brightness = 0.5f;
     public int resolutionIndex = 0;
-    public Language language = Language.Spanish;
+    public Language language = Language.English;
 }
