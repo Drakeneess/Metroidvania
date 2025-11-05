@@ -8,6 +8,7 @@ public class CharacterJump : MonoBehaviour
     public float jumpForce = 5.0f;
     public int maxJump = 2;
     public float jumpUseCost = 2.5f;
+
     [Header("Air Jump Cooldown")]
     public float airJumpCooldown = 0.6f;
     private float airJumpTimer = 0f;
@@ -15,9 +16,10 @@ public class CharacterJump : MonoBehaviour
     private Rigidbody rb;
     private Player player;
     private CharacterMovement characterMovement;
-    
+    private PlayerAnimationController anim;
+
     private bool isGrounded;
-    public bool IsGrounded{ get { return isGrounded; } set { isGrounded = value; } }
+    public bool IsGrounded { get { return isGrounded; } set { isGrounded = value; } }
     private int jumpCount;
     private bool wasGrounded;
 
@@ -31,99 +33,88 @@ public class CharacterJump : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         player = GetComponent<Player>();
         characterMovement = GetComponent<CharacterMovement>();
-        jumpCount = 0;
+        StartCoroutine(GetAnimRef());
+    }
+
+    private IEnumerator GetAnimRef()
+    {
+        while (anim == null)
+        {
+            anim = PlayerAnimationController.Instance;
+            yield return null; // espera 1 frame
+        }
     }
 
     void LateUpdate()
     {
         CheckGround();
 
-        // Disminuye el cooldown si está activo
         if (airJumpTimer > 0f)
-        {
             airJumpTimer -= Time.deltaTime;
-        }
     }
 
-    private void OnEnable() 
+    private void OnEnable()
     {
         if (InputActionController.Instance != null)
-        {
             InputActionController.Instance.OnActionTriggered += HandleJumpEvent;
-        }
     }
 
-    private void OnDisable() 
+    private void OnDisable()
     {
         if (InputActionController.Instance != null)
-        {
             InputActionController.Instance.OnActionTriggered -= HandleJumpEvent;
-        }
     }
 
     private void CheckGround()
     {
         isGrounded = Physics.Raycast(groundCheck.position, Vector3.down, groundDistance, groundMask);
-        // Si acaba de aterrizar, se reinicia el contador de saltos
-        if (isGrounded && !wasGrounded)
-        {
-            jumpCount = 0;
-        }
-        wasGrounded = isGrounded;
-        characterMovement.IsOnAir = !isGrounded;
-        PlayerAnimationController.IsOnAir(!isGrounded);
 
+        if (isGrounded && !wasGrounded)
+            jumpCount = 0;
+
+        wasGrounded = isGrounded;
+
+        characterMovement.IsOnAir = !isGrounded;
+        anim.OnAir(!isGrounded); // ✅ reemplazo del viejo SetOnAir
     }
 
-    /// <summary>
-    /// Comprueba si el personaje puede saltar.
-    /// </summary>
     private bool CanJump()
     {
         bool enoughHealth = player.Health.Get(HealthType.Mental) > jumpUseCost;
 
         if (isGrounded)
-        {
             return enoughHealth;
-        }
         else
-        {
             return jumpCount < maxJump && enoughHealth && airJumpTimer <= 0f;
-        }
     }
 
-    /// <summary>
-    /// Realiza el salto, aplicando fuerza y reseteando la velocidad vertical.
-    /// </summary>
     private void HandleJumpEvent(string actionName)
     {
-        if(actionName == "Jump"){
-            if (CanJump())
-            {
-                PerformJump();
-                PlayerActionLogger.Instance.Log("Jump",new List<string> { $"JumpCount:{jumpCount}" }, true);
-            }
+        if (actionName != "Jump") return;
+
+        if (CanJump())
+        {
+            PerformJump();
+            PlayerActionLogger.Instance.Log("Jump",
+                new List<string> { $"JumpCount:{jumpCount}" }, true);
         }
     }
 
     private void PerformJump()
     {
-        PlayerAnimationController.StartJumping();
+        anim.Jump(); // ✅ reemplazo del viejo StartJumping()
 
         rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
         rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
 
         jumpCount++;
         player.UseMentalPulse(jumpUseCost);
+
         RumbleController.RumblePulse(0.05f, 0.2f, 0.1f);
 
-        // Solo activa el cooldown si NO estás en el suelo
         if (!isGrounded)
-        {
             airJumpTimer = airJumpCooldown;
-        }
     }
-
 
     public void StallAir(float duration)
     {
@@ -132,14 +123,11 @@ public class CharacterJump : MonoBehaviour
 
     private IEnumerator StallAirCoroutine(float duration)
     {
-        // Desactivamos la gravedad y “reseteamos” la velocidad vertical
         rb.useGravity = false;
         rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
 
-        // Esperamos un momento
         yield return new WaitForSeconds(duration);
 
-        // Restauramos la gravedad a su valor original
         rb.useGravity = true;
     }
 }

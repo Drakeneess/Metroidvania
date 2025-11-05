@@ -9,6 +9,7 @@ public class StudentManager : MonoBehaviour
     [SerializeField] private Button submitButton;
     [SerializeField] private ApiClient apiClient;
     [SerializeField] private TextMeshProUGUI errorText;
+    [SerializeField] private LogoController logoController;
 
     private void Awake()
     {
@@ -23,6 +24,7 @@ public class StudentManager : MonoBehaviour
         if (SaveDataController.AreSavedData() && SaveDataController.Instance.saveData.studentID != -1)
         {
             gameObject.SetActive(false);
+            logoController.gameObject.SetActive(true);
         }
         else
         {
@@ -78,7 +80,8 @@ public class StudentManager : MonoBehaviour
                 {
                     SaveDataController.Instance.saveData.studentID = studentId;
                     PlaythroughManager.Instance.FindPlaythroughID(studentId);
-                    MainMenuFlowController.Instance.StartMenuFlow();
+                    logoController.gameObject.SetActive(true);
+
                     StartCoroutine(FadeOutAndDisable(gameObject, 0.75f));
                 }
                 else
@@ -157,7 +160,6 @@ public class StudentManager : MonoBehaviour
         yield return new WaitForSeconds(seconds);
         errorText.gameObject.SetActive(false);
     }
-
 }
 
 [System.Serializable]

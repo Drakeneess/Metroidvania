@@ -13,6 +13,7 @@ public class FastTravelMenu : Menu
     private MenuContainer checkpointMenu;
 
     private FastTravelMenuButtons menuButtons;
+    public RectTransform Content => content;
 
     protected override void Start()
     {
@@ -53,25 +54,35 @@ public class FastTravelMenu : Menu
 
     public void Open(Player p, MenuContainer cmc)
     {
+        if (!gameObject.activeInHierarchy)
+            gameObject.SetActive(true); // 🔹 garantizar activación
+
         player = p;
         checkpointMenu = cmc;
         isDeployed = true;
         areOptionsDeployed = true;
 
-        // 🔹 refrescar lista en MenuButtons
         menuButtons?.RefreshButtons();
     }
 
     private void OnSelectCheckpoint(Checkpoint cp)
     {
+        FadeController.Instance.FadeIn(1);
+        Debug.Log($"[FastTravel] Selected checkpoint ID: {cp.CheckpointID} ({cp.name})");
+        Debug.Log($"[FastTravel] Checkpoint world position: {cp.transform.position}");
+
         SaveDataController.Instance.saveData.lastCheckpointIndex = cp.CheckpointID;
         SaveDataController.SaveData();
 
         player.LastCheckpoint = cp;
         player.SetOnCheckpointPosition();
 
+        Debug.Log($"[FastTravel] Player teleported to: {player.transform.position}");
+        FadeController.Instance.FadeOut(1);
+
         Close();
     }
+
 
     public void Close()
     {

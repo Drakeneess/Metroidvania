@@ -1,10 +1,24 @@
-import { Flex, Box, Button, HStack, Text, Spacer } from "@chakra-ui/react";
+import {
+  Box,
+  Flex,
+  Button,
+  HStack,
+  Text,
+  Spacer,
+  IconButton,
+  Collapse,
+  VStack,
+  useDisclosure,
+} from "@chakra-ui/react";
 import { Link as RouterLink, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { HamburgerIcon, CloseIcon } from "@chakra-ui/icons";
 
-function NavButton({ to, children, exact = false }) {
+function NavButton({ to, children, exact = false, onClick }) {
   const location = useLocation();
-  const active = exact ? location.pathname === to : location.pathname.startsWith(to);
+  const active = exact
+    ? location.pathname === to
+    : location.pathname.startsWith(to);
 
   return (
     <Button
@@ -18,8 +32,8 @@ function NavButton({ to, children, exact = false }) {
       bg={active ? "whiteAlpha.200" : "transparent"}
       _hover={{ bg: "whiteAlpha.300", color: "white" }}
       _active={{ transform: "scale(0.98)" }}
-      _focusVisible={{ boxShadow: "0 0 0 2px rgba(159,122,234,0.6)" }} // morado chakra-ish
       transition="all 0.15s ease-out"
+      onClick={onClick}
     >
       {children}
     </Button>
@@ -28,6 +42,7 @@ function NavButton({ to, children, exact = false }) {
 
 export default function AppNav() {
   const { user, logout } = useAuth();
+  const { isOpen, onToggle } = useDisclosure();
   if (!user) return null;
 
   return (
@@ -37,25 +52,22 @@ export default function AppNav() {
       top="0"
       zIndex="100"
       backdropFilter="blur(10px)"
-      bg="blackAlpha.600"
+      bg="blackAlpha.700"
       borderBottom="1px solid"
       borderColor="whiteAlpha.200"
     >
       <Flex
-        as="nav"
         maxW="7xl"
         mx="auto"
-        w="100%"
-        px={{ base: 3, md: 6 }}
+        px={{ base: 4, md: 6 }}
         py={{ base: 3, md: 4 }}
         align="center"
         color="white"
-        gap={3}
-        wrap="wrap"
       >
         {/* Brand */}
         <Text
-          color="white"
+          fontWeight="bold"
+          fontSize="lg"
           bgGradient="linear(to-r, pink.300, purple.300)"
           bgClip="text"
         >
@@ -64,45 +76,73 @@ export default function AppNav() {
 
         <Spacer />
 
-        {/* Links (se apilan en pantallas muy pequeñas) */}
-        <HStack spacing={{ base: 1, md: 2 }} wrap="wrap">
+        {/* Desktop links */}
+        <HStack
+          display={{ base: "none", md: "flex" }}
+          spacing={2}
+          align="center"
+        >
           <NavButton to="/dashboard" exact>
             Inicio
           </NavButton>
-
           {user.role === "admin" && (
             <NavButton to="/dashboard/admin">Administrador</NavButton>
           )}
           {user.role === "psychologist" && (
-            <NavButton to="/dashboard/psychologist">Psicologo</NavButton>
+            <NavButton to="/dashboard/psychologist">Psicólogo</NavButton>
           )}
           {user.role === "teacher" && (
             <NavButton to="/dashboard/teacher">Profesor</NavButton>
           )}
-        </HStack>
-
-        <Spacer />
-
-        {/* User + Logout */}
-        <HStack spacing={3}>
-          <Text
-            fontSize="sm"
-            opacity={0.9}
-            noOfLines={1}
-            maxW={{ base: "140px", md: "260px" }}
-          >
-            {user.full_name} — {user.role}
-          </Text>
-          <Button
-            size="sm"
-            colorScheme="red"
-            onClick={logout}
-            _focusVisible={{ boxShadow: "0 0 0 2px rgba(229,62,62,0.6)" }}
-          >
-            Cerrar sesión
+          <Button size="sm" colorScheme="red" onClick={logout}>
+            Salir
           </Button>
         </HStack>
+
+        {/* Mobile toggle */}
+        <IconButton
+          display={{ base: "flex", md: "none" }}
+          aria-label="Abrir menú"
+          icon={isOpen ? <CloseIcon /> : <HamburgerIcon />}
+          variant="ghost"
+          color="white"
+          onClick={onToggle}
+        />
       </Flex>
+
+      {/* Mobile menu */}
+      <Collapse in={isOpen} animateOpacity>
+        <VStack
+          bg="blackAlpha.800"
+          align="stretch"
+          py={3}
+          px={4}
+          spacing={1}
+          display={{ md: "none" }}
+        >
+          <NavButton to="/dashboard" exact onClick={onToggle}>
+            Inicio
+          </NavButton>
+          {user.role === "admin" && (
+            <NavButton to="/dashboard/admin" onClick={onToggle}>
+              Administrador
+            </NavButton>
+          )}
+          {user.role === "psychologist" && (
+            <NavButton to="/dashboard/psychologist" onClick={onToggle}>
+              Psicólogo
+            </NavButton>
+          )}
+          {user.role === "teacher" && (
+            <NavButton to="/dashboard/teacher" onClick={onToggle}>
+              Profesor
+            </NavButton>
+          )}
+          <Button size="sm" colorScheme="red" onClick={logout}>
+            Cerrar sesión
+          </Button>
+        </VStack>
+      </Collapse>
     </Box>
   );
 }

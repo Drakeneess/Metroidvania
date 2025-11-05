@@ -15,10 +15,8 @@ public class LanguageController : MonoBehaviour
     {
         Instance = this;
         InitializeLanguages();
-    }
 
-    private void Start()
-    {
+        // ✅ aplicar el idioma inmediatamente
         currentLanguage = SettingsValue.Instance.Settings.language;
         SetLanguage(currentLanguage);
     }
@@ -27,7 +25,7 @@ public class LanguageController : MonoBehaviour
     private static void InitializeLanguages()
     {
         Instance.languageDict.Add(Language.English, "en");
-        Instance.languageDict.Add(Language.Espanol, "es");
+        Instance.languageDict.Add(Language.Español, "es");
     }
 
     // Cambiar el idioma
@@ -53,5 +51,5 @@ public class LanguageController : MonoBehaviour
 public enum Language
 {
     English,
-    Espanol,
+    Español,
 }

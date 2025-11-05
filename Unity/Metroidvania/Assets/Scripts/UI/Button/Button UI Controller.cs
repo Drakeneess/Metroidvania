@@ -5,7 +5,7 @@ public class ButtonUIController : MonoBehaviour
 {
     [Header("Game Icons")]
     public List<ControlSchemeIcons> controlSchemeIcons;
-    private static Dictionary<ActionType, Sprite[]> iconsPerAction = new Dictionary<ActionType, Sprite[]>();
+    private static Dictionary<ActionInputType, Sprite[]> iconsPerAction = new Dictionary<ActionInputType, Sprite[]>();
 
     private static List<ButtonUI> registeredButtons = new List<ButtonUI>();
     private static int actualScheme;
@@ -77,7 +77,7 @@ public class ButtonUIController : MonoBehaviour
 [System.Serializable]
 public class ControlSchemeIcons
 {
-    public ActionType actionType;
+    public ActionInputType actionType;
     public Sprite[] icons; // Íconos para cada esquema de control
 }
 

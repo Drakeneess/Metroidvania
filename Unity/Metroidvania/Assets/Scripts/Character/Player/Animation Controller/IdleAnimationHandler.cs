@@ -27,7 +27,6 @@ public class IdleAnimationHandler
 
         if (idleRoutine == null)
             idleRoutine = coroutineRunner.StartCoroutine(IdleTimerCoroutine());
-
     }
 
     public void StopIdle()

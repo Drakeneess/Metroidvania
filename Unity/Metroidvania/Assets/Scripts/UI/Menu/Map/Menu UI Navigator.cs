@@ -81,25 +81,24 @@ public class MenuUINavigator : MonoBehaviour
     {
         if (actionName != "CloseMap") return;
 
-        // Protecciones contra referencias destruidas (null de Unity)
         if (mapContainer != null)
         {
             ResetMapView();
             PlayerActionLogger.Instance.Log("CloseMap");
         }
 
-        if (mapCanvas) // usa la null de Unity
+        if (mapCanvas)
         {
-            // Extra: evita llamar SetActive si ya está desactivado
             if (mapCanvas.activeSelf)
                 mapCanvas.SetActive(false);
         }
         else
         {
-            // Si llegó aquí destruido, sencillamente ignoramos
-            // (o loguea para rastrear quién lo destruye)
             Debug.LogWarning("MenuUINavigator: mapCanvas ya no existe al cerrar.");
         }
+
+        // 🔹 Notifica el cierre para “latch” de apertura
+        MapEvents.OnMapClosed?.Invoke();
     }
 
     // ------------------ Pan ------------------

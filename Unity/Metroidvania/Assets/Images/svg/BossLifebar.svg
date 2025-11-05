@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="750mm"
+   height="250mm"
+   viewBox="0 0 937.5 312.5"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="BossLifebar.svg"
+   inkscape:version="1.4 (86a8ad7, 2024-10-11)"
+   inkscape:export-filename="..\png\HUD\BossLifebarContainer.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     inkscape:document-units="mm"
+     inkscape:export-bgcolor="#ffffff00"
+     inkscape:zoom="0.31996944"
+     inkscape:cx="1254.8073"
+     inkscape:cy="595.36936"
+     inkscape:window-width="1920"
+     inkscape:window-height="1094"
+     inkscape:window-x="-11"
+     inkscape:window-y="-11"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1">
+    <linearGradient
+       id="linearGradient7"
+       inkscape:collect="always">
+      <stop
+         style="stop-color:#ffffff;stop-opacity:1;"
+         offset="0.42086956"
+         id="stop7" />
+      <stop
+         style="stop-color:#ffffff;stop-opacity:0;"
+         offset="0.96869564"
+         id="stop8" />
+    </linearGradient>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath25">
+      <rect
+         style="fill:#ff0000;stroke:none;stroke-width:3;stroke-linecap:square;stroke-linejoin:miter;paint-order:stroke markers fill;stop-color:#000000"
+         id="rect25-8"
+         width="78"
+         height="45.033199"
+         x="763.61322"
+         y="452.82422" />
+    </clipPath>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient118859"
+       id="linearGradient47"
+       x1="20"
+       y1="50"
+       x2="80"
+       y2="50"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(1.1666667,0,0,1.1666667,12.377344,-58.333337)" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient119593"
+       id="linearGradient46"
+       x1="0"
+       y1="0"
+       x2="100"
+       y2="100"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient118859">
+      <stop
+         style="stop-color:#fc0000;stop-opacity:1;"
+         offset="0"
+         id="stop118855" />
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="1"
+         id="stop118857" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient119593">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop119589" />
+      <stop
+         style="stop-color:#f70000;stop-opacity:1;"
+         offset="1"
+         id="stop119591" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient3990"
+       inkscape:swatch="gradient">
+      <stop
+         style="stop-color:#ffffff;stop-opacity:1;"
+         offset="0"
+         id="stop3990" />
+      <stop
+         style="stop-color:#ffffff;stop-opacity:0;"
+         offset="1"
+         id="stop3991" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient7"
+       id="linearGradient8"
+       x1="0"
+       y1="52.26005"
+       x2="937.50025"
+       y2="52.26005"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       id="path5"
+       style="fill:url(#linearGradient8);fill-opacity:1;stroke-width:0.739442;stroke-linecap:round;stroke-linejoin:bevel;stroke-dasharray:0.739442, 0.739442;paint-order:fill markers stroke"
+       d="M 875.07319 0 L 777.59916 2.0295918 L 661.50677 11.162109 L 560.74742 26.384048 L 416.18002 48.708266 L 317.6111 36.531361 L 231.08925 11.162109 L 133.61587 5.0739796 L 53.665328 13.191701 L 18.618372 16.236089 L 7.6661986 32.472178 L 10.952174 47.69347 L 33.951415 50.737858 L 51.474893 71.033131 L 30.666086 70.018335 L 22.999242 78.136702 L 0 87.269219 L 3.2853291 104.5201 L 66.807936 102.49116 L 108.42555 86.254423 L 153.32914 70.018335 L 209.1849 84.225478 L 294.61186 92.343199 L 331.8486 99.44677 L 393.18077 84.225478 L 429.32262 69.003539 L 462.1785 74.077518 L 566.22383 69.003539 L 639.60307 69.003539 L 761.17123 81.18109 L 841.12177 90.313607 L 894.78645 97.417179 L 925.45254 73.062722 L 937.50025 53.782246 L 913.40547 35.516565 L 929.83341 14.206497 L 875.07319 0 z M 869.65556 9.3024036 L 923.68585 21.120803 L 907.47689 38.848403 L 931.24999 54.043212 L 919.36312 70.082284 L 889.10657 90.342029 L 836.15631 84.432829 L 757.27224 76.835748 L 637.32478 66.705875 L 564.92416 66.705875 L 462.26635 70.926548 L 429.84843 66.705875 L 394.18782 79.367893 L 333.67407 92.030557 L 296.93342 86.121357 L 212.64593 79.367893 L 157.53495 67.550139 L 113.23017 81.05642 L 70.874872 98.697462 L 8.1997577 100.38599 L 4.4409433 88.619266 L 27.134002 81.021539 L 34.69814 74.268721 L 58.072036 74.853957 L 39.490483 44.016692 L 18.089981 42.259694 L 13.814402 36.315612 L 24.62059 22.809331 L 59.199874 20.27654 L 138.08395 13.523722 L 234.25831 18.588658 L 319.62583 39.692667 L 416.88088 49.822539 L 559.52075 31.250676 L 658.93716 18.588658 L 773.4812 10.990931 L 869.65556 9.3024036 z "
+       inkscape:export-filename="..\png\png\HUD\BossLifebarContainer.png"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96" />
+    <path
+       style="fill:#ffffff;fill-opacity:1;stroke-width:0.739442;stroke-linecap:round;stroke-linejoin:bevel;stroke-dasharray:0.739442, 0.739442;paint-order:fill markers stroke"
+       d="M 51.474882,215.7411 33.95152,195.44588 10.952104,192.4016 7.6664723,177.18018 18.618576,160.944 l 35.046727,-3.04428 79.950337,-8.11809 97.47372,6.08857 86.5216,25.36903 98.56894,12.17713 144.56776,-22.32475 100.75932,-15.22141 116.0923,-9.13285 97.47371,-2.02952 54.76053,14.20665 -16.42816,21.30998 24.09462,18.2657 -12.0473,19.28046 -30.66591,24.35427 -53.66529,-7.10332 -79.95035,-9.13286 -121.56833,-12.17713 h -73.3791 l -104.04498,5.0738 -32.85629,-5.0738 L 393.18048,228.933 331.8487,244.15441 294.61156,237.05108 209.18515,228.933 153.32943,214.72634 108.42581,230.96252 66.807826,247.1987 3.2856303,249.22823 0,231.97729 l 22.999415,-9.13286 7.666472,-8.11809 z"
+       id="path6"
+       inkscape:export-filename="..\png\png\HUD\BossLifebar.png"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96" />
+  </g>
+</svg>

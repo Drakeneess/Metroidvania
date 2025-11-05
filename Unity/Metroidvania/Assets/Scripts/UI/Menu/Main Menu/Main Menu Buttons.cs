@@ -6,6 +6,7 @@ public class MainMenuButtons : MenuButtons
 {
     [SerializeField] private MenuContainer settingsContainer;
     [SerializeField] private MenuContainer menuButtonsContainer;
+    [SerializeField] private GameObject GameUI;
     private bool WaitForSelect = true;
     
     protected override void Awake()
@@ -39,6 +40,7 @@ public class MainMenuButtons : MenuButtons
         BeginGame();
     }
     private void Options() {
+        MenuInputLock.SetBlocked(true);
         MenuTransition.Instance.SwitchTo(settingsContainer);
     }
     private void QuitGame() {
@@ -47,10 +49,13 @@ public class MainMenuButtons : MenuButtons
     }
     protected override void NavigateVertical(Vector2 direction)
     {
+        if (MenuInputLock.Blocked) return;
+
         if (direction.y > 0) // Arriba
         {
             currentSelection--;
-            if(currentSelection==0 && !SaveDataController.AreSavedData()){
+            if (currentSelection == 0 && !SaveDataController.AreSavedData())
+            {
                 currentSelection--;
             }
         }
@@ -67,7 +72,8 @@ public class MainMenuButtons : MenuButtons
         else if (currentSelection >= buttons.Length)
         {
             currentSelection = 0; // Volver al primer botón
-            if(!SaveDataController.AreSavedData()){
+            if (!SaveDataController.AreSavedData())
+            {
                 currentSelection++;
             }
         }
@@ -75,8 +81,16 @@ public class MainMenuButtons : MenuButtons
         UpdateButtonSelection();
     }
 
+    protected override void Select(string actionName)
+    {
+        if (MenuInputLock.Blocked) return;
+        base.Select(actionName);
+    }
     private void BeginGame(){
         gameObject.SetActive(false);
+        GameSessionManager.Instance.StartGameSession();
+        MusicController.Instance.PlayTheme(1);
+        GameUI.SetActive(true);
         GameMenuController.CurrentMode = GameMode.Game;
     }
 }

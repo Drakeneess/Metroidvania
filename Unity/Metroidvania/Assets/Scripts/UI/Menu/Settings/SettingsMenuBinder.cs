@@ -9,7 +9,6 @@ public class SettingsMenuBinder : MonoBehaviour
     {
         LoadFromSettings();
 
-        // suscribir a cambios
         foreach (var ctrl in buttons.controls)
         {
             if (ctrl == null) continue;
@@ -36,14 +35,32 @@ public class SettingsMenuBinder : MonoBehaviour
 
         switch (idx)
         {
-            case 0 when control is SettingsSlider s: gs.rumbleValue = s.Value; break;
-            case 1 when control is SettingsSlider s: gs.music = s.Value; break;
-            case 2 when control is SettingsSlider s: gs.fxSound = s.Value; break;
-            case 3 when control is SettingsSlider s: gs.brightness = s.Value; break;
-            case 4 when control is SettingsCarousel c: gs.resolutionIndex = c.currentIndex; break;
+            case 0 when control is SettingsSlider s:
+                gs.rumbleValue = s.Value;
+                
+                break;
+
+            case 1 when control is SettingsSlider s:
+                gs.music = s.Value * 100f; // 🔹 0–1 → 0–100
+                MusicController.Instance?.SetGlobalMusicVolume(gs.music);
+                break;
+
+            case 2 when control is SettingsSlider s:
+                gs.fxSound = s.Value;
+                SFXController.Instance?.SetGlobalSFXVolume(gs.fxSound * 100f);
+                break;
+
+            case 3 when control is SettingsSlider s:
+                gs.brightness = s.Value;
+                break;
+
+            case 4 when control is SettingsCarousel c:
+                gs.resolutionIndex = c.currentIndex;
+                break;
+
             case 5 when control is SettingsCarousel c:
                 gs.language = (Language)c.currentIndex;
-                LanguageController.SetLanguage(gs.language); // 🔥 tiempo real
+                LanguageController.SetLanguage(gs.language);
                 break;
         }
 
@@ -55,12 +72,12 @@ public class SettingsMenuBinder : MonoBehaviour
         if (SettingsValue.Instance == null) return;
         var gs = SettingsValue.Instance.Settings;
 
-        // Idiomas primero
+        // 🔹 Cargar idiomas primero
         if (buttons.controls.Length > 5 && buttons.controls[5] is SettingsCarousel langCarousel)
             LoadLanguagesIntoCarousel(langCarousel);
 
         Apply(0, gs.rumbleValue);
-        Apply(1, gs.music);
+        Apply(1, gs.music / 100f); // 🔹 convertir 0–100 → 0–1 para slider
         Apply(2, gs.fxSound);
         Apply(3, gs.brightness);
         Apply(4, gs.resolutionIndex);
@@ -89,13 +106,8 @@ public class SettingsMenuBinder : MonoBehaviour
     {
         carousel.options.Clear();
         foreach (Language lang in Enum.GetValues(typeof(Language)))
-        {
-            carousel.options.Add(lang.ToString()); // Si quieres "English", "Espanol"
-            // o podrías mapearlos con LanguageController.GetLanguageString()
-        }
+            carousel.options.Add(lang.ToString());
+
         carousel.SetIndex((int)SettingsValue.Instance.Settings.language);
     }
 }
-
-
-    

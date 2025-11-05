@@ -112,6 +112,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Pause",
+                    "type": "Button",
+                    "id": "85e67390-0b92-461a-9cbc-879bcf4b0f47",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -283,7 +292,7 @@
                 {
                     "name": "",
                     "id": "fdcbe4de-86cb-4bea-8f16-8f37470122b2",
-                    "path": "<Keyboard>/shift",
+                    "path": "<Keyboard>/leftCtrl",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -519,6 +528,28 @@
                     "processors": "",
                     "groups": "",
                     "action": "Cure",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a35d65fe-9d2b-4d43-922a-0d09a6f48eb3",
+                    "path": "<Keyboard>/escape",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pause",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "ef714a74-fc76-4a8d-9eef-0ee4ea36db26",
+                    "path": "<Gamepad>/start",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pause",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
@@ -903,7 +934,7 @@
                 {
                     "name": "",
                     "id": "df5e43c9-8c7a-45a6-b86d-afe3054f5c46",
-                    "path": "<Gamepad>/buttonWest",
+                    "path": "<Gamepad>/buttonSouth",
                     "interactions": "",
                     "processors": "",
                     "groups": "",

@@ -50,7 +50,6 @@ public class FadeController : MonoBehaviour
         onComplete?.Invoke();
     }
 
-
     private void SetAlpha(float a)
     {
         if (!fadeImage) return;

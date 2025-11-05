@@ -7,7 +7,7 @@ public class ButtonUI : MonoBehaviour
     private Image buttonIcon; // Imagen asociada al botón
 
     [SerializeField]
-    private ActionType actionType; // Tipo de acción asociada al botón (opcional)
+    private ActionInputType actionType; // Tipo de acción asociada al botón (opcional)
 
     private void Awake()
     {
@@ -63,7 +63,7 @@ public class ButtonUI : MonoBehaviour
     /// Obtiene el tipo de acción asociado al botón (opcional).
     /// </summary>
     /// <returns>El tipo de acción como enum.</returns>
-    public ActionType GetActionType()
+    public ActionInputType GetActionType()
     {
         return actionType;
     }

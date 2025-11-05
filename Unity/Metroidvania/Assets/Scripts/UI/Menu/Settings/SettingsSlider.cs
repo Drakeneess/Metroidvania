@@ -104,6 +104,7 @@ public class SettingsSlider : SettingsControlBase
 
         // 🔔 Notificar cambio
         NotifyValueChanged();
+        NotifyChanged();
     }
 
 

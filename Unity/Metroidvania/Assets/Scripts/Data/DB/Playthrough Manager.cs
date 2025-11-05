@@ -5,22 +5,50 @@ public class PlaythroughManager : MonoBehaviour
     public static PlaythroughManager Instance { get; private set; }
     private ApiClient apiClient;
 
-    private void Start()
+    /// <summary>
+    /// Evento que se dispara cuando ya tenemos studentID y playthroughID listos.
+    /// Param1 = studentID, Param2 = playthroughID
+    /// </summary>
+    public static event System.Action<int, int> OnPlaythroughReady;
+
+    private void Awake()
     {
         Instance = this;
-        apiClient = GetComponent<ApiClient>();
-        if (SaveDataController.AreSavedData() && SaveDataController.Instance.saveData.studentID != -1)
-        {
-            FindPlaythroughID(SaveDataController.Instance.saveData.studentID);
-        }      
     }
 
+    private void Start()
+    {
+        apiClient = apiClient ?? GetComponent<ApiClient>();
+
+        // Caso: Ya existen datos guardados (segunda ejecución y posteriores)
+        if (SaveDataController.AreSavedData())
+        {
+            int sid = SaveDataController.Instance.saveData.studentID;
+            int pid = SaveDataController.Instance.saveData.playthroughID;
+
+            if (sid != -1 && pid != -1)
+            {
+                Debug.Log("▶️ PlaythroughManager: Datos existentes detectados. Disparando OnPlaythroughReady.");
+                OnPlaythroughReady?.Invoke(sid, pid);
+            }
+            else if (sid != -1 && pid == -1)
+            {
+                // Tenemos studentID pero nunca creamos playthrough
+                Debug.Log("ℹ️ PlaythroughManager: Hay studentID pero no playthroughID. Creando...");
+                FindPlaythroughID(sid);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Llamado por StudentManager cuando se obtiene por primera vez el studentID
+    /// </summary>
     public void FindPlaythroughID(int studentID)
     {
         CreateOrGetPlaythrough(studentID, "v1.0");
     }
 
-    public void CreateOrGetPlaythrough(int studentId, string version)
+    private void CreateOrGetPlaythrough(int studentId, string version)
     {
         PlaythroughData data = new PlaythroughData
         {
@@ -41,14 +69,24 @@ public class PlaythroughManager : MonoBehaviour
                 {
                     int playthroughId = int.Parse(parsed.data.id_playthrough);
                     SaveDataController.Instance.saveData.playthroughID = playthroughId;
+
+                    Debug.Log($"🎮 Playthrough listo: {playthroughId} (existing: {parsed.data.existing})");
+
+                    // ✅ Ahora sí tenemos ambos IDs → Disparar evento
+                    OnPlaythroughReady?.Invoke(studentId, playthroughId);
+                }
+                else
+                {
+                    Debug.LogError("❌ Error: respuesta inválida al crear/obtener playthrough.");
                 }
             },
-            error => Debug.LogError(error)
+            error =>
+            {
+                Debug.LogError($"❌ Error PlaythroughManager: {error}");
+            }
         ));
     }
-
 }
-
 
 [System.Serializable]
 public class PlaythroughData

@@ -1,0 +1,16 @@
+# --- Framework Web ---
+flask
+
+# --- Data Analysis ---
+pandas
+numpy
+scikit-learn
+
+# --- Database ---
+mysql-connector-python
+firebase-admin
+google-cloud-firestore
+google-auth
+
+# --- Utilidades ---
+python-dotenv

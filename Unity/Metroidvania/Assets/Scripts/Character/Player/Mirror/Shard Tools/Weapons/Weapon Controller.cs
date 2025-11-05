@@ -1,54 +1,38 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System;
+using System.Collections;
 
 public class WeaponController : MonoBehaviour
 {
     public static WeaponController Instance { get; private set; }
+
+    [Header("Player Weapons")]
     public Weapon[] weapons;
     public Image weaponImageUI;
     public WeaponChangeController weaponChange;
 
     private Weapon currentWeapon;
+    private int currentWeaponIndex = -1;
+
     public Weapon CurrentWeapon
     { 
         get => currentWeapon;
-        private set => currentWeapon = value; // sin UI aquí
+        private set => currentWeapon = value;
     }
-
-    private int currentWeaponIndex = 0;
 
     void Awake()
     {
         Instance = this;
-
         if (weaponChange == null)
-            weaponChange = FindObjectOfType<WeaponChangeController>();
-
-        // Arma inicial: pedimos el cambio (si el espejo está activo, se aplicará ya)
-        currentWeapon = weapons[currentWeaponIndex];
-        weaponChange?.RequestWeaponChange(currentWeapon);
-    }
-
-    void Start()
-    {
-        int savedWeapon = SaveDataController.Instance.saveData.currentWeapon;
-        if (SaveDataController.AreSavedData() && savedWeapon != -1)
-        {
-            foreach (Weapon weapon in weapons)
-            {
-                if (savedWeapon == weapon.GetToolID())
-                {
-                    ApplyWeaponChange(weapon);
-                }
-            }
-        }
+            weaponChange = FindObjectOfType<WeaponChangeController>(true);
     }
 
     private void OnEnable()
     {
+        // 🔥 Nos aseguramos de que primero esté cargado el save
+        StartCoroutine(LoadWeaponOnEnable());
+
         if (InputActionController.Instance != null)
             InputActionController.Instance.OnVector2Input += ChangeWeapon;
     }
@@ -59,9 +43,83 @@ public class WeaponController : MonoBehaviour
             InputActionController.Instance.OnVector2Input -= ChangeWeapon;
     }
 
+    private IEnumerator LoadWeaponOnEnable()
+    {
+        // ✅ Espera 1 frame para asegurar que SaveDataController ya inicializó
+        yield return null;
+
+        int savedWeaponID = SaveDataController.Instance.saveData.currentWeapon;
+
+        if (SaveDataController.AreSavedData() && savedWeaponID != -1)
+        {
+            foreach (Weapon w in weapons)
+            {
+                if (savedWeaponID == w.GetToolID())
+                {
+                    EquipWeapon(w);
+                    yield break;
+                }
+            }
+        }
+
+        // ✅ Si no hay armas desbloqueadas → sin arma
+        if (!HasUnlockedWeapon())
+        {
+            EquipWeapon(null);
+            yield break;
+        }
+
+        // ✅ Cargar primera arma desbloqueada
+        foreach (var w in weapons)
+        {
+            if (w.GetUnlocked())
+            {
+                EquipWeapon(w);
+                yield break;
+            }
+        }
+    }
+
+    private bool HasUnlockedWeapon()
+    {
+        foreach (var w in weapons)
+            if (w.GetUnlocked()) return true;
+        return false;
+    }
+
+    public void EquipWeapon(Weapon newWeapon)
+    {
+        if (newWeapon == null)
+        {
+            CurrentWeapon = null;
+            currentWeaponIndex = -1;
+            UpdateWeaponUI(null);
+            SaveDataController.Instance.saveData.currentWeapon = -1;
+            return;
+        }
+
+        CurrentWeapon = newWeapon;
+        currentWeaponIndex = Array.IndexOf(weapons, newWeapon);
+
+        UpdateWeaponUI(newWeapon.GetToolImage());
+
+        SaveDataController.Instance.saveData.currentWeapon = newWeapon.GetToolID();
+
+        CombatController combat = FindObjectOfType<CombatController>();
+        combat?.SetActiveWeapon(newWeapon);
+    }
+
+    private void UpdateWeaponUI(Sprite sprite)
+    {
+        if (weaponImageUI == null) return;
+
+        weaponImageUI.sprite = sprite;
+        weaponImageUI.enabled = (sprite != null);
+    }
+
     private void ChangeWeapon(string actionName, Vector2 value)
     {
-        if(actionName != "ChangeWeapon") return;
+        if (actionName != "ChangeWeapon") return;
 
         int newWeaponIndex = -1;
         if      (value == Vector2.up)    newWeaponIndex = 0;
@@ -70,33 +128,12 @@ public class WeaponController : MonoBehaviour
         else if (value == Vector2.right) newWeaponIndex = 3;
 
         if (newWeaponIndex < 0 || newWeaponIndex >= weapons.Length) return;
-        if (!weapons[newWeaponIndex].GetUnlocked()) { Debug.Log("Weapon locked."); return; }
 
-        // Evita re-aplicar la misma
-        if (newWeaponIndex == currentWeaponIndex) return;
+        var desired = weapons[newWeaponIndex];
 
-        currentWeaponIndex = newWeaponIndex;
-        var desired = weapons[currentWeaponIndex];
-        CurrentWeapon = desired;
+        if (!desired.GetUnlocked()) return;
+        if (desired == CurrentWeapon) return;
 
-        // 👉 Pide el cambio (bloquea o encola según estado del espejo)
         weaponChange?.RequestWeaponChange(desired);
-    }
-
-    // Llamado SOLO cuando el cambio realmente se aplicó
-    public void ApplyWeaponChange(Weapon newWeapon)
-    {
-        CurrentWeapon = newWeapon;
-        if (newWeapon != null)
-        {
-            UpdateWeaponUI(newWeapon.GetToolImage());
-            SaveDataController.Instance.saveData.currentWeapon = newWeapon.GetToolID();
-        }
-    }
-
-    private void UpdateWeaponUI(Sprite sprite)
-    {
-        if (weaponImageUI != null && sprite != null && weaponImageUI.sprite != sprite)
-            weaponImageUI.sprite = sprite;
     }
 }

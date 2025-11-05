@@ -65,7 +65,6 @@ public class MainMenuFlowController : MonoBehaviour
 
     void Start()
     {
-        if (SaveDataController.AreSavedData()) autoStart = true;
 
         if (autoStart && !startedBySceneEvent && !startedManuallyFallback)
         {
@@ -146,13 +145,18 @@ public class MainMenuFlowController : MonoBehaviour
 
     private IEnumerator WaitBeforeEnablingButtons()
     {
+        // Durante esta espera el menú NO debe aceptar input
+        MenuInputLock.SetBlocked(true);
+
         yield return new WaitForSeconds(2f);
+
         MainMenuEvents.TriggerButtonsReady();
     }
 
     private void HandleButtonsReady()
     {
         buttonsReady = true;
+        MenuInputLock.SetBlocked(false);
     }
 
     private void ActivateMenuButtons()

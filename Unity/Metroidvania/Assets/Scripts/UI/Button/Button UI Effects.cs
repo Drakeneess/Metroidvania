@@ -1,201 +1,189 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class ButtonUIEffects : MonoBehaviour
 {
-    public ButtonUIEffectsType[] effectTypes; // Array de efectos a aplicar
+    public ButtonUIEffectsType[] effectTypes;
 
-    [Header("Scale Effect")]
+    [Header("Scale Effect (S-B / Hold)")]
     public Vector3 scaleMultiplier = new Vector3(1.2f, 1.2f, 1f);
-    public float scaleDuration = 0.5f;
+    public float scaleDuration = 0.25f;
 
     [Header("Fade Effects")]
     public float fadeDuration = 0.5f;
 
     [Header("Shake Effect")]
-    public float shakeIntensity = 10f;
-    public float shakeDuration = 0.5f;
+    public float shakeIntensity = 8f;
+    public float shakeDuration = 0.4f;
 
     [Header("Blink Effect")]
-    public float blinkSpeed = 0.2f;
-    public bool isBlinkContinuous = false;
+    public float blinkSpeed = 0.25f;
+    public bool continuousBlink = false;
     public float blinkDuration = 1f;
 
+    [Header("Pressed Effect (P2 – Sink)")]
+    public float pressScale = 0.85f;
+    public float pressDuration = 0.12f;
+
     private Image image;
+    private CanvasGroup canvasGroup;
+
     private Vector3 originalScale;
     private Color originalColor;
 
-    private Coroutine activeCoroutine = null; // Variable para trackear la coroutine activa
+    private Dictionary<ButtonUIEffectsType, Coroutine> activeCoroutines = new();
 
-    private void Start()
+    private void Awake()
     {
         image = GetComponent<Image>();
+        canvasGroup = GetComponent<CanvasGroup>();
+
+        if (canvasGroup == null)
+        {
+            canvasGroup = gameObject.AddComponent<CanvasGroup>();
+        }
+
         originalScale = transform.localScale;
-        originalColor = image != null ? image.color : Color.white;
+        originalColor = image ? image.color : Color.white;
     }
 
-    private void OnEnable() {
-        ApplyAllEffects(); // Iniciar efectos al principio
+    private void OnEnable()
+    {
+        ApplyAllEffects();
     }
 
     public void ApplyAllEffects()
     {
-        foreach (var effectType in effectTypes)
+        foreach (var type in effectTypes)
         {
-            ApplyEffect(effectType);
+            StartEffect(type);
         }
     }
 
-    private void ApplyEffect(ButtonUIEffectsType effectType)
+    public void StartEffect(ButtonUIEffectsType type)
     {
-        if (activeCoroutine != null) // Si ya hay una coroutine en ejecución, cancelarla
-        {
-            StopCoroutine(activeCoroutine);
-        }
+        if (activeCoroutines.ContainsKey(type) && activeCoroutines[type] != null)
+            StopCoroutine(activeCoroutines[type]);
 
-        switch (effectType)
+        Coroutine c = type switch
         {
-            case ButtonUIEffectsType.Shake:
-                activeCoroutine = StartCoroutine(ShakeEffect());
-                break;
-            case ButtonUIEffectsType.Blink:
-                activeCoroutine = StartCoroutine(BlinkEffect());
-                break;
-            case ButtonUIEffectsType.FadeIn:
-                activeCoroutine = StartCoroutine(FadeEffect(1f));
-                break;
-            case ButtonUIEffectsType.FadeOut:
-                activeCoroutine = StartCoroutine(FadeEffect(0f));
-                break;
-            case ButtonUIEffectsType.Scale:
-                activeCoroutine = StartCoroutine(ScaleEffect());
-                break;
-            default:
-                Debug.LogWarning("No effect selected.");
-                break;
-        }
-    }
+            ButtonUIEffectsType.Scale    => StartCoroutine(ScaleEffect()),
+            ButtonUIEffectsType.FadeIn   => StartCoroutine(FadeEffect(1f)),
+            ButtonUIEffectsType.FadeOut  => StartCoroutine(FadeEffect(0f)),
+            ButtonUIEffectsType.Shake    => StartCoroutine(ShakeEffect()),
+            ButtonUIEffectsType.Blink    => StartCoroutine(BlinkEffect()),
+            ButtonUIEffectsType.Pressed  => StartCoroutine(PressedEffect()),
+            _ => null
+        };
 
-    public void ApplyIntroEffect()
-    {
-        foreach (var effectType in effectTypes)
-        {
-            if (effectType == ButtonUIEffectsType.FadeIn)
-            {
-                ApplyEffect(effectType);
-            }
-        }
-    }
-
-    public void ApplyOutEffect()
-    {
-        foreach (var effectType in effectTypes)
-        {
-            if (effectType == ButtonUIEffectsType.Scale || effectType == ButtonUIEffectsType.FadeOut)
-            {
-                ApplyEffect(effectType);
-            }
-        }
+        if (c != null)
+            activeCoroutines[type] = c;
     }
 
     private IEnumerator ScaleEffect()
     {
-        Vector3 targetScale = originalScale * scaleMultiplier.x;
-        return AnimateScale(targetScale);
+        Vector3 targetScale = Vector3.Scale(originalScale, scaleMultiplier);
+        float elapsed = 0f;
+
+        while (elapsed < scaleDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / scaleDuration;
+            transform.localScale = Vector3.Lerp(originalScale, targetScale, t);
+            yield return null;
+        }
+
+        transform.localScale = targetScale; // stays scaled (S-B)
     }
 
-    private IEnumerator FadeEffect(float targetAlpha)
+    private IEnumerator FadeEffect(float target)
     {
-        if (image != null)
+        float start = canvasGroup.alpha;
+        float elapsed = 0f;
+
+        while (elapsed < fadeDuration)
         {
-            Color startColor = image.color;
-            float elapsedTime = 0f;
-
-            while (elapsedTime < fadeDuration)
-            {
-                elapsedTime += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsedTime / fadeDuration);
-                Color newColor = image.color;
-                newColor.a = Mathf.Lerp(startColor.a, targetAlpha, t);
-                image.color = newColor;
-                yield return null;
-            }
-
-            // Ensure the final alpha is set correctly
-            Color finalColor = image.color;
-            finalColor.a = targetAlpha;
-            image.color = finalColor;
+            elapsed += Time.deltaTime;
+            canvasGroup.alpha = Mathf.Lerp(start, target, elapsed / fadeDuration);
+            yield return null;
         }
+
+        canvasGroup.alpha = target;
     }
 
     private IEnumerator ShakeEffect()
     {
-        Vector3 originalPosition = transform.localPosition;
-        float elapsedTime = 0f;
+        Vector3 originalPos = transform.localPosition;
+        float elapsed = 0f;
 
-        while (elapsedTime < shakeDuration)
+        while (elapsed < shakeDuration)
         {
-            elapsedTime += Time.deltaTime;
-            float offsetX = Random.Range(-shakeIntensity, shakeIntensity);
-            float offsetY = Random.Range(-shakeIntensity, shakeIntensity);
-            transform.localPosition = originalPosition + new Vector3(offsetX, offsetY, 0);
+            elapsed += Time.deltaTime;
+            float x = Random.Range(-shakeIntensity, shakeIntensity);
+            float y = Random.Range(-shakeIntensity, shakeIntensity);
+            transform.localPosition = originalPos + new Vector3(x, y, 0);
             yield return null;
         }
 
-        transform.localPosition = originalPosition;
+        transform.localPosition = originalPos;
     }
 
     private IEnumerator BlinkEffect()
     {
-        if (image != null)
+        float elapsed = 0f;
+        bool visible = true;
+
+        while (continuousBlink || elapsed < blinkDuration)
         {
-            float elapsedTime = 0f;
-            bool isVisible = true;
+            if (!continuousBlink) elapsed += blinkSpeed;
 
-            while (isBlinkContinuous || elapsedTime < blinkDuration)
-            {
-                if (!isBlinkContinuous)
-                    elapsedTime += blinkSpeed;
-
-                // Gradual fade in/out
-                yield return StartCoroutine(FadeInOut(isVisible));
-                isVisible = !isVisible;
-                yield return new WaitForSeconds(blinkSpeed);
-            }
-
-            image.color = originalColor;
+            yield return StartCoroutine(BlinkStep(visible));
+            visible = !visible;
+            yield return new WaitForSeconds(blinkSpeed);
         }
+
+        canvasGroup.alpha = 1f; // ensure visible back
     }
 
-    private IEnumerator FadeInOut(bool isVisible)
+    private IEnumerator BlinkStep(bool visible)
     {
-        float fadeElapsed = 0f;
-        float fadeDuration = blinkSpeed / 2f;
+        float time = 0f;
+        float half = blinkSpeed * 0.5f;
 
-        while (fadeElapsed < fadeDuration)
+        float start = canvasGroup.alpha;
+        float end = visible ? 1f : 0f;
+
+        while (time < half)
         {
-            fadeElapsed += Time.deltaTime;
-            float alpha = isVisible
-                ? Mathf.Lerp(0f, 1f, fadeElapsed / fadeDuration)
-                : Mathf.Lerp(1f, 0f, fadeElapsed / fadeDuration);
-
-            Color newColor = image.color;
-            newColor.a = alpha;
-            image.color = newColor;
+            time += Time.deltaTime;
+            canvasGroup.alpha = Mathf.Lerp(start, end, time / half);
             yield return null;
         }
+
+        canvasGroup.alpha = end;
     }
 
-    private IEnumerator AnimateScale(Vector3 targetScale)
+    private IEnumerator PressedEffect()
     {
-        float elapsedTime = 0f;
+        Vector3 pressedScale = originalScale * pressScale;
+        float time = 0f;
 
-        while (elapsedTime < scaleDuration)
+        // Scale down (sink)
+        while (time < pressDuration)
         {
-            elapsedTime += Time.deltaTime;
-            float t = elapsedTime / scaleDuration;
-            transform.localScale = Vector3.Lerp(originalScale, targetScale, t);
+            time += Time.deltaTime;
+            transform.localScale = Vector3.Lerp(originalScale, pressedScale, time / pressDuration);
+            yield return null;
+        }
+
+        // Return to original
+        time = 0f;
+        while (time < pressDuration)
+        {
+            time += Time.deltaTime;
+            transform.localScale = Vector3.Lerp(pressedScale, originalScale, time / pressDuration);
             yield return null;
         }
 
@@ -204,11 +192,18 @@ public class ButtonUIEffects : MonoBehaviour
 
     private void OnDisable()
     {
-        // Cancel any active coroutines
-        if (activeCoroutine != null)
+        foreach (var kvp in activeCoroutines)
         {
-            StopCoroutine(activeCoroutine);
+            if (kvp.Value != null)
+                StopCoroutine(kvp.Value);
         }
+
+        activeCoroutines.Clear();
+
+        // Reset to original (R1)
+        transform.localScale = originalScale;
+        canvasGroup.alpha = 1f;
+        if (image != null) image.color = originalColor;
     }
 }
 

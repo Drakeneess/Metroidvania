@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Enemy
   - GameUI
+  - Ledge
   layers:
   - Default
   - TransparentFX
@@ -16,8 +17,8 @@ TagManager:
   - Ground
   - No Volume
   - MuseTextureLayer
-  - 
-  - 
+  - Ledge
+  - Obstacle
   - 
   - 
   - 

@@ -1,94 +1,225 @@
+using System;
+using System.Threading.Tasks;
 using UnityEngine;
 
 [RequireComponent(typeof(Terrain))]
 public class ProceduralTerrainBackground : MonoBehaviour
 {
     [Header("Seed persistente")]
-    public int seed = 0;
-    public bool generarNuevaSeed = false;
+    public int seed = 0;                 // Seed manual (solo si quieres forzar)
+    public bool overrideSeed = false;    // Si true, usa 'seed' en lugar de student+playthrough
 
     [Header("Altura")]
     public float alturaMaxima = 10f;
     public float escalaNoise = 0.05f;
 
-    [Header("Exclusión central")]
+    [Header("Exclusión central (zona jugable)")]
     public int exclusionInicioX = 100;
     public int exclusionFinX = 150;
 
     [Header("Transición suave")]
-    public int falloffRange = 20; // Cuánto suavizar antes/después de la zona jugable
+    public int falloffRange = 20;
 
     [Header("Montaña icónica")]
     public float alturaMontanaIconica = 20f;
 
+    // Unity refs
     private Terrain terreno;
     private TerrainData datos;
 
-    void Start()
+    // Threading
+    private volatile bool _isGenerating = false;
+    private volatile bool _applyPending = false;
+    private float[,] _heightsBuffer;
+
+    // Para evitar suscripciones múltiples
+    private bool _subscribed = false;
+
+    private void Start()
     {
-        //generarNuevaSeed = !SaveDataController.AreSavedData();
         terreno = GetComponent<Terrain>();
         datos = terreno.terrainData;
 
-        if (generarNuevaSeed)
-            seed = System.Guid.NewGuid().GetHashCode();
+        // Modo “segundo arranque”: ya hay IDs en SaveData → generar ya
+        if (
+            SaveDataController.AreSavedData() &&
+            SaveDataController.Instance.saveData.studentID != -1 &&
+            SaveDataController.Instance.saveData.playthroughID != -1)
+        {
+            int sid = SaveDataController.Instance.saveData.studentID;
+            int pid = SaveDataController.Instance.saveData.playthroughID;
+            StartGenerationWithIds(sid, pid);
+        }
 
-        Random.InitState(seed);
-        GenerarTerreno();
+        // Primera ejecución: no hay IDs → esperamos el evento del PlaythroughManager
+        SubscribePlaythroughEvent();
     }
 
-    void GenerarTerreno()
+    private void OnDestroy()
     {
+        UnsubscribePlaythroughEvent();
+    }
+
+    private void SubscribePlaythroughEvent()
+    {
+        if (_subscribed) return;
+        PlaythroughManager.OnPlaythroughReady += OnPlaythroughReady;
+        _subscribed = true;
+    }
+
+    private void UnsubscribePlaythroughEvent()
+    {
+        if (!_subscribed) return;
+        PlaythroughManager.OnPlaythroughReady -= OnPlaythroughReady;
+        _subscribed = false;
+    }
+
+    private void OnPlaythroughReady(int studentId, int playthroughId)
+    {
+        // Solo generamos cuando no hay Save al iniciar; si ya generaste arriba, esto será no-op si está ocupado
+        StartGenerationWithIds(studentId, playthroughId);
+    }
+
+    private void StartGenerationWithIds(int studentId, int playthroughId)
+    {
+        if (_isGenerating) return;
+
+        int effectiveSeed;
+        if (overrideSeed)
+        {
+            effectiveSeed = seed;
+        }
+        else
+        {
+            // Seed determinista a partir de Student + Playthrough (evita overflow)
+            unchecked
+            {
+                // hash simple y seguro
+                int h = 17;
+                h = h * 31 + studentId;
+                h = h * 31 + playthroughId;
+                effectiveSeed = h;
+            }
+        }
+        print(effectiveSeed);
+        // Capturamos parámetros que NO son de Unity para el thread
         int width = datos.heightmapResolution;
         int height = datos.heightmapResolution;
+        float sizeY = datos.size.y;
 
-        float[,] alturas = new float[width, height];
+        float p_alturaMax = alturaMaxima;
+        float p_escalaNoise = escalaNoise;
+        int p_exIni = exclusionInicioX;
+        int p_exFin = exclusionFinX;
+        int p_falloff = falloffRange;
+        float p_altMont = alturaMontanaIconica;
 
+        _isGenerating = true;
+
+        Task.Run(() =>
+        {
+            try
+            {
+                var heights = GenerateHeights(
+                    width, height, sizeY,
+                    p_alturaMax, p_escalaNoise,
+                    p_exIni, p_exFin, p_falloff,
+                    p_altMont, effectiveSeed
+                );
+
+                // Poner el resultado para aplicar en el main thread
+                _heightsBuffer = heights;
+                _applyPending = true;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[TerrainGen] Error en generación: {e}");
+            }
+            finally
+            {
+                _isGenerating = false;
+            }
+        });
+    }
+
+    private void Update()
+    {
+        // Aplicamos en main thread cuando el buffer está listo
+        if (_applyPending && _heightsBuffer != null)
+        {
+            try
+            {
+                datos.SetHeights(0, 0, _heightsBuffer);
+                // Limpiar flags
+                _applyPending = false;
+                _heightsBuffer = null;
+                Debug.Log("🌄 Terreno procedural aplicado.");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[TerrainGen] Error al aplicar SetHeights: {e}");
+                // Evitamos loop infinito si algo falla
+                _applyPending = false;
+                _heightsBuffer = null;
+            }
+        }
+    }
+
+    // =================== GENERACIÓN EN BACKGROUND ===================
+
+    private float[,] GenerateHeights(
+        int width, int height, float sizeY,
+        float alturaMax, float escala,
+        int exIni, int exFin, int falloff,
+        float altMontIcon, int genSeed)
+    {
+        System.Random rng = new System.Random(genSeed);
+
+        var alturas = new float[width, height];
+
+        // Base procedural
         for (int x = 0; x < width; x++)
         {
+            // precálculo de zona jugable + falloff
+            int zonaInicio = exIni - falloff;
+            int zonaFin = exFin + falloff;
+
             for (int y = 0; y < height; y++)
             {
-                float nx = x * escalaNoise;
-                float ny = y * escalaNoise;
+                float nx = x * escala;
+                float ny = y * escala;
 
-                // Base redondeada con combinación de ruidos suaves
+                // Dos bases de ruido suaves mezcladas
                 float base1 = Mathf.PerlinNoise(nx * 0.3f, ny * 0.3f);
-                float base2 = Mathf.PerlinNoise(nx * 0.1f + 100, ny * 0.1f + 100);
+                float base2 = Mathf.PerlinNoise(nx * 0.1f + 100f, ny * 0.1f + 100f);
                 float baseSuave = Mathf.Lerp(base1, base2, 0.6f);
-
                 float smooth = Mathf.SmoothStep(0f, 1f, baseSuave);
 
-                // Pulso orgánico en el fondo
-                float dist = Vector2.Distance(new Vector2(x, y), new Vector2(width / 2f, height / 2f));
-                float pulso = Mathf.Sin(dist * 0.01f + seed % 100) * 0.08f;
+                // Pulso orgánico suave
+                float dist = Vector2.Distance(new Vector2(x, y), new Vector2(width * 0.5f, height * 0.5f));
+                float pulso = Mathf.Sin(dist * 0.01f + (genSeed % 100)) * 0.08f;
 
-                float alturaFinal = (smooth + pulso) * (alturaMaxima / datos.size.y);
+                float alturaFinal = (smooth + pulso) * (alturaMax / sizeY);
                 alturaFinal = Mathf.Clamp01(alturaFinal);
-
-                int zonaInicio = exclusionInicioX - falloffRange;
-                int zonaFin = exclusionFinX + falloffRange;
 
                 if (x >= zonaInicio && x <= zonaFin)
                 {
                     float t;
-
-                    if (x < exclusionInicioX)
+                    if (x < exIni)
                     {
-                        // Transición de entrada a la zona jugable
-                        t = Mathf.InverseLerp(zonaInicio, exclusionInicioX, x); // 0 a 1
+                        t = Mathf.InverseLerp(zonaInicio, exIni, x);
                         t = Mathf.SmoothStep(1f, 0f, t);
                         alturas[x, y] = alturaFinal * t;
                     }
-                    else if (x > exclusionFinX)
+                    else if (x > exFin)
                     {
-                        // Transición de salida de la zona jugable
-                        t = Mathf.InverseLerp(exclusionFinX, zonaFin, x); // 0 a 1
+                        t = Mathf.InverseLerp(exFin, zonaFin, x);
                         t = Mathf.SmoothStep(0f, 1f, t);
                         alturas[x, y] = alturaFinal * t;
                     }
                     else
                     {
-                        // Zona jugable plana
+                        // zona jugable plana
                         alturas[x, y] = 0f;
                     }
                 }
@@ -99,18 +230,18 @@ public class ProceduralTerrainBackground : MonoBehaviour
             }
         }
 
-        // Montaña icónica del jugador (puede mantenerse o comentarse)
-        AgregarVallePrincipal(ref alturas, width, height);
-        AgregarAccidentesGeograficos(ref alturas, width, height);
-        PintarMontañaIconica(ref alturas, width, height);
+        // Detalles adicionales (idénticos a tus métodos, pero sin tocar UnityObjects)
+        AgregarVallePrincipal(ref alturas, width, height, sizeY, alturaMax);
+        AgregarAccidentesGeograficos(ref alturas, width, height, sizeY, alturaMax, exIni, exFin, 8, 0.03f, rng);
+        PintarMontanaIconica(ref alturas, width, height, sizeY, altMontIcon, genSeed);
 
-        datos.SetHeights(0, 0, alturas);
+        return alturas;
     }
 
-    void PintarMontañaIconica(ref float[,] alturas, int width, int height)
+    private void PintarMontanaIconica(ref float[,] alturas, int width, int height, float sizeY, float altMontIcon, int genSeed)
     {
-        int inicioX = (int)(width * 0.5f);    // Donde empieza la montaña
-        int finX = (int)(width * 0.9f);       // Hasta dónde llega
+        int inicioX = (int)(width * 0.5f);
+        int finX = (int)(width * 0.9f);
         int inicioY = (int)(height * 0.2f);
         int finY = (int)(height * 0.7f);
 
@@ -118,42 +249,38 @@ public class ProceduralTerrainBackground : MonoBehaviour
         {
             for (int py = inicioY; py < finY; py++)
             {
-                float deformacion1 = Mathf.PerlinNoise((px + seed * 2) * 0.06f, (py - seed * 2) * 0.06f);
-                float deformacion2 = Mathf.PerlinNoise((px - seed) * 0.1f, (py + seed) * 0.1f);
+                float deformacion1 = Mathf.PerlinNoise((px + genSeed * 2) * 0.06f, (py - genSeed * 2) * 0.06f);
+                float deformacion2 = Mathf.PerlinNoise((px - genSeed) * 0.1f, (py + genSeed) * 0.1f);
                 float mezcla = Mathf.Lerp(deformacion1, deformacion2, 0.5f);
 
-                // Envolvimiento suave: altura más baja en bordes del área
                 float factorX = Mathf.InverseLerp(inicioX, finX, px);
                 float factorY = Mathf.InverseLerp(inicioY, finY, py);
-                float envoltura = Mathf.SmoothStep(1f, 0f, Mathf.Abs(factorX - 0.5f) * 2f) *
-                                Mathf.SmoothStep(1f, 0f, Mathf.Abs(factorY - 0.5f) * 2f);
+                float envoltura =
+                    Mathf.SmoothStep(1f, 0f, Mathf.Abs(factorX - 0.5f) * 2f) *
+                    Mathf.SmoothStep(1f, 0f, Mathf.Abs(factorY - 0.5f) * 2f);
 
-                float alturaExtra = mezcla * envoltura * (alturaMontanaIconica / datos.size.y);
-                alturas[px, py] += alturaExtra;
-                alturas[px, py] = Mathf.Clamp01(alturas[px, py]);
+                float alturaExtra = mezcla * envoltura * (altMontIcon / sizeY);
+                alturas[px, py] = Mathf.Clamp01(alturas[px, py] + alturaExtra);
             }
         }
     }
-    void AgregarAccidentesGeograficos(ref float[,] alturas, int width, int height)
+
+    private void AgregarAccidentesGeograficos(ref float[,] alturas, int width, int height, float sizeY, float alturaMax,
+                                          int exIni, int exFin, int cantidad, float escalaAccidente, System.Random rng)
     {
-        int cantidad = 8; // Número de accidentes a generar
-        float escalaAccidente = 0.03f;
-        float alturaAccidente = alturaMaxima * 1.5f;
+        float alturaAccidente = alturaMax * 1.5f;
 
         for (int i = 0; i < cantidad; i++)
         {
-            // Posición aleatoria lejos de la zona jugable
-            int centroX = Random.Range((int)(width * 0.1f), (int)(width * 0.9f));
-            int centroY = Random.Range((int)(height * 0.2f), (int)(height * 0.8f));
+            int centroX = rng.Next((int)(width * 0.1f), (int)(width * 0.9f));
+            int centroY = rng.Next((int)(height * 0.2f), (int)(height * 0.8f));
+            int radio   = rng.Next(10, 25);
 
-            int radio = Random.Range(10, 25);
 
-            // Verificación completa: si cualquier parte del accidente invade la zona jugable, se descarta
+
             int minX = centroX - radio;
             int maxX = centroX + radio;
-
-            if (maxX >= exclusionInicioX && minX <= exclusionFinX)
-                continue;
+            if (maxX >= exIni && minX <= exFin) continue; // evitar invadir zona jugable
 
             for (int x = -radio; x <= radio; x++)
             {
@@ -161,9 +288,7 @@ public class ProceduralTerrainBackground : MonoBehaviour
                 {
                     int px = centroX + x;
                     int py = centroY + y;
-
-                    if (px < 0 || py < 0 || px >= width || py >= height)
-                        continue;
+                    if (px < 0 || py < 0 || px >= width || py >= height) continue;
 
                     float distNorm = Mathf.Sqrt(x * x + y * y) / (float)radio;
                     if (distNorm > 1f) continue;
@@ -171,38 +296,33 @@ public class ProceduralTerrainBackground : MonoBehaviour
                     float ruido = Mathf.PerlinNoise(px * escalaAccidente, py * escalaAccidente);
                     float forma = Mathf.SmoothStep(1f, 0f, distNorm) * ruido;
 
-                    // Alternamos entre elevación y hundimiento para variedad
                     float signo = (i % 2 == 0) ? 1f : -1f;
+                    float alturaModificada = forma * signo * (alturaAccidente / sizeY);
 
-                    float alturaModificada = forma * signo * (alturaAccidente / datos.size.y);
-                    alturas[px, py] += alturaModificada;
-                    alturas[px, py] = Mathf.Clamp01(alturas[px, py]);
+                    alturas[px, py] = Mathf.Clamp01(alturas[px, py] + alturaModificada);
                 }
             }
         }
     }
 
-    void AgregarVallePrincipal(ref float[,] alturas, int width, int height)
+    private void AgregarVallePrincipal(ref float[,] alturas, int width, int height, float sizeY, float alturaMax)
     {
-        int centroY = (int)(height * 0.5f); // Altura central del valle
-        int grosor = 20;                    // Grosor vertical del valle
-        float profundidad = alturaMaxima * 2.5f;
+        int centroY = (int)(height * 0.5f);
+        int grosor = 20;
+        float profundidad = alturaMax * 2.5f;
 
         for (int x = 0; x < width; x++)
         {
             for (int y = -grosor; y <= grosor; y++)
             {
                 int py = centroY + y;
-
-                if (py < 0 || py >= height)
-                    continue;
+                if (py < 0 || py >= height) continue;
 
                 float dist = Mathf.Abs(y) / (float)grosor;
-                float falloff = Mathf.SmoothStep(1f, 0f, dist); // Bordes suaves
+                float falloff = Mathf.SmoothStep(1f, 0f, dist);
 
-                float alturaRestada = falloff * (profundidad / datos.size.y);
-                alturas[x, py] -= alturaRestada;
-                alturas[x, py] = Mathf.Clamp01(alturas[x, py]);
+                float alturaRestada = falloff * (profundidad / sizeY);
+                alturas[x, py] = Mathf.Clamp01(alturas[x, py] - alturaRestada);
             }
         }
     }

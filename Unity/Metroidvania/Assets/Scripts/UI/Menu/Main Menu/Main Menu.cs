@@ -104,8 +104,6 @@ public class MainMenu : Menu
 
     public IEnumerator ButtonsFadeIn()
     {
-        GameSessionManager.Instance.StartGameSession();
-
         if (titleContent != null && titleContent.Length > 0)
             yield return StartCoroutine(FadeElement(titleContent[^1], 2f, 0f));
 
@@ -168,7 +166,6 @@ public class MainMenu : Menu
             canvasGroup.alpha = targetAlpha;
         }
     }
-
 
     private IEnumerator FadeElement(GameObject element, float duration, float targetAlpha)
     {

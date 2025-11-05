@@ -1,0 +1,7 @@
+{
+  "build": { "builder": "Python" },
+  "deploy": {
+    "workdir": ".",
+    "startCommand": "python app.py"
+  }
+}

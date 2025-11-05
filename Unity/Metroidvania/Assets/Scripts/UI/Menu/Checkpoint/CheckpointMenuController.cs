@@ -67,9 +67,10 @@ public class CheckpointMenuController : MonoBehaviour
 
     private IEnumerator openFastTravelMenu(Player p)
     {
-        print(p);
-        yield return 0.5f;
-        print(p);
+        // 🔹 Esperar hasta que el Fast Travel esté activado
+        yield return new WaitUntil(() => fastTravelMenu.gameObject.activeInHierarchy);
+
+        // Ahora sí, está activo → es seguro abrirlo
         fastTravelMenu.Open(p, checkMenu);
     }
 }

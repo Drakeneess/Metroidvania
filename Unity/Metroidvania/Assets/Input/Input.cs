@@ -134,6 +134,15 @@ public partial class @Input: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Pause"",
+                    ""type"": ""Button"",
+                    ""id"": ""85e67390-0b92-461a-9cbc-879bcf4b0f47"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -305,7 +314,7 @@ public partial class @Input: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""fdcbe4de-86cb-4bea-8f16-8f37470122b2"",
-                    ""path"": ""<Keyboard>/shift"",
+                    ""path"": ""<Keyboard>/leftCtrl"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -541,6 +550,28 @@ public partial class @Input: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Cure"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""a35d65fe-9d2b-4d43-922a-0d09a6f48eb3"",
+                    ""path"": ""<Keyboard>/escape"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Pause"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""ef714a74-fc76-4a8d-9eef-0ee4ea36db26"",
+                    ""path"": ""<Gamepad>/start"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Pause"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -925,7 +956,7 @@ public partial class @Input: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""df5e43c9-8c7a-45a6-b86d-afe3054f5c46"",
-                    ""path"": ""<Gamepad>/buttonWest"",
+                    ""path"": ""<Gamepad>/buttonSouth"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -1684,6 +1715,7 @@ public partial class @Input: IInputActionCollection2, IDisposable
         m_Game_Block = m_Game.FindAction("Block", throwIfNotFound: true);
         m_Game_Map = m_Game.FindAction("Map", throwIfNotFound: true);
         m_Game_Cure = m_Game.FindAction("Cure", throwIfNotFound: true);
+        m_Game_Pause = m_Game.FindAction("Pause", throwIfNotFound: true);
         // Menu
         m_Menu = asset.FindActionMap("Menu", throwIfNotFound: true);
         m_Menu_Select = m_Menu.FindAction("Select", throwIfNotFound: true);
@@ -1776,6 +1808,7 @@ public partial class @Input: IInputActionCollection2, IDisposable
     private readonly InputAction m_Game_Block;
     private readonly InputAction m_Game_Map;
     private readonly InputAction m_Game_Cure;
+    private readonly InputAction m_Game_Pause;
     public struct GameActions
     {
         private @Input m_Wrapper;
@@ -1792,6 +1825,7 @@ public partial class @Input: IInputActionCollection2, IDisposable
         public InputAction @Block => m_Wrapper.m_Game_Block;
         public InputAction @Map => m_Wrapper.m_Game_Map;
         public InputAction @Cure => m_Wrapper.m_Game_Cure;
+        public InputAction @Pause => m_Wrapper.m_Game_Pause;
         public InputActionMap Get() { return m_Wrapper.m_Game; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -1837,6 +1871,9 @@ public partial class @Input: IInputActionCollection2, IDisposable
             @Cure.started += instance.OnCure;
             @Cure.performed += instance.OnCure;
             @Cure.canceled += instance.OnCure;
+            @Pause.started += instance.OnPause;
+            @Pause.performed += instance.OnPause;
+            @Pause.canceled += instance.OnPause;
         }
 
         private void UnregisterCallbacks(IGameActions instance)
@@ -1877,6 +1914,9 @@ public partial class @Input: IInputActionCollection2, IDisposable
             @Cure.started -= instance.OnCure;
             @Cure.performed -= instance.OnCure;
             @Cure.canceled -= instance.OnCure;
+            @Pause.started -= instance.OnPause;
+            @Pause.performed -= instance.OnPause;
+            @Pause.canceled -= instance.OnPause;
         }
 
         public void RemoveCallbacks(IGameActions instance)
@@ -2166,6 +2206,7 @@ public partial class @Input: IInputActionCollection2, IDisposable
         void OnBlock(InputAction.CallbackContext context);
         void OnMap(InputAction.CallbackContext context);
         void OnCure(InputAction.CallbackContext context);
+        void OnPause(InputAction.CallbackContext context);
     }
     public interface IMenuActions
     {

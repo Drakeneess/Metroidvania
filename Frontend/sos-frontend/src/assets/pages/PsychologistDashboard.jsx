@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import { fetchStudents, fetchStudentFull } from "../services/studentService";
 import StudentTable from "../components/StudentTable";
 import StudentFilters from "../components/StudentFilters";
-import StudentDetailDrawer from "../components/student/StudentDetailDrawer";
+import StudentDetailDrawer from "../components/student/StudentDetailDrawer.jsx";
+import { useAuth } from "../auth/AuthContext";
 
 // 👇 nuevo bloque KPI
 import PsychologistKPIBlock from "../components/PsychologistKPIBlock.jsx";
 
 export default function PsychologistDashboard() {
+  const { user } = useAuth();
   const [students, setStudents] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [filters, setFilters] = useState({
@@ -142,6 +144,7 @@ export default function PsychologistDashboard() {
         onClose={() => setDetailOpen(false)}
         loading={detailLoading}
         payload={detailPayload}
+        authUser={user}
       />
 
     </Box>

@@ -24,7 +24,7 @@ MonoBehaviour:
   - state: 2
     type: 1
     priority: 50
-    duration: 1.1833334
+    duration: 2
   - state: 3
     type: 0
     priority: 60
@@ -32,7 +32,7 @@ MonoBehaviour:
   - state: 4
     type: 1
     priority: 70
-    duration: 0.6
+    duration: 1
   - state: 5
     type: 1
     priority: 90
@@ -53,3 +53,7 @@ MonoBehaviour:
     type: 0
     priority: 180
     duration: 0
+  - state: 10
+    type: 1
+    priority: 100
+    duration: 2.9743593

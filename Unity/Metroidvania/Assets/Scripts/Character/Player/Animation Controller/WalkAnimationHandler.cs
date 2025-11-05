@@ -1,15 +1,13 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class WalkAnimationHandler
 {
     private readonly Animator animator;
-    private readonly MonoBehaviour owner;
+    private readonly UnityEngine.MonoBehaviour owner;
 
-    private readonly string walkBool = "isWalking";
+    private readonly int walkHash = Animator.StringToHash("isWalking");
 
-    public WalkAnimationHandler(Animator animator, MonoBehaviour owner)
+    public WalkAnimationHandler(Animator animator, UnityEngine.MonoBehaviour owner)
     {
         this.animator = animator;
         this.owner = owner;
@@ -17,12 +15,11 @@ public class WalkAnimationHandler
 
     public void StartWalk()
     {
-        animator.SetBool(walkBool, true);
+        animator.SetBool(walkHash, true);
     }
 
     public void StopWalk()
     {
-        animator.SetBool(walkBool, false);
+        animator.SetBool(walkHash, false);
     }
 }
-

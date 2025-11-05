@@ -11,15 +11,42 @@ public class SettingsValue : MonoBehaviour
     public static SettingsValue Instance { get; private set; }
     private string settingsFilePath;
 
-
     private void Awake()
     {
         Instance = this;
-
+        
         settingsFilePath = Application.persistentDataPath + "/settings.json";
         LoadSettings();
     }
 
+    /// <summary>
+    /// Elimina settings.json, save.json y PlayerPrefs para simular instalación nueva
+    /// </summary>
+    private void ResetForFreshInstall()
+    {
+        // 🧽 1. Borrar settings.json
+        string settingsFilePath = Application.persistentDataPath + "/settings.json";
+        if (System.IO.File.Exists(settingsFilePath))
+        {
+            System.IO.File.Delete(settingsFilePath);
+            Debug.Log("🧽 settings.json eliminado.");
+        }
+
+        // 💾 2. Borrar save.json (ajusta nombre si tu save usa otro)
+        string saveFilePath = Application.persistentDataPath + "/save.json";
+        if (System.IO.File.Exists(saveFilePath))
+        {
+            System.IO.File.Delete(saveFilePath);
+            Debug.Log("💾 save.json eliminado.");
+        }
+
+        // 🧯 3. Borrar PlayerPrefs
+        PlayerPrefs.DeleteAll();
+        PlayerPrefs.Save();
+        Debug.Log("🧯 PlayerPrefs eliminados.");
+
+        Debug.Log("✅ Fresh Install ejecutado.");
+    }
 
     public void LoadSettings()
     {
@@ -57,8 +84,8 @@ public class GameSettings
 {
     public float rumbleValue = 0.5f;
     public float fxSound = 0.5f;
-    public float music = 0.5f;
+    public float music = 50f;
     public float brightness = 0.5f;
     public int resolutionIndex = 0;
-    public Language language = Language.English;
+    public Language language = Language.Español;
 }

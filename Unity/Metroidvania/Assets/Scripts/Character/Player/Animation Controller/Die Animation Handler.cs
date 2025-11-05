@@ -6,8 +6,8 @@ public class DieAnimationHandler
     private System.Random rng = new System.Random();
     private int last = -1;
 
-    private const string BOOL  = "isDying";
-    private const string STATE = "Die State";
+    private static readonly int BOOL  = Animator.StringToHash("isDying");
+    private static readonly int STATE = Animator.StringToHash("Die State");
 
     public DieAnimationHandler(Animator animator)
     {
@@ -34,6 +34,16 @@ public class DieAnimationHandler
         animator.SetInteger(STATE, v);
         animator.SetBool(BOOL, true);
     }
+
+    /// <summary>
+    /// Limpia el estado de muerte (para respawn)
+    /// </summary>
+    public void Stop()
+    {
+        animator.SetBool(BOOL, false);
+        animator.SetInteger(STATE, -1); // Limpia variante para permitir repetir
+    }
+
 
     private int NextVariant()
     {

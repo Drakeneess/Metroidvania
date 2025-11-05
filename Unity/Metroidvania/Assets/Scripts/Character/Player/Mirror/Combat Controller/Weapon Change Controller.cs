@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class WeaponChangeController : MonoBehaviour
@@ -12,44 +10,26 @@ public class WeaponChangeController : MonoBehaviour
     void Awake()
     {
         if (combatController == null) combatController = GetComponent<CombatController>();
-        if (mirrorVisual == null)     mirrorVisual     = GetComponent<MirrorVisualController>();
+        if (mirrorVisual == null) mirrorVisual = GetComponent<MirrorVisualController>();
     }
 
-    void OnEnable()
-    {
-        if (mirrorVisual != null)
-            mirrorVisual.OnMirrorShown += ApplyPendingIfAny; // aplicar cola cuando vuelve el espejo
-    }
-
-    void OnDisable()
-    {
-        if (mirrorVisual != null)
-            mirrorVisual.OnMirrorShown -= ApplyPendingIfAny;
-    }
-
-    /// Llamado por WeaponController. No toca CombatController más que para SetActiveWeapon (existente).
     public void RequestWeaponChange(Weapon desired)
     {
-        if (desired == null || combatController == null || mirrorVisual == null) return;
-
-        // Si el espejo está visible, aplicamos inmediato
-        if (mirrorVisual.IsMirrorActive)
+        if (desired == null)
         {
-            ApplyNow(desired);
+            WeaponController.Instance?.EquipWeapon(null);
             return;
         }
 
-        // Si el arma está afuera, encolamos
+        // Si el espejo está activo, se equipa instantáneo
+        if (mirrorVisual != null && mirrorVisual.IsMirrorActive)
+        {
+            WeaponController.Instance?.EquipWeapon(desired);
+            return;
+        }
+
+        // Si no, lo dejamos pendiente hasta que el espejo active
         pendingWeapon = desired;
-    }
-
-    private void ApplyNow(Weapon w)
-    {
-        // No tocamos la lógica interna del CombatController más que su API pública existente
-        combatController.SetActiveWeapon(w);
-
-        // Actualizamos el UI SOLO cuando la aplicación fue real
-        WeaponController.Instance?.ApplyWeaponChange(w);
     }
 
     private void ApplyPendingIfAny()
@@ -58,6 +38,7 @@ public class WeaponChangeController : MonoBehaviour
 
         var w = pendingWeapon;
         pendingWeapon = null;
-        ApplyNow(w);
+
+        WeaponController.Instance?.EquipWeapon(w);
     }
 }

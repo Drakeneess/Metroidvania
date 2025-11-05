@@ -1,5 +1,25 @@
 id_conversation,index,id_response,es,en
-1,0,1,No estoy triste solo cansado.,I’m not sad just tired.
-1,1,2,Hay días en los que la tristeza me pesa.,There are days when sadness weighs on me.
-1,2,3,Últimamente la tristeza no me suelta.,Lately sadness never leaves me.
-1,3,4,Estoy tan hundido que no puedo soportarlo.,I’m so overwhelmed I can’t stand it.
+1,0,1,A veces siento un pequeño alivio,Sometimes I feel a small relief
+1,1,2,Ocurre pero casi no dura,It happens but it barely lasts
+1,2,3,Casi nunca siento alivio,Almost never feel relief
+1,3,4,No siento alivio con nada,Nothing brings me relief
+
+2,0,4,Pasa pero logro recordarlo al final,It happens but I can recall it in the end
+2,1,5,Se me escapa seguido,It slips away often
+2,2,6,Casi no puedo retener nada,I can barely hold onto anything
+2,3,8,Siento que mi mente se vacía al instante,I feel my mind empties instantly
+
+3,0,9,A veces puedo estar quieto sin problema,Sometimes I can stay still without trouble
+3,1,10,Me cuesta detener mi mente,It is hard to slow my mind
+3,2,11,Casi nunca tengo paz cuando paro,I almost never feel calm when I stop
+3,3,12,No puedo con el silencio mi mente no me deja,I cannot handle stillness my mind will not stop
+
+4,0,13,A veces siento que valgo algo,Sometimes I feel I am worth something
+4,1,14,Me cuesta verme con valor,It is hard to see any worth in myself
+4,2,15,Casi nunca siento que valgo,CasI never feel I am worth anything
+4,3,16,Siento que no valgo nada,I feel I am worth nothing
+
+5,0,17,Creo que algo podría mejorar,I think something could get better
+5,1,18,Me cuesta imaginar un futuro distinto,It is hard to imagine a different future
+5,2,19,Casi no veo nada adelante,I see almost nothing ahead
+5,3,20,No veo ningún futuro para mí,I see no future for myself

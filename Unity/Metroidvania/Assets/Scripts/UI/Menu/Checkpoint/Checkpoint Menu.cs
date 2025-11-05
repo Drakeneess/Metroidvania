@@ -3,24 +3,30 @@ using UnityEngine;
 
 public class CheckpointMenu : Menu
 {
+    private PlayerAnimationController anim;
+
     protected override void Start()
     {
-        // Mantiene la semántica del modo menú del base
         base.Start();
+
+        // Cache del anim del jugador
+        var player = FindObjectOfType<Player>();
+        if (player != null)
+            anim = player.GetComponent<PlayerAnimationController>();
     }
 
     public void Open()
     {
-        // Sin fades; solo flags para que quien consulte el estado no reviente
         isDeployed = true;
-        areOptionsDeployed = true; // true para no bloquear lógicas que lo consulten
+        areOptionsDeployed = true;
         gameObject.SetActive(true);
     }
 
     public void Close()
     {
         GameMenuController.CurrentMode = GameMode.Game;
-        PlayerAnimationController.SetWalkState(false, true);
+
+        // Antes: PlayerAnimationController.SetWalkState(false, true);
 
         areOptionsDeployed = false;
         isDeployed = false;

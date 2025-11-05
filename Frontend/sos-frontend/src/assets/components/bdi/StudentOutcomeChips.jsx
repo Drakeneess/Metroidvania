@@ -1,14 +1,20 @@
 // src/components/bdi/StudentOutcomeChips.jsx
 export default function StudentOutcomeChips({ matched = [], all = [] }) {
+  // 🎨 Conversión de nivel de severidad a color
   const severityToColor = (sev) => {
     switch ((sev || "").toLowerCase()) {
-      case "mild": return "#38A169";     // green
-      case "moderate": return "#D69E2E"; // yellow
-      case "severe": return "#E53E3E";   // red
-      default: return "#3182CE";         // blue
+      case "mild":
+        return "#38A169"; // verde
+      case "moderate":
+        return "#D69E2E"; // amarillo
+      case "severe":
+        return "#E53E3E"; // rojo
+      default:
+        return "#3182CE"; // azul
     }
   };
 
+  // 🧩 Componente de chip individual
   const Chip = ({ text, color, subtle, title }) => (
     <span
       title={title || ""}
@@ -22,28 +28,32 @@ export default function StudentOutcomeChips({ matched = [], all = [] }) {
         fontSize: 13,
         marginRight: 6,
         marginBottom: 6,
-        cursor: title ? "help" : "default"
+        cursor: title ? "help" : "default",
+        transition: "background 0.2s ease"
       }}
     >
       {text}
     </span>
   );
 
+  // 🧠 Si no hay reglas configuradas
   if (!all.length && !matched.length) {
     return <p style={{ color: "#4A5568" }}>Sin reglas configuradas.</p>;
   }
 
+  // 🧾 Renderizado principal
   return (
     <div>
+      {/* Outcomes que aplican */}
       {matched.length > 0 ? (
         <>
           <div style={{ fontSize: 13, color: "#4A5568", marginBottom: 6 }}>
             Que aplican:
           </div>
           <div>
-            {matched.map((o) => (
+            {matched.map((o, i) => (
               <Chip
-                key={`matched-${o.id_outcome}`}  // ✅ key único
+                key={`matched-${o.id_outcome ?? i}`} // ✅ key siempre única
                 text={`${o.name}${o.narrative_flag ? ` · ${o.narrative_flag}` : ""}`}
                 color={severityToColor(o.severity_level)}
                 title={o.description || ""}
@@ -57,16 +67,17 @@ export default function StudentOutcomeChips({ matched = [], all = [] }) {
         </p>
       )}
 
+      {/* Todas las reglas activas */}
       {all.length > 0 && (
         <>
           <div style={{ fontSize: 13, color: "#4A5568", margin: "10px 0 6px" }}>
             Todas las reglas activas:
           </div>
           <div>
-            {all.map((o) => (
+            {all.map((o, i) => (
               <Chip
-                key={`all-${o.id_outcome}`}      // ✅ key único
-                text={o.name}
+                key={`all-${o.id_outcome ?? i}`} // ✅ evita duplicados all-undefined
+                text={o.name || `Outcome ${i + 1}`}
                 color={severityToColor(o.severity_level)}
                 subtle
                 title={`${o.description || ""} · Rango: ${o.min_score}-${o.max_score}`}

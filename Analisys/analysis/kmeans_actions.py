@@ -18,13 +18,27 @@ FEATURE_COLS_DEFAULT = [
     "mean_health",
 ]
 
+_CLEAN_RENAME_MAP = {
+    "total_actions": "actions",
+    "actions_per_minute": "apm",
+    "Jump": "jumps",
+    "Dash": "dashes",
+    "Light Attacking": "light_attacks",
+    "Movement": "movement",
+    "Stopped": "stopped",
+    "interactions_count": "interactions",
+    "interaction_avg_s": "inter_avg_s",
+    "unique_action_types": "uniq_types",
+    "mean_health": "health",
+}
+
 def kmeans_actions(final_actions_df: pd.DataFrame,
                    sessions_rows: list,
-                   k: int = 3,
+                   k: int = 4,
                    feature_cols = None):
     """
     final_actions_df: DF limpio de acciones (todas las sesiones) con columnas: id_session, type, timestamp, currentHealth...
-    sessions_rows: lista de dicts (salida de tu get_playthroughs_with_logs) con bdi_score por id_session.
+    sessions_rows: lista de dicts (salida de get_playthroughs_with_logs) con bdi_score/start_time por id_session.
     """
     if feature_cols is None:
         feature_cols = FEATURE_COLS_DEFAULT
@@ -35,13 +49,15 @@ def kmeans_actions(final_actions_df: pd.DataFrame,
     if feats.empty:
         raise ValueError("No hay acciones para construir features.")
 
-    # 2) Traer BDI por sesión desde la vista
+    # 2) Traer BDI + metadata por sesión desde la vista
     sess_df = pd.DataFrame(sessions_rows)
-    cols = [c for c in ["id_session", "bdi_score", "id_level", "id_playthrough", "id_student"] if c in sess_df.columns]
+    cols = [c for c in [
+        "id_session", "bdi_score", "id_level", "id_playthrough", "id_student", "start_time"
+    ] if c in sess_df.columns]
     sess_df = sess_df[cols].drop_duplicates(subset=["id_session"])
 
     df = feats.merge(sess_df, on="id_session", how="left")
-    df = df.dropna(subset=["bdi_score"])  # nos quedamos con sesiones que sí tienen BDI
+    df = df.dropna(subset=["bdi_score"])  # sesiones con BDI
 
     # 3) Escalar y clusterizar (solo features de acciones)
     X = df[feature_cols].astype(float).values
@@ -54,7 +70,7 @@ def kmeans_actions(final_actions_df: pd.DataFrame,
 
     sil = silhouette_score(Xs, labels) if len(set(labels)) > 1 else float("nan")
 
-    # 4) Resumen por clúster (incluyendo BDI para interpretar)
+    # 4) Resumen por clúster (mantiene tus etiquetas limpias)
     summary = df.groupby("cluster").agg(
         n=("id_session", "count"),
         bdi_mean=("bdi_score", "mean"),
@@ -69,4 +85,16 @@ def kmeans_actions(final_actions_df: pd.DataFrame,
         uniq_types=("unique_action_types", "mean"),
     ).reset_index().sort_values("cluster")
 
-    return df, summary, sil, km, scaler, feature_cols
+    # 5) Devolver DF de sesiones con nombres LIMPIOS + metadata clave
+    #    (esto es lo que guardaremos a disco desde main.py)
+    export_cols = [
+        "id_session", "id_playthrough", "id_student", "start_time", "bdi_score", "cluster",
+        *feature_cols
+    ]
+    for c in export_cols:
+        if c not in df.columns:
+            df[c] = 0  # por si faltara algo
+
+    clustered_clean = df[export_cols].rename(columns=_CLEAN_RENAME_MAP)
+
+    return clustered_clean, summary, sil, km, scaler, list(_CLEAN_RENAME_MAP.values())

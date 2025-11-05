@@ -10,6 +10,7 @@ import { adminIngestRouter } from "./routes/adminIngest.js";
 import { studentsRouter } from "./routes/students.js";
 import { kpiRouterFactory } from "./routes/kpi.js";
 import { sequelize } from "./sequelize.js";
+import { alertsRouter } from "./routes/alerts.js";
 
 const app = express();
 app.use(cors());
@@ -28,9 +29,12 @@ app.use("/api/students", verifyJWT, loadUser, studentsRouter);
 // KPI
 app.use("/api/kpi", kpiRouterFactory(sequelize));
 
+app.use("/api/alerts", verifyJWT, loadUser, alertsRouter);
+
 // Rutas generales
 app.use("/ingest/admin", adminIngestRouter);
 app.use("/api", verifyJWT, loadUser, adminSessionHeartbeat, protectedRouter);
+
 
 // Manejador global de errores
 app.use((err, req, res, next) => {
@@ -38,5 +42,10 @@ app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
   res.status(500).json({ ok: false, error: err.message || "Error interno" });
 });
+
+app.get("/health", (req, res) => {
+  res.json({ status: "healthy", timestamp: Date.now() });
+});
+
 
 export default app;

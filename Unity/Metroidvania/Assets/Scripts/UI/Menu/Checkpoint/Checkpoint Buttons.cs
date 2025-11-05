@@ -11,8 +11,8 @@ public class CheckpointMenuButtons : MenuButtons
         base.Start();
         // Suponiendo orden: 0=Rest, 1=Travel, 2=Exit
         buttons[0].onClick.AddListener(OnRest);
-        buttons[1].onClick.AddListener(OnTravel);
-        buttons[2].onClick.AddListener(OnExit);
+        //buttons[1].onClick.AddListener(OnTravel);
+        buttons[1].onClick.AddListener(OnExit);
     }
 
     private void OnRest()

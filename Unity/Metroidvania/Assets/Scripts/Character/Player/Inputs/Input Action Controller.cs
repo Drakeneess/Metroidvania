@@ -79,6 +79,7 @@ public class InputActionController : MonoBehaviour
         RegisterBufferedAction(inputActions.Game.Interact, "InteractPressed");
         RegisterBufferedAction(inputActions.Game.Map, "Map");
         RegisterBufferedAction(inputActions.Game.Cure, "Cure");
+        RegisterBufferedAction(inputActions.Game.Pause, "Pause");
 
         RegisterBufferedAction(inputActions.Menu.Select, "Select");
         RegisterBufferedAction(inputActions.Menu.Back, "Back");
@@ -170,6 +171,7 @@ public class InputActionController : MonoBehaviour
         UnregisterBufferedAction(inputActions.Game.Interact, "InteractPressed");
         UnregisterBufferedAction(inputActions.Game.Map, "Map");
         UnregisterBufferedAction(inputActions.Game.Cure, "Cure");
+        UnregisterBufferedAction(inputActions.Game.Pause, "Pause");
 
         UnregisterBufferedAction(inputActions.Menu.Select, "Select");
         UnregisterBufferedAction(inputActions.Menu.Back, "Back");

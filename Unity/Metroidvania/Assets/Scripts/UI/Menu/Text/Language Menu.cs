@@ -21,9 +21,11 @@ public class LanguageMenu : MonoBehaviour
         // Cargar el idioma guardado o establecer por defecto
         language = LanguageController.GetLanguageString();
         LoadTranslations();
-
-        // Actualizar todos los textos del UI
         UpdateAllTexts();
+
+        // 🔹 Forzar re-aplicación si el LanguageController ya inició
+        if (LanguageController.Instance != null)
+            LanguageController.SetLanguage(SettingsValue.Instance.Settings.language);
     }
 
     private void OnDestroy()
@@ -33,7 +35,7 @@ public class LanguageMenu : MonoBehaviour
     }
 
     // Método que se llama cuando el idioma cambia
-    private void OnLanguageChanged()
+    public void OnLanguageChanged()
     {
         language = LanguageController.GetLanguageString();
         LoadTranslations();

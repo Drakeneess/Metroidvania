@@ -63,6 +63,7 @@ public class SettingsCarousel : SettingsControlBase
 
         // 🔔 Notificar cambio
         NotifyValueChanged();
+        NotifyChanged();
     }
 
     public void Next()

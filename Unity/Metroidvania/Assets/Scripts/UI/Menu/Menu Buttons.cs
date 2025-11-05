@@ -204,3 +204,13 @@ public class MenuButtons : MonoBehaviour
         }
     }
 }
+
+public static class MenuInputLock
+{
+    public static bool Blocked = true; // Por defecto bloqueado
+
+    public static void SetBlocked(bool value)
+    {
+        Blocked = value;
+    }
+}

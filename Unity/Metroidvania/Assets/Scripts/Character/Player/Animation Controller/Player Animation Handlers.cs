@@ -1,22 +1,53 @@
 using UnityEngine;
+
+// Idle: usa tus handlers de idle/walk para mantener el ciclo base.
 public sealed class IdleState : IAnimState
 {
     private readonly IdleAnimationHandler idle;
     private readonly WalkAnimationHandler walk;
     public PlayerAnimationState Id => PlayerAnimationState.Idle;
-    public IdleState(IdleAnimationHandler i, WalkAnimationHandler w) { idle = i; walk = w; }
-    public void Enter() { walk.StopWalk(); idle.StartIdle(); }
-    public void Exit()  { idle.StopIdle(); }
+
+    public IdleState(IdleAnimationHandler idleHandler, WalkAnimationHandler walkHandler)
+    {
+        idle = idleHandler;
+        walk = walkHandler;
+    }
+
+    public void Enter()
+    {
+        walk.StopWalk();
+        idle.StartIdle();
+    }
+
+    public void Exit()
+    {
+        idle.StopIdle();
+    }
 }
 
+// Walk: activa caminar y desactiva idle.
 public sealed class WalkState : IAnimState
 {
     private readonly IdleAnimationHandler idle;
     private readonly WalkAnimationHandler walk;
     public PlayerAnimationState Id => PlayerAnimationState.Walk;
-    public WalkState(IdleAnimationHandler i, WalkAnimationHandler w) { idle = i; walk = w; }
-    public void Enter() { idle.StopIdle(); walk.StartWalk(); }
-    public void Exit()  { walk.StopWalk(); }
+
+    public WalkState(IdleAnimationHandler idleHandler, WalkAnimationHandler walkHandler)
+    {
+        idle = idleHandler;
+        walk = walkHandler;
+    }
+
+    public void Enter()
+    {
+        idle.StopIdle();
+        walk.StartWalk();
+    }
+
+    public void Exit()
+    {
+        walk.StopWalk();
+    }
 }
 
 // Persistentes por bool
@@ -32,13 +63,13 @@ public sealed class RestState : AnimatorBoolState
     public override PlayerAnimationState Id => PlayerAnimationState.Rest;
 }
 
+// Transitorios
 public sealed class AttackState : AnimatorBoolState
 {
     public AttackState(Animator a) : base(a, AnimParams.IsAttacking) { }
     public override PlayerAnimationState Id => PlayerAnimationState.Attacking;
 }
 
-// Transitorios por trigger
 public sealed class JumpState : AnimatorTriggerState
 {
     public JumpState(Animator a) : base(a, AnimParams.TrigJumping) { }
@@ -57,23 +88,51 @@ public sealed class CureState : AnimatorTriggerState
     public override PlayerAnimationState Id => PlayerAnimationState.Curing;
 }
 
-// Daño y Muerte con random
+public sealed class ClimbState : AnimatorTriggerState
+{
+    public ClimbState(Animator a) : base(a, AnimParams.TrigClimb) { }
+    public override PlayerAnimationState Id => PlayerAnimationState.Climb;
+}
+
+// Daño con handler propio
 public sealed class TakingDamageState : IAnimState
 {
-    private readonly Animator A;
     private readonly TakingDamageAnimationHandler handler;
     public PlayerAnimationState Id => PlayerAnimationState.TakingDamage;
-    public TakingDamageState(Animator a) { A = a; handler = new TakingDamageAnimationHandler(a); }
-    public void Enter() => handler.Play(); // set int 0..3 y trigger
+
+    public TakingDamageState(Animator a)
+    {
+        handler = new TakingDamageAnimationHandler(a);
+    }
+
+    public void Enter()
+    {
+        handler.Play();
+    }
+
     public void Exit() { }
 }
 
+// Muerte con handler propio
 public sealed class DieState : IAnimState
 {
-    private readonly Animator A;
     private readonly DieAnimationHandler handler;
     public PlayerAnimationState Id => PlayerAnimationState.Die;
-    public DieState(Animator a) { A = a; handler = new DieAnimationHandler(a); }
-    public void Enter() => handler.Play(); // set int 0..3 y bool isDying = true
-    public void Exit() { /* muerte terminal */ }
+
+    public DieState(Animator a)
+    {
+        handler = new DieAnimationHandler(a);
+    }
+
+    public void Enter()
+    {
+        handler.Play(); // activa isDying y variante
+    }
+
+    public void Exit()
+    {
+        // Limpia para respawn (sin esto se queda pose o bloquea)
+        handler.Stop();
+    }
 }
+

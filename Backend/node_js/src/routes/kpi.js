@@ -4,6 +4,7 @@ import { requireRole } from "../middlewares/requireRole.js";
 import { verifyJWT } from "../middlewares/verifyJWT.js";
 import { loadUser } from "../middlewares/loadUser.js";
 
+
 /** Utils fechas */
 const toISODate = (v) => {
   if (!v) return null;
@@ -49,7 +50,7 @@ export const kpiRouterFactory = (sequelize) => {
       const from = toISODate(req.query.from) || daysAgo(30);
       const to   = toISODate(req.query.to)   || today();
       const rows = await q(
-        `SELECT * FROM VistaEstudiantesActivosDiario
+        `SELECT * FROM vistaestudiantesactivosdiario
           WHERE dia BETWEEN :from AND :to
           ORDER BY dia`,
         { from, to }
@@ -65,7 +66,7 @@ export const kpiRouterFactory = (sequelize) => {
       const from = toISODate(req.query.from) || daysAgo(30);
       const to   = toISODate(req.query.to)   || today();
       const rows = await q(
-        `SELECT * FROM VistaReportesEmitidosDiario
+        `SELECT * FROM vistareportesemitidosdiario
           WHERE dia BETWEEN :from AND :to
           ORDER BY dia`,
         { from, to }
@@ -81,7 +82,7 @@ export const kpiRouterFactory = (sequelize) => {
       const from = toISODate(req.query.from) || daysAgo(30);
       const to   = toISODate(req.query.to)   || today();
       const rows = await q(
-        `SELECT * FROM VistaReportesExportadosDiario
+        `SELECT * FROM vistareportesexportadosdiario
           WHERE dia BETWEEN :from AND :to
           ORDER BY dia, format`,
         { from, to }
@@ -96,7 +97,7 @@ export const kpiRouterFactory = (sequelize) => {
     asyncHandler(async (req, res) => {
       const id_student = Number(req.params.id_student);
       const rows = await q(
-        `SELECT * FROM VistaEvolucionCasos
+        `SELECT * FROM vistaevolucioncasos
           WHERE id_student = :sid
           ORDER BY fecha`,
         { sid: id_student }
@@ -112,7 +113,7 @@ export const kpiRouterFactory = (sequelize) => {
       const from = toISODate(req.query.from) || daysAgo(30);
       const to   = toISODate(req.query.to)   || today();
       const rows = await q(
-        `SELECT * FROM VistaAccesosDiario
+        `SELECT * FROM vistaaccesosdiario
           WHERE dia BETWEEN :from AND :to
           ORDER BY dia`,
         { from, to }
@@ -127,7 +128,7 @@ export const kpiRouterFactory = (sequelize) => {
       const from = toISODate(req.query.from) || daysAgo(7);
       const to   = toISODate(req.query.to)   || today();
       const rows = await q(
-        `SELECT * FROM VistaAccesosDetalle
+        `SELECT * FROM vistaaccesosdetalle
           WHERE timestamp BETWEEN :from AND DATE_ADD(:to, INTERVAL 1 DAY)
           ORDER BY timestamp`,
         { from, to }
@@ -145,7 +146,7 @@ export const kpiRouterFactory = (sequelize) => {
     requireRole(...TEACHER_ROLES),
     asyncHandler(async (req, res) => {
       const { studentId } = req.query;
-      const base = `SELECT * FROM VistaFrecuenciaSesiones`;
+      const base = `SELECT * FROM vistafrecuenciasesiones`;
       const rows = await q(
         studentId ? `${base} WHERE id_student = :sid` : base,
         studentId ? { sid: Number(studentId) } : {}
@@ -159,10 +160,10 @@ export const kpiRouterFactory = (sequelize) => {
     requireRole(...TEACHER_ROLES),
     asyncHandler(async (req, res) => {
       const { studentId } = req.query;
-      const base = `SELECT * FROM VistaSesionesPorSemana ORDER BY anio_semana`;
+      const base = `SELECT * FROM vistasesionesporsemana ORDER BY anio_semana`;
       const rows = await q(
         studentId
-          ? `SELECT * FROM VistaSesionesPorSemana WHERE id_student = :sid ORDER BY anio_semana`
+          ? `SELECT * FROM vistasesionesporsemana WHERE id_student = :sid ORDER BY anio_semana`
           : base,
         studentId ? { sid: Number(studentId) } : {}
       );
@@ -174,7 +175,7 @@ export const kpiRouterFactory = (sequelize) => {
   router.get("/sessions/avg-duration",
     requireRole(...TEACHER_ROLES),
     asyncHandler(async (req, res) => {
-      const rows = await q(`SELECT * FROM VistaTiempoSesionGlobal`);
+      const rows = await q(`SELECT * FROM vistatiemposesionglobal`);
       return res.json({ ok: true, data: rows[0] || null });
     })
   );
@@ -184,7 +185,7 @@ export const kpiRouterFactory = (sequelize) => {
     requireRole(...TEACHER_ROLES),
     asyncHandler(async (req, res) => {
       const { studentId } = req.query;
-      const base = `SELECT * FROM VistaExploracionPorEstudiante`;
+      const base = `SELECT * FROM vistaexploracionporestudiante`;
       const rows = await q(
         studentId ? `${base} WHERE id_student = :sid` : base,
         studentId ? { sid: Number(studentId) } : {}
@@ -198,7 +199,7 @@ export const kpiRouterFactory = (sequelize) => {
     requireRole(...TEACHER_ROLES),
     asyncHandler(async (req, res) => {
       const { studentId } = req.query;
-      const base = `SELECT * FROM VistaDecisionTendencia`;
+      const base = `SELECT * FROM vistadecisiontendencia`;
       const rows = await q(
         studentId ? `${base} WHERE id_student = :sid` : base,
         studentId ? { sid: Number(studentId) } : {}
@@ -212,7 +213,7 @@ export const kpiRouterFactory = (sequelize) => {
     requireRole(...TEACHER_ROLES),
     asyncHandler(async (req, res) => {
       const { studentId } = req.query;
-      const base = `SELECT * FROM VistaInteraccionesSociales`;
+      const base = `SELECT * FROM vistainteraccionessociales`;
       const rows = await q(
         studentId ? `${base} WHERE id_student = :sid` : base,
         studentId ? { sid: Number(studentId) } : {}
@@ -226,7 +227,7 @@ export const kpiRouterFactory = (sequelize) => {
   requireRole(...TEACHER_ROLES),
   asyncHandler(async (req, res) => {
     const { studentId } = req.query;
-    const base = `SELECT * FROM VistaTiempoReaccion`;
+    const base = `SELECT * FROM vistatiemporeaccion`;
     const rows = await q(
       studentId ? `${base} WHERE id_student = :sid` : base,
       studentId ? { sid: Number(studentId) } : {}
@@ -243,7 +244,7 @@ export const kpiRouterFactory = (sequelize) => {
     requireRole(...TEACHER_ROLES),
     asyncHandler(async (req, res) => {
       const { studentId } = req.query;
-      const base = `SELECT * FROM VistaInactividad`;
+      const base = `SELECT * FROM vistainactividad`;
       const rows = await q(
         studentId ? `${base} WHERE id_student = :sid` : base,
         studentId ? { sid: Number(studentId) } : {}
@@ -257,7 +258,7 @@ export const kpiRouterFactory = (sequelize) => {
     requireRole(...TEACHER_ROLES),
     asyncHandler(async (req, res) => {
       const { studentId } = req.query;
-      const base = `SELECT * FROM VistaPatronesRepeticion`;
+      const base = `SELECT * FROM vistapatronesrepeticion`;
       const rows = await q(
         studentId ? `${base} WHERE id_student = :sid` : base,
         studentId ? { sid: Number(studentId) } : {}
@@ -273,7 +274,7 @@ export const kpiRouterFactory = (sequelize) => {
       const from = toISODate(req.query.from) || daysAgo(30);
       const to   = toISODate(req.query.to)   || today();
       const rows = await q(
-        `SELECT * FROM VistaAlertasGeneradasDiario
+        `SELECT * FROM vistaalertasgeneradasdiario
           WHERE dia BETWEEN :from AND :to
           ORDER BY dia, alert_level`,
         { from, to }
@@ -289,7 +290,7 @@ export const kpiRouterFactory = (sequelize) => {
     asyncHandler(async (req, res) => {
       const id_student = Number(req.params.id_student);
       const rows = await q(
-        `SELECT * FROM VistaAlertasPorEstudiante WHERE id_student = :sid`,
+        `SELECT * FROM vistaalertasporestudiante WHERE id_student = :sid`,
         { sid: id_student }
       );
       return res.json({ ok: true, data: rows[0] || null });

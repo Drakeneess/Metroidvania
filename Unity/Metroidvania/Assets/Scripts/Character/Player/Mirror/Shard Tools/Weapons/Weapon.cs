@@ -52,7 +52,7 @@ public class Weapon : ShardTool
         transform.localRotation = originalRotation;
     }
 
-    protected IEnumerator SmoothReset(float duration)
+    public IEnumerator SmoothReset(float duration)
     {
         Quaternion currentRot = transform.localRotation;
         Vector3 currentPos    = transform.localPosition;
@@ -73,37 +73,36 @@ public class Weapon : ShardTool
     // 🔹 Ataque con daño + knockback
     protected void ActivateDamageArea(bool isHeavy = false, float chargeFactor = 1f)
     {
-        int facing = GetFacingDirection();               // +1 derecha, -1 izquierda
-        Vector3 forward2D = Vector3.right * facing;      // “frente” en 2.5D (eje X)
-
         Collider[] hits = Physics.OverlapSphere(transform.position, GetDamageRange(), characterMask);
 
         foreach (var col in hits)
         {
             if (!col.CompareTag("Enemy")) continue;
 
-            // Vector hacia el enemigo, a piso (evita empuje vertical)
             Vector3 toEnemy = col.transform.position - transform.position;
             toEnemy.y = 0f;
 
-            // ✅ Solo enemigos delante (dot > 0 => delante)
             if (toEnemy.sqrMagnitude < 0.0001f) continue;
-            float frontDot = Vector3.Dot(toEnemy.normalized, forward2D);
-            if (frontDot <= 0f) continue;
 
-            // Daño con distancia + heavy/charge
             float distance = toEnemy.magnitude;
             float damage   = CalculateDamage(distance, isHeavy, chargeFactor);
 
-            var e = col.GetComponent<Enemy>();
-            if (e == null) continue;
+            var boss = col.GetComponent<Boss>();
+            if (boss != null)
+            {
+                boss.TakePhysicalDamage(damage, null);
+                continue;
+            }
 
-            e.TakePhysicalDamage(damage,null);
+            var enemy = col.GetComponent<Enemy>();
+            if (enemy == null) continue;
 
-            // ✅ Knockback siempre horizontal hacia el frente del ataque
+            enemy.TakePhysicalDamage(damage, null);
+
+            // Knockback radial (empuje desde el centro hacia afuera)
             float knockForce = Mathf.Max(0f, WeaponData.knockback * (1f - (distance / GetDamageRange())));
-            Vector3 pushDir = forward2D;   // pura X, sin Y/Z
-            e.ApplyKnockback(pushDir, knockForce, 0.15f);
+            Vector3 pushDir = toEnemy.normalized; // ← ahora radial en 360°
+            enemy.ApplyKnockback(pushDir, knockForce, 0.15f);
         }
     }
 

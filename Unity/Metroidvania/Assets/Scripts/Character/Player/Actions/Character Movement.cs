@@ -9,42 +9,57 @@ public class CharacterMovement : MonoBehaviour
     public float speed = 5.0f;
 
     private float direction = 1;
-    public float Direction { get { return direction; } }
-    private float currentSpeed;
-    private bool canMove=true;
-    public bool CanMove { get { return canMove; } set { canMove= value; } }
-    private bool isOnAir=false;
-    public bool IsOnAir { get { return isOnAir; } set { isOnAir= value; } }
+    public float Direction => direction;
 
-    // Variables para almacenar los inputs actuales
+    private float currentSpeed;
+    private bool canMove = true;
+    public bool CanMove { get => canMove; set => canMove = value; }
+
+    private bool isOnAir = false;
+    public bool IsOnAir { get => isOnAir; set => isOnAir = value; }
+
     private float horizontalInput = 0f;
     public float HorizontalInput => horizontalInput;
+
     public event Action<float> OnMovementInputChanged;
 
-    void Start()
+    private PlayerAnimationController anim;
+
+    private void Awake()
     {
         currentSpeed = speed;
+        anim = PlayerAnimationController.Instance;
+
+        // 🔥 Si todavía no existe en Awake, lo intentamos luego
+        if (anim == null)
+            StartCoroutine(WaitForAnimator());
     }
 
-    private void OnEnable() 
+    private IEnumerator WaitForAnimator()
+    {
+        // Espera a que el PlayerAnimationController haga su Start y registre Instance
+        while (PlayerAnimationController.Instance == null)
+            yield return null;
+
+        anim = PlayerAnimationController.Instance;
+    }
+
+    private void OnEnable()
     {
         if (InputActionController.Instance != null)
-        {
             InputActionController.Instance.OnFloatInput += HandleActionInput;
-        }
     }
 
-    private void OnDisable() 
+    private void OnDisable()
     {
         if (InputActionController.Instance != null)
-        {
             InputActionController.Instance.OnFloatInput -= HandleActionInput;
-        }
     }
 
     private void HandleActionInput(string actionName, float value)
     {
-        switch(actionName){
+        switch (actionName)
+        {
             case "Movement":
                 HandleMovementInput(value);
                 break;
@@ -54,71 +69,48 @@ public class CharacterMovement : MonoBehaviour
         }
     }
 
-    void Update()
+    private void Update()
     {
-        // Se actualiza la rotación y se mueve el personaje en función del input recibido
         HandleRotation();
     }
 
-    #region Eventos de Input
-
-    // Actualiza el valor del movimiento horizontal
     private void HandleMovementInput(float value)
     {
         horizontalInput = value;
         OnMovementInputChanged?.Invoke(horizontalInput);
 
-        string actionType;
-        string directionName;
-        if (value == 0)
-        {
-            actionType = "Stopped";
-            directionName = "None";
-        }
-        else
-        {
-            actionType = "Movement";
-            directionName = value > 0 ? "Right" : "Left";
-        }
-        PlayerActionLogger.Instance.Log(actionType,new List<string> { $"Direction: {directionName}" });
-        PlayerAnimationController.SetMoving(value != 0);
-        PlayerAnimationController.SetWalkState(value != 0);
+        string actionType = value == 0 ? "Stopped" : "Movement";
+        string directionName = value == 0 ? "None" : (value > 0 ? "Right" : "Left");
+        PlayerActionLogger.Instance.Log(actionType, new List<string> { $"Direction: {directionName}" });
+
+        anim.Move(value != 0);
+
+        // 🔥 Fuerza reevaluación inmediata de Idle/Walk en la FSM
+        PlayerAnimationController.Instance?.ForceBaseIdleOrWalk();
     }
 
-    // Actualiza la velocidad según el input de correr
     private void HandleRunningInput(float value)
     {
-        if (value > 0.5f)
-        {
-            currentSpeed = speed * 1.5f;
-        }
-        else
-        {
-            currentSpeed = speed;
-        }
+        currentSpeed = value > 0.5f ? speed * 1.5f : speed;
     }
-
-    #endregion
 
     private void HandleRotation()
     {
-        if (Mathf.Abs(horizontalInput) > 0.01f)
-        {
-            // Determina la dirección según el input
-            direction = Mathf.Sign(horizontalInput);
-            float targetRotation = direction == 1 ? 0 : 180;
-            transform.rotation = Quaternion.Euler(0, targetRotation, 0);
-            HandleMovement(horizontalInput);
-        }
+        if (Mathf.Abs(horizontalInput) <= 0.01f) return;
+
+        direction = Mathf.Sign(horizontalInput);
+        float targetRotation = direction == 1 ? 0 : 180;
+        transform.rotation = Quaternion.Euler(0, targetRotation, 0);
+
+        HandleMovement(horizontalInput);
     }
 
-    // Mueve al personaje en el eje X (el eje Z se fuerza a cero)
     private void HandleMovement(float directionMove)
     {
-        if(canMove){
-            Vector3 move = transform.right * currentSpeed * directionMove * Time.deltaTime;
-            move.z = 0f;
-            transform.Translate(move, Space.Self);
-        }
+        if (!canMove) return;
+
+        Vector3 move = transform.right * currentSpeed * directionMove * Time.deltaTime;
+        move.z = 0f;
+        transform.Translate(move, Space.Self);
     }
 }

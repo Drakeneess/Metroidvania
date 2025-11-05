@@ -1,6 +1,8 @@
 using System.Collections;
 using UnityEngine;
 
+[RequireComponent(typeof(AudioSource))]
+[RequireComponent(typeof(ProceduralBlip))]
 public class DialogueBlip : MonoBehaviour
 {
     [SerializeField] public CharacterBlipProfile profile;
@@ -14,6 +16,7 @@ public class DialogueBlip : MonoBehaviour
     {
         audioSource = GetComponent<AudioSource>();
         blipGenerator = GetComponent<ProceduralBlip>();
+
         if (audioSource == null)
             audioSource = gameObject.AddComponent<AudioSource>();
     }
@@ -21,11 +24,19 @@ public class DialogueBlip : MonoBehaviour
     private void OnEnable()
     {
         DialogueSystem.OnLetterTyped += OnLetterTyped;
+
+        // 🔹 suscribir al controlador global de SFX
+        if (SFXController.Instance != null)
+            SFXController.Instance.RegisterSource(audioSource);
     }
 
     private void OnDisable()
     {
         DialogueSystem.OnLetterTyped -= OnLetterTyped;
+
+        // 🔹 desuscribir
+        if (SFXController.Instance != null)
+            SFXController.Instance.UnregisterSource(audioSource);
     }
 
     public void SetActive(bool value) => isActive = value;
@@ -43,6 +54,13 @@ public class DialogueBlip : MonoBehaviour
         float finalFreq = Mathf.Clamp(baseFreq * factor, 180f, 850f);
         float duration = 0.05f;
 
+        // 🔹 Ajustar volumen local según perfil y volumen global
+        float globalVol = SFXController.Instance != null
+            ? SFXController.Instance.GetGlobalSFXVolume() / 100f
+            : 0.5f; // fallback
+        float emotionVol = GetEmotionVolumeMultiplier(currentEmotion);
+        audioSource.volume = profile.baseVolume * emotionVol * globalVol;
+
         // ✅ aplicar preset emocional antes de sonar
         blipGenerator.SetEmotion(currentEmotion);
         blipGenerator.Play(finalFreq, duration);
@@ -52,14 +70,30 @@ public class DialogueBlip : MonoBehaviour
     {
         switch (emotion)
         {
-            case EmotionType.Joy: return +3;      // menor tercera ↑
-            case EmotionType.Sadness: return -2;  // segunda ↓
-            case EmotionType.Anger: return +7;    // quinta justa ↑
-            case EmotionType.Fear: return +1;     // semitono ↑
-            case EmotionType.Calm: return 0;      // sin cambio
-            case EmotionType.Contempt: return -3; // menor tercera ↓
-            case EmotionType.Confidence: return +5; // cuarta justa ↑
+            case EmotionType.Joy: return +3;       // menor tercera ↑
+            case EmotionType.Sadness: return -2;   // segunda ↓
+            case EmotionType.Anger: return +7;     // quinta justa ↑
+            case EmotionType.Fear: return +1;      // semitono ↑
+            case EmotionType.Calm: return 0;       // sin cambio
+            case EmotionType.Contempt: return -3;  // menor tercera ↓
+            case EmotionType.Confidence: return +5;// cuarta justa ↑
             default: return 0;
+        }
+    }
+
+    private float GetEmotionVolumeMultiplier(EmotionType emotion)
+    {
+        // 🔸 variaciones de volumen perceptivo por emoción
+        switch (emotion)
+        {
+            case EmotionType.Joy: return 1.1f;
+            case EmotionType.Anger: return 1.2f;
+            case EmotionType.Fear: return 0.9f;
+            case EmotionType.Sadness: return 0.8f;
+            case EmotionType.Contempt: return 0.9f;
+            case EmotionType.Confidence: return 1.15f;
+            case EmotionType.Calm: 
+            default: return 1f;
         }
     }
 
@@ -68,6 +102,7 @@ public class DialogueBlip : MonoBehaviour
         return profile != null ? profile.baseFrequency : 440f; // A4 por defecto
     }
 }
+
 
 public enum EmotionType
 {

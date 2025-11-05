@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -29,12 +28,12 @@ public enum PlayerAnimationState
     TakingDamage,
     Evading,
     Die,
-    Rest
+    Rest,
+    Climb,
 }
 
 public enum AnimationStateType
 {
-    Persistent, // e.g. Idle, Walk, Blocking
-    Transient   // e.g. Jump, Attack, TakingDamage
+    Persistent, // Idle, Walk, Blocking, Rest, Die
+    Transient   // Jumping, Attacking, TakingDamage, Evading, Curing, Climb
 }
-

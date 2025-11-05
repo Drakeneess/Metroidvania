@@ -6,10 +6,18 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // todo lo que empiece con /auth lo envía al backend 4000
+      // backend local actual
       "/auth": "http://localhost:4000",
       "/api": "http://localhost:4000",
       "/ingest": "http://localhost:4000",
-    },
-  },
+
+      // ✅ Nuevo: backend Analytics en Railway para evitar CORS
+      "/analytics": {
+        target: "https://sosbehavioranalytics-production.up.railway.app",
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/analytics/, "")
+      }
+    }
+  }
 })

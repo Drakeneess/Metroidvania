@@ -66,9 +66,13 @@ public class DialogueNPC : Interactable
     }
 }
 
-public enum NPCname{
-    NPC1,
-    NPC2,
+public enum NPCname
+{
+    Michel,
+    Jules,
+    Helen,
+    Ronald,
+    Roland,
+    Thomas,
+    Grey
 }
-
-

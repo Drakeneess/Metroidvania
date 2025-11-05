@@ -1,6 +1,6 @@
 Key,es,en
 Sword,Autojuicio,Self-Judgment
-Sword_Desc,,
+Sword_Desc,Un arma nacida para mejorar convertida en acusasion cronica,A weapon born to improve turned into a chronic accusation
 Claws,Desgarradores,Tearers
 Claws_Desc,,
 Spear,Destino vacio,Empty Fate
@@ -51,3 +51,8 @@ Lang,Idioma,Language
 Rumbling,Vibracion,Rumbling
 Resolution,Resolucion,Resolution
 Bright,Brillo,Brightness
+GameOver,Mantente Determinado,Stay Determinated
+Retry,Volver a despertar,Awake Again
+
+Thanks,MUCHAS GRACIAS POR LLEGAR HASTA AQUI,THANK YOU SO MUCH FOR GETTING THIS FAR
+Advice,Tu apoyo significa mucho. Si tienes comentarios o encontraste errores compártelos conmigo. La expansión llegará pronto. Espero que esta demo te haya dejado con ganas de más.,Your support means a lot. If you have any feedback or found any issues feel free to share them. The expansion is coming soon. I hope this demo left you wanting more.

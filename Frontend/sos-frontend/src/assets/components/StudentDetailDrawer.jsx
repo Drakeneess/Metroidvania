@@ -68,7 +68,7 @@ export default function StudentDetailDrawer({ isOpen, onClose, loading, payload 
             <div style={{ display: "grid", gap: 6 }}>
               <div style={{ fontWeight: 700, fontSize: 18 }}>{student.full_name}</div>
               <div style={{ color: "#4A5568", fontSize: 14 }}>
-                CI: {student.ci} · Edad: {student.age_range} · Registro:{" "}
+                C: {student.ci} · Edad: {student.age_range} · Registro:{" "}
                 {formatDate(student.register_date)}
               </div>
             </div>

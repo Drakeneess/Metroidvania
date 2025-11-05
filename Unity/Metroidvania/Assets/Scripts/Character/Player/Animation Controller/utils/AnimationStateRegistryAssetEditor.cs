@@ -20,7 +20,8 @@ public class AnimationStateRegistryAssetEditor : Editor
         { "Block", PlayerAnimationState.Blocking },
         { "Rest", PlayerAnimationState.Rest },
         { "Damage", PlayerAnimationState.TakingDamage }, // submachine/BT que agrupa Damage_0..3
-        { "Die", PlayerAnimationState.Die }
+        { "Die", PlayerAnimationState.Die },
+        { "Climb", PlayerAnimationState.Climb}
     };
 
     public override void OnInspectorGUI()

@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -17,6 +18,8 @@ public class SettingsButtons : MonoBehaviour
 
     [Header("Ref")]
     public MenuContainer menuButtonsContainer;
+    public SettingsScrollManualContainer scrollCenter;
+
 
     private int current = 0;
     private bool isEditing = false;
@@ -50,12 +53,27 @@ public class SettingsButtons : MonoBehaviour
         GameMenuController.CurrentMode = GameMode.Menu;
     }
 
-    void OnEnable()
+    private void OnEnable()
     {
-        if (InputActionController.Instance == null) return;
-        InputActionController.Instance.OnVector2Input    += OnNavigate;
-        InputActionController.Instance.OnActionTriggered += OnAction;
+        if (InputActionController.Instance != null)
+        {
+            InputActionController.Instance.OnVector2Input += OnNavigate;
+            InputActionController.Instance.OnActionTriggered += OnAction;
+        }
+
+        // 🔹 Esperar 1 frame y forzar refresh visual de idioma
+        StartCoroutine(ForceLanguageRefresh());
+
+        // centrar el elemento actual al abrir
+        scrollCenter?.MoveTo(current);
     }
+
+    private IEnumerator ForceLanguageRefresh()
+    {
+        yield return null; // Esperar un frame a que el idioma se fije
+        LanguageMenu.Instance?.OnLanguageChanged(); // Fuerza actualización de textos visibles
+    }
+
 
     void OnDisable()
     {
@@ -150,6 +168,8 @@ public class SettingsButtons : MonoBehaviour
             if (isEditing) isEditing = false;
             else
             {
+                SettingsUploader.Instance?.OnSettingsMenuClosed();
+                MenuInputLock.SetBlocked(false);
                 MenuTransition.Instance.SwitchTo(menuButtonsContainer);
             }
         }
@@ -160,7 +180,9 @@ public class SettingsButtons : MonoBehaviour
         current = Mathf.Clamp(index, 0, Mathf.Max(0, controls.Length - 1));
         UpdateHighlights();
         FocusCurrent();
+        scrollCenter?.MoveTo(current);
     }
+
 
     private void UpdateHighlights()
     {

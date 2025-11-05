@@ -16,11 +16,18 @@ public class Player : Character
     [SerializeField] private CharacterMovement movement;
     public CharacterMovement Movement => movement;
 
+    private PlayerAnimationController anim;
+
     protected override void Start()
     {
         base.Start();
+
         if (!movement)
             Debug.LogError("[Player] Falta CharacterMovement.");
+
+        anim = PlayerAnimationController.Instance;
+        if (!anim)
+            Debug.LogError("[Player] Falta PlayerAnimationController.");
 
         // Inicializar máximos desde SaveData
         var save = SaveDataController.Instance.saveData;
@@ -30,8 +37,11 @@ public class Player : Character
 
         var pad = DualShockGamepad.current;
         if (pad != null) UpdateOnPhysicalHealth(pad);
-        
+
+        // Inicializa UI/Animación de vida
+        anim?.SetCurrentHealthPercentage(health.GetPercent(HealthType.Physical));
     }
+
     protected override void OnDestroy()
     {
         base.OnDestroy();
@@ -42,10 +52,7 @@ public class Player : Character
         base.TakePhysicalDamage(damage, damager);
 
         string type = "Damaged";
-        var extras = new List<string>
-        {
-            $"Amount Damage: {damage}"
-        };
+        var extras = new List<string> { $"Amount Damage: {damage}" };
 
         if (damager != null)
             extras.Add($"Damager: {damager.name}");
@@ -56,8 +63,12 @@ public class Player : Character
         PlayerActionLogger.Instance.Log(type, extras);
 
         var pad = DualShockGamepad.current;
-        if (pad != null) 
+        if (pad != null)
             UpdateOnPhysicalHealth(pad);
+
+        anim?.TakeDamage();
+        // Actualizar animación
+        anim?.SetCurrentHealthPercentage(health.GetPercent(HealthType.Physical));
     }
 
     public override void HealPhysical(float amount)
@@ -67,7 +78,8 @@ public class Player : Character
         var pad = DualShockGamepad.current;
         if (pad != null) UpdateOnPhysicalHealth(pad);
 
-        PlayerAnimationController.SetCurrentHealthPercentage(health.GetPercent(HealthType.Physical));
+        if (health.Get(HealthType.Physical) > 0)
+            anim?.TakeDamage();
     }
 
     public void UseMentalPulse(float amount)
@@ -77,8 +89,11 @@ public class Player : Character
 
     public override void Respawn()
     {
+        anim?.Die(false);
+        anim?.ForceBaseIdleOrWalk();
         SetOnCheckpointPosition();
         base.Respawn(); // health.Initialize()
+        anim?.SetCurrentHealthPercentage(health.GetPercent(HealthType.Physical));
     }
 
     public void SetOnCheckpointPosition()
@@ -89,13 +104,16 @@ public class Player : Character
 
     public void SetOnRefugee(Checkpoint newCheckpoint)
     {
-        PlayerAnimationController.SetResting();
+        
+        anim?.SetCurrentHealthPercentage(health.GetPercent(HealthType.Physical));
+
         LastCheckpoint = newCheckpoint;
     }
 
     public void RestOnRefugee()
     {
         health.RestoreFull();
+        anim?.SetCurrentHealthPercentage(health.GetPercent(HealthType.Physical));
     }
 
     public void UpgradeHealth(HealthType type, float quantity)
@@ -110,11 +128,14 @@ public class Player : Character
             case HealthType.Mental:    save.mentalHealth    = health.GetMax(type); break;
             case HealthType.Emotional: save.emotionalHealth = health.GetMax(type); break;
         }
+
+        anim?.SetCurrentHealthPercentage(health.GetPercent(HealthType.Physical));
     }
 
     private void UpdateOnPhysicalHealth(DualShockGamepad pad)
     {
         float ratio = health.GetPercent(HealthType.Physical);
+
         if      (ratio >= 0.6f) pad.SetLightBarColor(Color.blue);
         else if (ratio >= 0.3f) pad.SetLightBarColor(Color.yellow);
         else                    pad.SetLightBarColor(Color.red);
@@ -122,7 +143,10 @@ public class Player : Character
 
     protected override void Die()
     {
-        
+        GameMenuController.CurrentMode = GameMode.Menu;
+        PlayerConflictStateController.Instance.EndCombat();
+        anim?.Die(true);
         // Aquí podrías abrir UI de muerte y llamar a Respawn después de un delay si quieres.
+        GameOverManager.Instance.TriggerGameOver();
     }
 }

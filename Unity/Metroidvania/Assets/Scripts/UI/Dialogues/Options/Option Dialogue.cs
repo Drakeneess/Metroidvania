@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,35 +13,23 @@ public class OptionDialogue : MonoBehaviour
     private OptionDialogueElement activeOption;
     private int currentIndex;
 
+    void Awake()
+    {
+        options = new List<OptionDialogueElement>();
+
+        if (buttons != null && buttons.Length >= 2)
+        {
+            buttons[0].onClick.AddListener(() => ChangeOptionSelect(-1)); // Arriba/Izquierda
+            buttons[1].onClick.AddListener(() => ChangeOptionSelect(1));  // Abajo/Derecha
+        }
+    }
+
     void OnEnable()
     {
         if (InputActionController.Instance != null)
         {
             InputActionController.Instance.OnActionTriggered += OnOptionDialogueSelect;
             InputActionController.Instance.OnFloatInput += OnOptionDialogueNavigate;
-        }
-    }
-
-    private void OnOptionDialogueSelect(string action)
-    {
-        if (action == "OptionSelect")
-        {
-            // Lógica para seleccionar una opción
-            if (activeOption != null)
-            {
-                activeOption.PressButton();
-            }
-        }
-    }
-
-    private void OnOptionDialogueNavigate(string action, float value)
-    {
-        if (action == "OptionMovement")
-        {
-            if(value!=0){
-                int direction = value > 0 ? 1 : -1;
-                ChangeOptionSelect(direction);
-            }
         }
     }
 
@@ -53,72 +40,75 @@ public class OptionDialogue : MonoBehaviour
             InputActionController.Instance.OnActionTriggered -= OnOptionDialogueSelect;
             InputActionController.Instance.OnFloatInput -= OnOptionDialogueNavigate;
         }
-        if (options != null)
+
+        // 🧹 Limpieza segura sin afectar layout
+        ClearOptions();
+    }
+
+    private void OnOptionDialogueSelect(string action)
+    {
+        if (action == "OptionSelect" && activeOption != null)
+            activeOption.PressButton();
+    }
+
+    private void OnOptionDialogueNavigate(string action, float value)
+    {
+        if (action == "OptionMovement" && value != 0)
         {
-            options.Clear();
+            int direction = value > 0 ? 1 : -1;
+            ChangeOptionSelect(direction);
         }
     }
 
-    void Awake()
-    {
-        options = new List<OptionDialogueElement>();
-
-        // Corrección del registro de eventos
-        buttons[0].onClick.AddListener(() => ChangeOptionSelect(-1)); // Botón para moverse hacia arriba/izquierda
-        buttons[1].onClick.AddListener(() => ChangeOptionSelect(1));  // Botón para moverse hacia abajo/derecha
-    }
-
     /// <summary>
-    /// Instancia las opciones de diálogo y oculta todas excepto la primera.
+    /// Instancia nuevas opciones limpiando las previas sin tocar el layout.
     /// </summary>
     public void SetOptions(List<LocalizedDecision> decisions)
     {
         DialogueSystem.IsOptionActive = true;
+
+        ClearOptions();
+
+        currentIndex = 0;
+        activeOption = null;
+
         foreach (var decision in decisions)
         {
-            GameObject optionDialogue = Instantiate(optionDialogueElementPrefab, panel);
-            optionDialogue.transform.localScale = optionDialogueElementPrefab.transform.localScale;
+            GameObject optionObj = Instantiate(optionDialogueElementPrefab, panel);
 
-            OptionDialogueElement optionDialogueElement = optionDialogue.GetComponent<OptionDialogueElement>();
-            optionDialogueElement.SetButton(decision, gameObject);
+            // ✅ NO cambiamos scale ni forzamos layout
+            // optionObj.transform.localScale = Vector3.one;  // ❌ No se usa para evitar alterar diseño
 
-            options.Add(optionDialogueElement);
+            var element = optionObj.GetComponent<OptionDialogueElement>();
+            element.SetButton(decision, gameObject);
+
+            options.Add(element);
         }
 
-        // Mostrar solo la primera opción
-        currentIndex = 0;
-        activeOption = options[currentIndex];
-        UpdateActiveOption();
+        if (options.Count > 0)
+        {
+            activeOption = options[0];
+            UpdateActiveOption();
 
-        for(int i = 1; i < options.Count; i++){
-            options[i].gameObject.SetActive(false);
+            for (int i = 1; i < options.Count; i++)
+                options[i].gameObject.SetActive(false);
         }
     }
 
-    /// <summary>
-    /// Cambia la opción activa basada en la dirección de navegación.
-    /// </summary>
     private void ChangeOptionSelect(int direction)
     {
         if (options.Count == 0) return;
 
-        // Ocultar la opción actual
         options[currentIndex].gameObject.SetActive(false);
 
-        // Cambiar el índice
         currentIndex += direction;
 
-        // Asegurar que el índice no salga de los límites
-        currentIndex = currentIndex<0? options.Count-1: currentIndex;
-        currentIndex = currentIndex>=options.Count? 0: currentIndex;
+        if (currentIndex < 0) currentIndex = options.Count - 1;
+        if (currentIndex >= options.Count) currentIndex = 0;
 
-        // Activar la nueva opción
         UpdateActiveOption();
     }
 
-    /// <summary>
-    /// Activa la opción actual y actualiza la referencia de `activeOption`.
-    /// </summary>
     private void UpdateActiveOption()
     {
         if (options.Count > 0)
@@ -127,6 +117,22 @@ public class OptionDialogue : MonoBehaviour
             activeOption = options[currentIndex];
 
             activeOption.Button.Select();
+        }
+    }
+
+    /// <summary>
+    /// Limpia los botones sin afectar layout original.
+    /// </summary>
+    private void ClearOptions()
+    {
+        if (options != null && options.Count > 0)
+        {
+            foreach (var opt in options)
+            {
+                if (opt != null && opt.gameObject != null)
+                    Destroy(opt.gameObject);
+            }
+            options.Clear();
         }
     }
 }

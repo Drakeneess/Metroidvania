@@ -25,7 +25,7 @@ public class PlayerActionLogger : MonoBehaviour
         var nowIso = DateTime.UtcNow.ToString("o");
         float x = (float)Math.Round(transform.position.x, 6);
         float y = (float)Math.Round(transform.position.y, 6);
-        ActionType actionName = PlayerConflictStateController.Instance.IsInConflict ? ActionType.Fight : ActionType.Explore;
+        ActionContextType actionName = PlayerConflictStateController.Instance.IsInConflict ? ActionContextType.Fight : ActionContextType.Explore;
         float currentHealth = player.Health.GetPercent(HealthType.Physical);
 
         if (extras == null) extras = new List<string>();
@@ -65,14 +65,14 @@ public class PlayerActionLogger : MonoBehaviour
 public class PlayerAction
 {
     public string type;
-    public ActionType actionName;
+    public ActionContextType actionName;
     public string timestamp; // ISO 8601 (UTC)
     public float posX;
     public float posY;
     public float currentHealth;
     public List<string> extras;
 
-    public PlayerAction(string type, ActionType actionName, string timestamp, float x, float y, float currentHealth, List<string> extras = null)
+    public PlayerAction(string type, ActionContextType actionName, string timestamp, float x, float y, float currentHealth, List<string> extras = null)
     {
         this.type = type;
         this.actionName = actionName;
@@ -84,7 +84,7 @@ public class PlayerAction
     }
 }
 
-public enum ActionType
+public enum ActionContextType
 {
     Neutral,
     Fight,

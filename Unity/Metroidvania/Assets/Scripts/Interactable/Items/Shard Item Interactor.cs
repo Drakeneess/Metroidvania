@@ -38,5 +38,9 @@ public class ShardItemInteractor : Interactable
         ToolMenuController.Instance.ShowMenu(shard.ShardTool);
         shard.ShardTool.UnlockTool();
         shard.SetInMirror();
+        if (WeaponController.Instance.CurrentWeapon == null && shard.ShardTool is Weapon)
+        {
+            WeaponController.Instance.EquipWeapon(shard.ShardTool as Weapon);
+        }
     }
 }
