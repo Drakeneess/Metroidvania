@@ -1,4 +1,4 @@
-import { Box, ChakraProvider } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./assets/auth/AuthContext";
 import RequireAuth from "./assets/auth/RequireAuth";
@@ -10,30 +10,28 @@ import AdminDashboard from "./assets/pages/AdminDashboard";
 import PsychologistDashboard from "./assets/pages/PsychologistDashboard";
 import TeacherDashboard from "./assets/pages/TeacherDashboard";
 import Forbidden from "./assets/components/Forbidden";
+import NotFound from "./assets/components/NotFound";
 
-// 🆕 imports nuevos
 import GradientBackground from "./assets/components/GradientBackground";
-import theme from "./theme";
 
 export default function App() {
   return (
-    <ChakraProvider theme={theme}>
-      <AuthProvider>
-        <Router>
-          {/* 🌌 Fondo animado global */}
-          <GradientBackground />
+    <AuthProvider>
+      <Router>
+        <GradientBackground />
 
-          <Box
-            minH="100vh"
-            bg="transparent"
-            pos="relative"
-            zIndex={1}
-          >
-            <AppNav />
+        <Box
+          minH="100vh"
+          bg="transparent"
+          pos="relative"
+          zIndex={1}
+        >
+          <AppNav />
+
+          <Box as="main" px={{ base: 4, md: 8 }} py={{ base: 4, md: 6 }}>
             <Routes>
               <Route path="/" element={<LoginForm />} />
 
-              {/* Cualquiera logueado */}
               <Route
                 path="/dashboard"
                 element={
@@ -43,7 +41,6 @@ export default function App() {
                 }
               />
 
-              {/* Exclusivo ADMIN */}
               <Route
                 path="/dashboard/admin"
                 element={
@@ -53,7 +50,6 @@ export default function App() {
                 }
               />
 
-              {/* Exclusivo PSYCHOLOGIST */}
               <Route
                 path="/dashboard/psychologist"
                 element={
@@ -63,7 +59,6 @@ export default function App() {
                 }
               />
 
-              {/* Exclusivo TEACHER */}
               <Route
                 path="/dashboard/teacher"
                 element={
@@ -74,10 +69,11 @@ export default function App() {
               />
 
               <Route path="/forbidden" element={<Forbidden />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </Box>
-        </Router>
-      </AuthProvider>
-    </ChakraProvider>
+        </Box>
+      </Router>
+    </AuthProvider>
   );
 }

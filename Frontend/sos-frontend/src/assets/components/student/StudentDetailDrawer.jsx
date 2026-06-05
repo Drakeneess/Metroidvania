@@ -1,12 +1,25 @@
 // src/components/student-detail/StudentDetailDrawer.jsx
+
 import { useEffect, useMemo, useState } from "react";
-import { Select, Tooltip } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Flex,
+  HStack,
+  Select,
+  Spinner,
+  Text,
+  Tooltip,
+  useToast,
+} from "@chakra-ui/react";
+
 import StudentSummary from "./StudentSummary";
 import DistributionBars from "../bdi/BdiDistributionBars";
 import OutcomeChips from "../bdi/StudentOutcomeChips";
 import ResponsesTable from "../bdi/StudentResponsesTable";
 import GameSessionsSection from "../GameSessions/GameSessionsSection";
 import ExportSection from "../student-detail/ExportSection";
+
 import { fetchGameSessions } from "../../services/gameSessionService";
 import {
   getAlertForStudent,
@@ -15,6 +28,24 @@ import {
   updateAlert,
 } from "../../services/alertService";
 
+function formatDate(value) {
+  if (!value) return "—";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "—";
+
+  return date.toLocaleDateString("es-BO", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function getLevelById(levels, id) {
+  return levels.find((level) => String(level.id) === String(id));
+}
+
 export default function StudentDetailDrawer({
   isOpen,
   onClose,
@@ -22,154 +53,182 @@ export default function StudentDetailDrawer({
   payload,
   authUser,
 }) {
+  const toast = useToast();
+
   const [activeTab, setActiveTab] = useState("responses");
+  const [hoverTab, setHoverTab] = useState("");
+
   const [sessions, setSessions] = useState([]);
   const [sessionsLoading, setSessionsLoading] = useState(false);
   const [sessionsError, setSessionsError] = useState(null);
 
-  // 🔹 Estado para alertas
   const [alertInfo, setAlertInfo] = useState(null);
   const [alertLevels, setAlertLevels] = useState([]);
   const [selectedAlert, setSelectedAlert] = useState("");
+  const [alertUpdating, setAlertUpdating] = useState(false);
 
   const student = payload?.student;
   const stats = payload?.stats || {};
   const outcomes = payload?.outcomes || {};
   const items = payload?.items || {};
+
   const answered = items.answered || [];
   const unanswered = items.unanswered || [];
 
-  // Bloquear scroll del body al abrir el drawer
+  const selectedLevel = useMemo(
+    () => getLevelById(alertLevels, selectedAlert),
+    [alertLevels, selectedAlert]
+  );
+
+  const alertSelectBg = selectedLevel?.color
+    ? `${selectedLevel.color}26`
+    : "rgba(255,255,255,0.82)";
+
   useEffect(() => {
-    const prev = document.body.style.overflow;
-    console.log(prev);
-    document.body.style.overflow = isOpen ? "hidden" : prev || "";
+    const previousOverflow = document.body.style.overflow;
+
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    }
+
     return () => {
-      document.body.style.overflow = prev || "";
+      document.body.style.overflow = previousOverflow || "";
     };
   }, [isOpen]);
 
-  // Reset de pestaña y sesiones al cambiar estudiante
   useEffect(() => {
     setActiveTab("responses");
     setSessions([]);
     setSessionsError(null);
-  }, [payload]);
+  }, [payload?.student?.id_student]);
 
-  // 🧩 Cargar metadatos de alertas (niveles)
   useEffect(() => {
     getAlertLevels()
       .then((levels) => setAlertLevels(levels || []))
-      .catch((err) => console.error("❌ Error al cargar meta de alertas:", err));
+      .catch((error) => {
+        console.error("Error al cargar niveles de alerta:", error);
+      });
   }, []);
 
-  // 🔥 Cargar alerta actual del estudiante
   useEffect(() => {
-    if (!student?.id_student) return;
-
-    console.log("🟢 Solicitando alerta para:", student.id_student);
+    if (!student?.id_student || !isOpen) return;
 
     getAlertForStudent(student.id_student)
       .then((alert) => {
-        console.log("🟣 Respuesta del backend (alert):", alert);
         setAlertInfo(alert);
         setSelectedAlert(alert?.id_alert || "");
       })
-      .catch((err) => {
-        console.error("🔴 Error al cargar alerta:", err);
+      .catch((error) => {
+        console.error("Error al cargar alerta:", error);
         setAlertInfo(null);
         setSelectedAlert("");
       });
-  }, [student?.id_student]);
+  }, [student?.id_student, isOpen]);
 
-  // 🎛️ Cambiar o asignar alerta
-  const handleAlertChange = async (e) => {
-    const newId = e.target.value;
+  useEffect(() => {
+    if (activeTab !== "sessions" || !student?.id_student || !isOpen) return;
+
+    setSessionsLoading(true);
+    setSessionsError(null);
+
+    fetchGameSessions(student.id_student)
+      .then((sessionList) => {
+        setSessions(Array.isArray(sessionList) ? sessionList : []);
+      })
+      .catch((error) => {
+        console.error("Error al cargar sesiones:", error);
+
+        if (error?.status === 404) {
+          setSessions([]);
+          setSessionsError("NO_SESSIONS");
+          return;
+        }
+
+        setSessions([]);
+        setSessionsError(error?.message || "Error desconocido");
+      })
+      .finally(() => setSessionsLoading(false));
+  }, [activeTab, student?.id_student, isOpen]);
+
+  const handleAlertChange = async (event) => {
+    const newId = event.target.value;
+
     setSelectedAlert(newId);
-    if (!newId) return;
+
+    if (!newId || !student?.id_student) return;
+
+    setAlertUpdating(true);
 
     try {
       if (!alertInfo) {
-        // Crear nueva
         const created = await createAlert({
           id_student: student.id_student,
           id_alert: newId,
         });
+
         setAlertInfo(created);
       } else {
-        // Actualizar existente
         const updated = await updateAlert({
           id_alert_student: alertInfo.id_alert_student,
           id_alert: newId,
         });
+
         setAlertInfo(updated);
       }
-    } catch (err) {
-      console.error("Error al actualizar alerta:", err);
+
+      toast({
+        title: "Alerta actualizada",
+        status: "success",
+        duration: 1800,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error al actualizar alerta:", error);
+
+      toast({
+        title: "No se pudo actualizar la alerta",
+        description: "Revisa la conexión o el endpoint de alertas.",
+        status: "error",
+        duration: 2400,
+        isClosable: true,
+      });
+    } finally {
+      setAlertUpdating(false);
     }
   };
 
-  // Carga on-demand de Game Sessions
-  useEffect(() => {
-    if (activeTab === "sessions" && student) {
-      setSessionsLoading(true);
-      setSessionsError(null);
-
-      fetchGameSessions(student.id_student)
-        .then((sess) => {
-          if (!sess || !sess.length) {
-            setSessions([]);
-          } else {
-            setSessions(sess);
-          }
-        })
-        .catch((err) => {
-          console.error("Error al cargar sesiones:", err);
-
-          if (err?.status === 404) {
-            // <-- Bandera especial: no existen sesiones para este estudiante
-            setSessions([]);
-            setSessionsError("NO_SESSIONS"); 
-          } else {
-            setSessionsError(err?.message || "Error desconocido");
-          }
-        })
-        .finally(() => setSessionsLoading(false));
-    }
-  }, [activeTab, student]);
-
-
-  // 🎨 Estilos
-    const styles = useMemo(
+  const styles = useMemo(
     () => ({
       overlay: {
         position: "fixed",
         inset: 0,
         background: "rgba(17, 17, 27, 0.45)",
-        backdropFilter: "blur(2px)",
+        backdropFilter: "blur(3px)",
         opacity: isOpen ? 1 : 0,
         pointerEvents: isOpen ? "auto" : "none",
         transition: "opacity 220ms ease",
         zIndex: 1000,
       },
+
       drawer: {
         position: "fixed",
         top: 0,
         right: 0,
-        width: "720px",
+        width: "760px",
         maxWidth: "100vw",
         height: "100%",
         background:
-          "linear-gradient(160deg, rgba(255,255,255,0.88) 0%, rgba(245,245,250,0.92) 100%)",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
+          "linear-gradient(160deg, rgba(255,255,255,0.92) 0%, rgba(246,244,255,0.96) 48%, rgba(239,242,255,0.94) 100%)",
+        boxShadow: "0 8px 42px rgba(15,12,41,0.32)",
         transform: isOpen ? "translateX(0%)" : "translateX(100%)",
         transition: "transform 280ms cubic-bezier(0.25,0.8,0.25,1)",
         zIndex: 1001,
         display: "flex",
         flexDirection: "column",
-        borderLeft: "1px solid rgba(255,255,255,0.6)",
-        backdropFilter: "blur(10px) saturate(160%)",
+        borderLeft: "1px solid rgba(255,255,255,0.72)",
+        backdropFilter: "blur(12px) saturate(160%)",
       },
+
       closeBtn: {
         position: "absolute",
         top: 14,
@@ -177,102 +236,117 @@ export default function StudentDetailDrawer({
         width: 36,
         height: 36,
         borderRadius: 12,
-        border: "none",
+        border: "1px solid rgba(107,70,193,0.14)",
         background:
-          "linear-gradient(135deg, rgba(240,240,250,1), rgba(225,225,240,0.9))",
+          "linear-gradient(135deg, rgba(255,255,255,1), rgba(238,235,252,0.95))",
         cursor: "pointer",
         fontSize: 20,
-        lineHeight: "34px",
+        lineHeight: "32px",
         color: "#2D3748",
-        boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+        boxShadow: "0 2px 8px rgba(15,12,41,0.13)",
         transition: "all 0.2s ease",
       },
+
       header: {
         position: "sticky",
         top: 0,
         zIndex: 2,
         padding: "18px 22px",
-        borderBottom: "1px solid rgba(0,0,0,0.05)",
-        background: "rgba(255,255,255,0.85)",
-        backdropFilter: "blur(8px) saturate(180%)",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+        paddingRight: "62px",
+        borderBottom: "1px solid rgba(107,70,193,0.12)",
+        background: "rgba(255,255,255,0.86)",
+        backdropFilter: "blur(10px) saturate(180%)",
+        boxShadow: "0 2px 14px rgba(15,12,41,0.06)",
       },
+
       tabsBar: {
         display: "flex",
         gap: 8,
         padding: "12px 20px",
-        borderBottom: "1px solid rgba(0,0,0,0.06)",
-        background: "rgba(255,255,255,0.75)",
-        backdropFilter: "blur(6px) saturate(160%)",
+        borderBottom: "1px solid rgba(107,70,193,0.10)",
+        background: "rgba(255,255,255,0.72)",
+        backdropFilter: "blur(8px) saturate(160%)",
         position: "sticky",
-        top: 70,
+        top: 76,
         zIndex: 1,
+        overflowX: "auto",
       },
+
       tabBtn: (active) => ({
         padding: "8px 16px",
-        borderRadius: 10,
+        borderRadius: 999,
         background: active
           ? "linear-gradient(135deg, #6B46C1 0%, #805AD5 100%)"
-          : "rgba(245,245,255,0.8)",
+          : "rgba(248,247,255,0.92)",
         color: active ? "#fff" : "#2D3748",
-        border: "1px solid " + (active ? "transparent" : "rgba(0,0,0,0.05)"),
+        border: active
+          ? "1px solid transparent"
+          : "1px solid rgba(107,70,193,0.10)",
         cursor: "pointer",
         fontSize: 14,
-        fontWeight: active ? 700 : 600,
+        fontWeight: active ? 800 : 650,
         transition:
           "box-shadow 160ms ease, transform 120ms ease, background 160ms ease",
         boxShadow: active
-          ? "0 4px 12px rgba(107,70,193,0.3)"
-          : "0 1px 3px rgba(0,0,0,0.06)",
+          ? "0 6px 16px rgba(107,70,193,0.30)"
+          : "0 1px 4px rgba(15,12,41,0.07)",
+        whiteSpace: "nowrap",
       }),
+
       tabBtnHover: {
-        boxShadow: "0 6px 16px rgba(0,0,0,0.12)",
+        boxShadow: "0 7px 18px rgba(15,12,41,0.16)",
         transform: "translateY(-1px)",
       },
+
       main: {
         padding: 24,
         overflowY: "auto",
         flex: 1,
         scrollBehavior: "smooth",
         background:
-          "linear-gradient(180deg, rgba(255,255,255,0.95), rgba(250,250,255,0.9))",
+          "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(250,249,255,0.94))",
       },
+
       sectionTitle: {
-        fontWeight: 700,
+        fontWeight: 800,
         fontSize: 15,
-        margin: "18px 0 10px",
+        margin: "20px 0 10px",
         color: "#1A202C",
+        letterSpacing: "-0.01em",
       },
+
       muted: {
         color: "#718096",
         fontSize: 14,
       },
+
       error: {
         color: "#E53E3E",
-        fontWeight: 600,
+        fontWeight: 700,
       },
     }),
     [isOpen]
   );
 
-  const [hoverTab, setHoverTab] = useState("");
-
-  // ======================
-  // 🔥 HEADER con dropdown de alerta
-  // ======================
   return (
     <>
-      <div onClick={onClose} style={styles.overlay} />
+      <Box onClick={onClose} style={styles.overlay} />
 
       <style>{`
         #sosDrawerScroll::-webkit-scrollbar { width: 10px; }
         #sosDrawerScroll::-webkit-scrollbar-thumb {
-          background-color: rgba(0,0,0,0.15);
+          background-color: rgba(107,70,193,0.22);
           border-radius: 10px;
           border: 3px solid transparent;
           background-clip: content-box;
         }
-        #sosDrawerScroll { scrollbar-color: rgba(0,0,0,0.25) transparent; scrollbar-width: thin; }
+        #sosDrawerScroll::-webkit-scrollbar-thumb:hover {
+          background-color: rgba(107,70,193,0.34);
+        }
+        #sosDrawerScroll {
+          scrollbar-color: rgba(107,70,193,0.30) transparent;
+          scrollbar-width: thin;
+        }
       `}</style>
 
       <aside role="dialog" aria-modal="true" style={styles.drawer}>
@@ -280,150 +354,189 @@ export default function StudentDetailDrawer({
           ×
         </button>
 
-        {/* Header con dropdown */}
         <header style={styles.header}>
           {student ? (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
+            <Flex
+              align={{ base: "flex-start", md: "center" }}
+              justify="space-between"
+              direction={{ base: "column", md: "row" }}
+              gap={3}
             >
-              <div>
-                <h2 style={{ fontWeight: 800, fontSize: 18, color: "#1A202C" }}>
-                  {student.full_name}
-                </h2>
-                <div style={{ color: "#4A5568", fontSize: 14, marginTop: 2 }}>
-                  CI: {student.ci} · Edad: {student.age_range} · Registro:{" "}
-                  {student.register_date
-                    ? new Date(student.register_date).toLocaleDateString()
-                    : "—"}
-                </div>
-              </div>
+              <Box>
+                <Text
+                  as="h2"
+                  fontWeight="800"
+                  fontSize="lg"
+                  color="#1A202C"
+                  lineHeight="1.2"
+                >
+                  {student.full_name || "Estudiante sin nombre"}
+                </Text>
+
+                <Text color="#4A5568" fontSize="sm" mt={1}>
+                  CI: {student.ci || "—"} · Edad: {student.age_range || "—"} ·
+                  Registro: {formatDate(student.register_date)}
+                </Text>
+
+                {authUser?.role && (
+                  <Text color="#805AD5" fontSize="xs" fontWeight="700" mt={1}>
+                    Vista actual: {authUser.role}
+                  </Text>
+                )}
+              </Box>
 
               <Tooltip label="Nivel de alerta" hasArrow placement="bottom">
-                <Select
-                  value={selectedAlert}
-                  onChange={handleAlertChange}
-                  placeholder="Sin alerta"
-                  width="180px"
-                  size="sm"
-                  ml={4}
-                  fontWeight="600"
-                  border="1px solid rgba(0,0,0,0.1)"
-                  borderRadius="10px"
-                  bg={
-                    alertLevels.find((lvl) => String(lvl.id) === String(selectedAlert))
-                      ? `${alertLevels.find((lvl) => String(lvl.id) === String(selectedAlert)).color}30`
-                      : "rgba(255,255,255,0.8)"
-                  } // color + transparencia (ej: #E53E3E30)
-                  color={
-                    alertLevels.find((lvl) => String(lvl.id) === String(selectedAlert))
-                      ? "#1A202C"
-                      : "#2D3748"
-                  }
-                  _hover={{
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                    bg: "rgba(255,255,255,0.95)",
-                  }}
-                  _focus={{
-                    borderColor: "#6B46C1",
-                    boxShadow: "0 0 0 2px rgba(107,70,193,0.25)",
-                  }}
-                >
-                  {alertLevels.map((level) => (
-                    <option
-                      key={level.id}
-                      value={level.id}
-                      style={{
+                <Box minW="180px">
+                  <Select
+                    value={selectedAlert}
+                    onChange={handleAlertChange}
+                    placeholder="Sin alerta"
+                    width="180px"
+                    size="sm"
+                    isDisabled={alertUpdating}
+                    fontWeight="700"
+                    border="1px solid rgba(107,70,193,0.16)"
+                    borderRadius="10px"
+                    bg={alertSelectBg}
+                    color="#1A202C"
+                    _hover={{
+                      boxShadow: "0 2px 8px rgba(15,12,41,0.12)",
+                      bg: "rgba(255,255,255,0.96)",
+                    }}
+                    _focus={{
+                      borderColor: "#6B46C1",
+                      boxShadow: "0 0 0 2px rgba(107,70,193,0.25)",
+                    }}
+                    sx={{
+                      option: {
                         background: "white",
                         color: "#1A202C",
-                        fontWeight: 500,
-                      }}
-                    >
-                      {level.type}
-                    </option>
-                  ))}
-                </Select>
+                        fontWeight: 600,
+                      },
+                    }}
+                  >
+                    {alertLevels.map((level) => (
+                      <option key={level.id} value={level.id}>
+                        {level.type}
+                      </option>
+                    ))}
+                  </Select>
+                </Box>
               </Tooltip>
-
-            </div>
+            </Flex>
           ) : (
-            <h2 style={{ fontWeight: 800, fontSize: 18, color: "#1A202C" }}>
+            <Text as="h2" fontWeight="800" fontSize="lg" color="#1A202C">
               Detalle del estudiante
-            </h2>
+            </Text>
           )}
         </header>
 
-        {/* Tabs */}
         <div style={styles.tabsBar}>
           <TabButton
             active={activeTab === "responses"}
             onClick={() => setActiveTab("responses")}
             onHover={hoverTab === "responses"}
-            setHover={(v) => setHoverTab(v ? "responses" : "")}
+            setHover={(value) => setHoverTab(value ? "responses" : "")}
             styles={styles}
           >
             Respuestas
           </TabButton>
+
           <TabButton
             active={activeTab === "sessions"}
             onClick={() => setActiveTab("sessions")}
             onHover={hoverTab === "sessions"}
-            setHover={(v) => setHoverTab(v ? "sessions" : "")}
+            setHover={(value) => setHoverTab(value ? "sessions" : "")}
             styles={styles}
           >
             Game Sessions
           </TabButton>
+
           <TabButton
             active={activeTab === "export"}
             onClick={() => setActiveTab("export")}
             onHover={hoverTab === "export"}
-            setHover={(v) => setHoverTab(v ? "export" : "")}
+            setHover={(value) => setHoverTab(value ? "export" : "")}
             styles={styles}
           >
             Exportar
           </TabButton>
         </div>
 
-        {/* Contenido */}
         <main id="sosDrawerScroll" style={styles.main}>
           {loading ? (
-            <p>Cargando…</p>
+            <Flex minH="320px" align="center" justify="center" direction="column">
+              <Spinner size="lg" color="purple.500" />
+              <Text mt={3} color="#718096" fontWeight="600">
+                Cargando detalle…
+              </Text>
+            </Flex>
           ) : !payload ? (
-            <p style={styles.muted}>Seleccione un estudiante para ver detalles.</p>
+            <Box
+              p={5}
+              border="1px dashed rgba(107,70,193,0.22)"
+              borderRadius="16px"
+              bg="rgba(255,255,255,0.72)"
+            >
+              <Text color="#718096">
+                Seleccione un estudiante para ver detalles.
+              </Text>
+            </Box>
           ) : (
             <>
               <StudentSummary stats={stats} />
 
               {activeTab === "responses" && (
                 <>
-                  <h3 style={styles.sectionTitle}>Distribución de respuestas</h3>
+                  <h3 style={styles.sectionTitle}>
+                    Distribución de respuestas
+                  </h3>
+
                   <DistributionBars
-                    distribution={stats.distribution}
-                    total={stats.answeredCount}
+                    distribution={stats.distribution || {}}
+                    total={stats.answeredCount || 0}
                   />
-                  <h3 style={styles.sectionTitle}>Interpretación / Outcomes</h3>
+
+                  <h3 style={styles.sectionTitle}>
+                    Interpretación / Outcomes
+                  </h3>
+
                   <OutcomeChips
                     matched={outcomes.matched || []}
                     all={outcomes.all || []}
                   />
+
                   <h3 style={styles.sectionTitle}>Respuestas</h3>
-                  <ResponsesTable answered={answered} unanswered={unanswered} />
+
+                  <ResponsesTable
+                    answered={answered}
+                    unanswered={unanswered}
+                  />
                 </>
               )}
 
               {activeTab === "sessions" && (
                 <>
                   {sessionsLoading ? (
-                    <p>Cargando sesiones…</p>
+                    <Flex
+                      minH="220px"
+                      align="center"
+                      justify="center"
+                      direction="column"
+                    >
+                      <Spinner size="md" color="purple.500" />
+                      <Text mt={3} color="#718096" fontWeight="600">
+                        Cargando sesiones…
+                      </Text>
+                    </Flex>
                   ) : (
-                    <GameSessionsSection sessions={sessions} error={sessionsError} />
+                    <GameSessionsSection
+                      sessions={sessions}
+                      error={sessionsError}
+                    />
                   )}
                 </>
               )}
-
 
               {activeTab === "export" && (
                 <ExportSection
@@ -432,6 +545,21 @@ export default function StudentDetailDrawer({
                   authUser={authUser}
                 />
               )}
+
+              <HStack mt={8} justify="flex-end">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  borderColor="rgba(107,70,193,0.24)"
+                  color="#6B46C1"
+                  _hover={{
+                    bg: "rgba(107,70,193,0.08)",
+                  }}
+                  onClick={onClose}
+                >
+                  Cerrar
+                </Button>
+              </HStack>
             </>
           )}
         </main>
@@ -446,6 +574,7 @@ function TabButton({ active, onClick, children, onHover, setHover, styles }) {
 
   return (
     <button
+      type="button"
       onClick={onClick}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}

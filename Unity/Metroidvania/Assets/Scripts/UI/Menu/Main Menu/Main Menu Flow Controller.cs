@@ -110,14 +110,14 @@ public class MainMenuFlowController : MonoBehaviour
         titleCoroutine = StartCoroutine(mainMenu.StartTittleFadeIn());
     }
 
-    private void HandleActionTriggered(string action)
+    private void HandleActionTriggered(InputActionType action)
     {
         switch (action)
         {
-            case "PAButton":
+            case InputActionType.PAButton:
                 SkipTitleAnimation();
                 break;
-            case "Select":
+            case InputActionType.Select:
                 ActivateMenuButtons();
                 break;
         }

@@ -6,7 +6,7 @@ using System;
 
 public class ApiClient : MonoBehaviour
 {
-    private static readonly string baseUrl = "https://equilibria.cloud/api/";
+    private static readonly string baseUrl = "https://dataconection-production.up.railway.app/api/";
 
     public IEnumerator PostRequest(string endpoint, string jsonData, Action<string> onSuccess, Action<string> onError)
     {

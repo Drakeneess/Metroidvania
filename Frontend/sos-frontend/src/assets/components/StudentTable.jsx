@@ -1,138 +1,440 @@
-import { Box, Grid, GridItem, Text, Spinner, Tag, useBreakpointValue, Stack } from "@chakra-ui/react";
+// src/assets/components/StudentTable.jsx
 
-export default function StudentTable({ students = [], loading = false, onSelect }) {
-  const borderClr = "gray.300";
-  const headerBg = "gray.100";
-  const textColor = "gray.800";
-  const hoverBg = "blue.50";
+import {
+  Box,
+  Grid,
+  GridItem,
+  Text,
+  Spinner,
+  Tag,
+  useBreakpointValue,
+  Stack,
+  VStack,
+  HStack,
+  Heading,
+  Badge,
+  Flex,
+} from "@chakra-ui/react";
 
-  // 🔹 Saber si estamos en móvil o escritorio
-  const isMobile = useBreakpointValue({ base: true, md: false });
+function formatDate(value) {
+  if (!value) return "—";
 
-  if (loading) return <Spinner size="lg" />;
-  if (students.length === 0)
-    return <Text color="gray.700">No hay estudiantes registrados.</Text>;
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "—";
+
+  return date.toLocaleDateString("es-BO", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function toNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+}
+
+function getStudentName(student) {
+  return (
+    student.full_name ||
+    student.student_name ||
+    student.name ||
+    `Estudiante #${student.id_student}`
+  );
+}
+
+function getSessionCount(student) {
+  return toNumber(student.total_sessions);
+}
+
+function hasPlayed(student) {
+  return getSessionCount(student) > 0;
+}
+
+function TableShell({
+  title,
+  description,
+  count,
+  badgeColor = "brand",
+  children,
+}) {
+  const isCalm = badgeColor === "calm";
 
   return (
     <Box
-      overflowX="auto"
-      borderWidth="1px"
-      borderColor={borderClr}
-      borderRadius="lg"
-      bg="white"
-      w="100%"
+      bg="rgba(35, 41, 70, 0.84)"
+      border="1px solid"
+      borderColor="soul.border"
+      borderRadius="2xl"
+      boxShadow="soul"
+      backdropFilter="blur(18px)"
+      overflow="hidden"
     >
-      {/* 💻 Cabecera solo en escritorio */}
-      {!isMobile && (
-        <Grid
-          templateColumns="2fr 1fr 1fr 1fr"
-          gap={0}
-          bg={headerBg}
-          color={textColor}
-          borderBottom={`1px solid var(--chakra-colors-${borderClr.replace('.', '-')})`}
-          minW="800px"
-          px={4}
-          py={2}
-          fontWeight="semibold"
+      <Flex
+        justify="space-between"
+        align={{ base: "flex-start", md: "center" }}
+        direction={{ base: "column", md: "row" }}
+        gap={3}
+        px={{ base: 4, md: 5 }}
+        py={4}
+        borderBottom="1px solid"
+        borderColor="soul.softBorder"
+      >
+        <Box>
+          <Heading size="sm" color="white">
+            {title}
+          </Heading>
+
+          {description && (
+            <Text color="gray.500" fontSize="sm" mt={1}>
+              {description}
+            </Text>
+          )}
+        </Box>
+
+        <Badge
+          px={3}
+          py={1}
+          borderRadius="full"
+          bg={
+            isCalm
+              ? "rgba(0, 187, 249, 0.14)"
+              : "rgba(169, 112, 255, 0.18)"
+          }
+          color={isCalm ? "calm" : "brand.100"}
+          border="1px solid"
+          borderColor={
+            isCalm
+              ? "rgba(0, 187, 249, 0.26)"
+              : "rgba(169, 112, 255, 0.32)"
+          }
         >
-          <GridItem px={2}>Nombre completo</GridItem>
-          <GridItem px={2}>CI</GridItem>
-          <GridItem px={2}>Edad</GridItem>
-          <GridItem px={2}>Fecha de registro</GridItem>
-        </Grid>
-      )}
+          {count} estudiantes
+        </Badge>
+      </Flex>
 
-      {/* 🔹 Filas / Tarjetas */}
-      {students.map((s, idx) => {
-        const rowBg = idx % 2 === 0 ? "white" : "gray.50";
-        const hasAlert = !!s.alert;
-        const alertColor = s.alert?.color || "transparent";
-        const alertBg = hasAlert ? `${alertColor}20` : rowBg;
-        const alertTextClr = hasAlert ? textColor : "gray.600";
+      {children}
+    </Box>
+  );
+}
 
-        return (
-          <Box
-            key={s.id_student}
-            bg={alertBg}
-            borderBottom={`1px solid var(--chakra-colors-${borderClr.replace('.', '-')})`}
-            _hover={{ bg: hoverBg }}
-            cursor={onSelect ? "pointer" : "default"}
-            onClick={() => onSelect && onSelect(s)}
-            transition="background-color 0.2s ease"
-            px={4}
+function StudentTableSection({
+  title,
+  description,
+  students,
+  onSelect,
+  emptyText,
+  badgeColor,
+  showSessionColumns = false,
+}) {
+  const isMobile = useBreakpointValue({ base: true, md: false });
+
+  if (!students.length) {
+    return (
+      <TableShell
+        title={title}
+        description={description}
+        count={0}
+        badgeColor={badgeColor}
+      >
+        <Box px={5} py={8} textAlign="center">
+          <Text color="gray.400" fontWeight="semibold">
+            {emptyText}
+          </Text>
+        </Box>
+      </TableShell>
+    );
+  }
+
+  const templateColumns = showSessionColumns
+    ? "2fr 1fr 1fr 1fr 1.2fr"
+    : "2fr 1fr 1fr 1.2fr";
+
+  const minW = showSessionColumns ? "900px" : "760px";
+
+  return (
+    <TableShell
+      title={title}
+      description={description}
+      count={students.length}
+      badgeColor={badgeColor}
+    >
+      <Box overflowX="auto" w="100%">
+        {!isMobile && (
+          <Grid
+            templateColumns={templateColumns}
+            gap={0}
+            minW={minW}
+            px={5}
             py={3}
+            bg="rgba(15, 12, 41, 0.45)"
+            borderBottom="1px solid"
+            borderColor="soul.softBorder"
+            color="gray.400"
+            fontWeight="bold"
+            fontSize="xs"
+            letterSpacing="0.08em"
+            textTransform="uppercase"
           >
-            {isMobile ? (
-              // 📱 Vista móvil
-              <Stack spacing={1}>
-                <Text fontWeight="bold" color={textColor} fontSize="md">
-                  {s.full_name || "—"}
-                  {hasAlert && (
-                    <Tag
-                      size="sm"
-                      ml={2}
-                      bg={s.alert.color}
-                      color="white"
-                      borderRadius="md"
-                    >
-                      {s.alert.type}
-                    </Tag>
-                  )}
-                </Text>
-                <Text fontSize="sm" color="gray.600">
-                  CI: {s.ci || "—"}
-                </Text>
-                <Text fontSize="sm" color="gray.600">
-                  Edad: {s.age_range || "—"}
-                </Text>
-                <Text fontSize="sm" color="gray.600">
-                  Registro:{" "}
-                  {s.register_date
-                    ? new Date(s.register_date).toLocaleDateString()
-                    : "—"}
-                </Text>
-              </Stack>
+            <GridItem px={2}>Estudiante</GridItem>
+            <GridItem px={2}>CI</GridItem>
+            <GridItem px={2}>Edad</GridItem>
+
+            {showSessionColumns ? (
+              <>
+                <GridItem px={2}>Partidas</GridItem>
+                <GridItem px={2}>Última sesión</GridItem>
+              </>
             ) : (
-              // 💻 Vista escritorio
-              <Grid
-                templateColumns="2fr 1fr 1fr 1fr"
-                gap={0}
-                color={alertTextClr}
-                minW="800px"
-                alignItems="center"
-              >
-                <GridItem px={2}>
-                  <Text noOfLines={1} fontWeight="medium">
-                    {s.full_name}
+              <GridItem px={2}>Registro</GridItem>
+            )}
+          </Grid>
+        )}
+
+        {students.map((student, index) => {
+          const hasAlert = Boolean(student.alert);
+          const studentName = getStudentName(student);
+          const sessionCount = getSessionCount(student);
+
+          return (
+            <Box
+              key={student.id_student}
+              bg={
+                hasAlert
+                  ? "rgba(239, 71, 111, 0.10)"
+                  : index % 2 === 0
+                    ? "rgba(255, 255, 255, 0.025)"
+                    : "rgba(255, 255, 255, 0.045)"
+              }
+              borderBottom="1px solid"
+              borderColor="soul.softBorder"
+              _hover={{
+                bg: "rgba(169, 112, 255, 0.12)",
+              }}
+              cursor={onSelect ? "pointer" : "default"}
+              onClick={() => onSelect?.(student)}
+              transition="background-color 0.2s ease"
+              px={5}
+              py={4}
+            >
+              {isMobile ? (
+                <Stack spacing={2}>
+                  <HStack spacing={2} flexWrap="wrap">
+                    <Text fontWeight="bold" color="white" fontSize="md">
+                      {studentName}
+                    </Text>
+
                     {hasAlert && (
                       <Tag
                         size="sm"
-                        ml={2}
-                        bg={s.alert.color}
+                        bg={student.alert.color || "danger"}
                         color="white"
                         borderRadius="md"
                       >
-                        {s.alert.type}
+                        {student.alert.type || "Alerta"}
                       </Tag>
                     )}
+                  </HStack>
+
+                  <Text fontSize="sm" color="gray.400">
+                    ID:{" "}
+                    <Text as="span" color="gray.200">
+                      #{student.id_student}
+                    </Text>
                   </Text>
-                </GridItem>
-                <GridItem px={2}>
-                  <Text>{s.ci}</Text>
-                </GridItem>
-                <GridItem px={2}>
-                  <Text>{s.age_range}</Text>
-                </GridItem>
-                <GridItem px={2}>
-                  <Text>
-                    {new Date(s.register_date).toLocaleDateString()}
+
+                  <Text fontSize="sm" color="gray.400">
+                    CI:{" "}
+                    <Text as="span" color="gray.200">
+                      {student.ci || "—"}
+                    </Text>
                   </Text>
-                </GridItem>
-              </Grid>
-            )}
-          </Box>
-        );
-      })}
-    </Box>
+
+                  <Text fontSize="sm" color="gray.400">
+                    Edad:{" "}
+                    <Text as="span" color="gray.200">
+                      {student.age_range || "—"}
+                    </Text>
+                  </Text>
+
+                  {showSessionColumns ? (
+                    <>
+                      <Text fontSize="sm" color="gray.400">
+                        Partidas:{" "}
+                        <Text as="span" color="success" fontWeight="bold">
+                          {sessionCount}
+                        </Text>
+                      </Text>
+
+                      <Text fontSize="sm" color="gray.400">
+                        Última sesión:{" "}
+                        <Text as="span" color="gray.200">
+                          {formatDate(student.last_session_date)}
+                        </Text>
+                      </Text>
+                    </>
+                  ) : (
+                    <Text fontSize="sm" color="gray.400">
+                      Registro:{" "}
+                      <Text as="span" color="gray.200">
+                        {formatDate(student.register_date)}
+                      </Text>
+                    </Text>
+                  )}
+                </Stack>
+              ) : (
+                <Grid
+                  templateColumns={templateColumns}
+                  gap={0}
+                  minW={minW}
+                  alignItems="center"
+                  color="gray.200"
+                >
+                  <GridItem px={2}>
+                    <HStack spacing={2}>
+                      <Box minW={0}>
+                        <Text noOfLines={1} fontWeight="semibold" color="white">
+                          {studentName}
+                        </Text>
+
+                        <Text color="gray.500" fontSize="xs">
+                          ID #{student.id_student}
+                        </Text>
+                      </Box>
+
+                      {hasAlert && (
+                        <Tag
+                          size="sm"
+                          bg={student.alert.color || "danger"}
+                          color="white"
+                          borderRadius="md"
+                        >
+                          {student.alert.type || "Alerta"}
+                        </Tag>
+                      )}
+                    </HStack>
+                  </GridItem>
+
+                  <GridItem px={2}>
+                    <Text color="gray.300">{student.ci || "—"}</Text>
+                  </GridItem>
+
+                  <GridItem px={2}>
+                    <Text color="gray.300">
+                      {student.age_range || "—"}
+                    </Text>
+                  </GridItem>
+
+                  {showSessionColumns ? (
+                    <>
+                      <GridItem px={2}>
+                        <Badge
+                          px={2}
+                          py={1}
+                          borderRadius="md"
+                          bg="rgba(6, 214, 160, 0.14)"
+                          color="success"
+                          border="1px solid"
+                          borderColor="rgba(6, 214, 160, 0.26)"
+                        >
+                          {sessionCount}
+                        </Badge>
+                      </GridItem>
+
+                      <GridItem px={2}>
+                        <Text color="gray.300">
+                          {formatDate(student.last_session_date)}
+                        </Text>
+                      </GridItem>
+                    </>
+                  ) : (
+                    <GridItem px={2}>
+                      <Text color="gray.300">
+                        {formatDate(student.register_date)}
+                      </Text>
+                    </GridItem>
+                  )}
+                </Grid>
+              )}
+            </Box>
+          );
+        })}
+      </Box>
+    </TableShell>
+  );
+}
+
+export default function StudentTable({
+  students = [],
+  loading = false,
+  onSelect,
+}) {
+  if (loading) {
+    return (
+      <Flex
+        minH="180px"
+        align="center"
+        justify="center"
+        color="gray.300"
+        border="1px dashed"
+        borderColor="soul.border"
+        borderRadius="2xl"
+        bg="rgba(35, 41, 70, 0.54)"
+      >
+        <Spinner size="md" color="brand.200" mr={3} />
+        <Text>Cargando estudiantes...</Text>
+      </Flex>
+    );
+  }
+
+  if (!students.length) {
+    return (
+      <Box
+        p={6}
+        border="1px dashed"
+        borderColor="soul.border"
+        borderRadius="2xl"
+        bg="rgba(35, 41, 70, 0.54)"
+        textAlign="center"
+      >
+        <Text color="gray.300" fontWeight="semibold">
+          No hay estudiantes registrados.
+        </Text>
+
+        <Text color="gray.500" fontSize="sm" mt={1}>
+          Cuando existan registros, aparecerán en esta sección.
+        </Text>
+      </Box>
+    );
+  }
+
+  const studentsWithGames = students.filter(hasPlayed);
+
+  const studentsOnlyRegistered = students.filter(
+    (student) => !hasPlayed(student)
+  );
+
+  return (
+    <VStack spacing={6} align="stretch">
+      <StudentTableSection
+        title="Estudiantes con partidas"
+        description="Estudiantes que ya tienen playthroughs registrados en la API principal."
+        students={studentsWithGames}
+        onSelect={onSelect}
+        emptyText="No hay estudiantes con partidas registradas."
+        badgeColor="calm"
+        showSessionColumns
+      />
+
+      <StudentTableSection
+        title="Estudiantes solo registrados"
+        description="Estudiantes creados en el sistema que todavía no tienen actividad de juego."
+        students={studentsOnlyRegistered}
+        onSelect={onSelect}
+        emptyText="No hay estudiantes pendientes de iniciar actividad."
+        badgeColor="brand"
+      />
+    </VStack>
   );
 }

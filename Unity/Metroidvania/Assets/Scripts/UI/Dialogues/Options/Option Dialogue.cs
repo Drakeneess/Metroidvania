@@ -45,15 +45,15 @@ public class OptionDialogue : MonoBehaviour
         ClearOptions();
     }
 
-    private void OnOptionDialogueSelect(string action)
+    private void OnOptionDialogueSelect(InputActionType action)
     {
-        if (action == "OptionSelect" && activeOption != null)
+        if (action == InputActionType.OptionSelect && activeOption != null)
             activeOption.PressButton();
     }
 
-    private void OnOptionDialogueNavigate(string action, float value)
+    private void OnOptionDialogueNavigate(InputActionType action, float value)
     {
-        if (action == "OptionMovement" && value != 0)
+        if (action == InputActionType.OptionMovement && value != 0)
         {
             int direction = value > 0 ? 1 : -1;
             ChangeOptionSelect(direction);

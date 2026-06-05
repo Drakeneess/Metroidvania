@@ -189,7 +189,7 @@ def _run_kmeans_players(players_df: pd.DataFrame, k=4):
 # =========================
 # API pública
 # =========================
-def kmeans_players_mean(k=4, limit=10000):
+def kmeans_players_mean(k=2, limit=10000):
     ses_df = _build_session_features(limit=limit)
     if ses_df is None or ses_df.empty:
         raise ValueError("No hay sesiones con logs válidos para construir features por jugador.")

@@ -1,13 +1,19 @@
 export function formatDateTime(date) {
   try {
-    return new Date(date).toLocaleString();
+    const d = new Date(date);
+    return d.toLocaleString("es-BO", {
+      timeZone: "America/La_Paz",
+    });
   } catch {
     return "—";
   }
 }
+
 export function formatDateShort(date) {
   try {
-    return new Date(date).toLocaleDateString(undefined, {
+    const d = new Date(date);
+    return d.toLocaleDateString("es-BO", {
+      timeZone: "America/La_Paz",
       month: "short",
       day: "numeric",
     });

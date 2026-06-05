@@ -46,9 +46,9 @@ public class ToolUI : MonoBehaviour
         transform.rotation = Quaternion.Euler(currentRotation.x, currentRotation.y, 0f);
     }
 
-    private void HandleInput(string actionName, Vector2 value)
+    private void HandleInput(InputActionType actionName, Vector2 value)
     {
-        if (actionName != "RotateTool") return;
+        if (actionName != InputActionType.RotateTool) return;
 
         rotationInput = value != Vector2.zero ? value.normalized : Vector2.zero;
     }

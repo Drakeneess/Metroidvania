@@ -57,7 +57,7 @@ def kmeans_actions(final_actions_df: pd.DataFrame,
     sess_df = sess_df[cols].drop_duplicates(subset=["id_session"])
 
     df = feats.merge(sess_df, on="id_session", how="left")
-    df = df.dropna(subset=["bdi_score"])  # sesiones con BDI
+    df["bdi_score"] = df["bdi_score"].fillna(-1)
 
     # 3) Escalar y clusterizar (solo features de acciones)
     X = df[feature_cols].astype(float).values

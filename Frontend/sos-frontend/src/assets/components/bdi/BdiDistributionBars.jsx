@@ -1,3 +1,36 @@
+// src/components/bdi/BdiDistributionBars.jsx
+
+import {
+  Box,
+  Flex,
+  Text,
+  VStack,
+  Progress,
+} from "@chakra-ui/react";
+
+const scorePalette = {
+  0: {
+    label: "Mínimo",
+    color: "#3182CE",
+    gradient: "linear-gradient(90deg, #63B3ED, #3182CE)",
+  },
+  1: {
+    label: "Leve",
+    color: "#6B46C1",
+    gradient: "linear-gradient(90deg, #B794F4, #6B46C1)",
+  },
+  2: {
+    label: "Moderado",
+    color: "#DD6B20",
+    gradient: "linear-gradient(90deg, #F6AD55, #DD6B20)",
+  },
+  3: {
+    label: "Alto",
+    color: "#E53E3E",
+    gradient: "linear-gradient(90deg, #FC8181, #E53E3E)",
+  },
+};
+
 export default function BdiDistributionBars({ distribution = {}, total = 0 }) {
   const entries = Object.entries(distribution).sort(
     (a, b) => Number(a[0]) - Number(b[0])
@@ -5,86 +38,77 @@ export default function BdiDistributionBars({ distribution = {}, total = 0 }) {
 
   if (!entries.length) {
     return (
-      <p
-        style={{
-          color: "#A0AEC0",
-          fontSize: 14,
-          background: "rgba(255,255,255,0.6)",
-          padding: "12px 16px",
-          borderRadius: 10,
-          boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
-          textAlign: "center",
-        }}
+      <Box
+        color="#718096"
+        fontSize="sm"
+        bg="rgba(255,255,255,0.72)"
+        border="1px solid rgba(107,70,193,0.12)"
+        px={4}
+        py={4}
+        borderRadius="16px"
+        boxShadow="0 2px 10px rgba(15,12,41,0.06)"
+        textAlign="center"
       >
         Sin datos disponibles.
-      </p>
+      </Box>
     );
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        gap: 20,
-        background: "rgba(255,255,255,0.6)",
-        padding: 16,
-        borderRadius: 14,
-        boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-        backdropFilter: "blur(6px) saturate(150%)",
-      }}
+    <Box
+      bg="rgba(255,255,255,0.72)"
+      border="1px solid rgba(107,70,193,0.12)"
+      p={4}
+      borderRadius="18px"
+      boxShadow="0 2px 12px rgba(15,12,41,0.07)"
+      backdropFilter="blur(8px) saturate(150%)"
     >
-      {entries.map(([score, count], i) => {
-        const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+      <VStack spacing={4} align="stretch">
+        {entries.map(([score, count]) => {
+          const numericScore = Number(score);
+          const numericCount = Number(count) || 0;
+          const pct = total > 0 ? Math.round((numericCount / total) * 100) : 0;
 
-        // paleta emocional (gradientes suaves por score)
-        const gradients = [
-          "linear-gradient(90deg, #63B3ED, #3182CE)", // azul
-          "linear-gradient(90deg, #9F7AEA, #6B46C1)", // violeta
-          "linear-gradient(90deg, #F6AD55, #DD6B20)", // naranja
-          "linear-gradient(90deg, #FC8181, #E53E3E)", // rojo
-          "linear-gradient(90deg, #48BB78, #2F855A)", // verde
-        ];
-        const barColor = gradients[i % gradients.length];
+          const palette =
+            scorePalette[numericScore] || {
+              label: `Score ${score}`,
+              color: "#6B46C1",
+              gradient: "linear-gradient(90deg, #B794F4, #6B46C1)",
+            };
 
-        return (
-          <div key={score} style={{ minWidth: "240px", flex: "1" }}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginBottom: 6,
-                fontSize: 14,
-                fontWeight: 600,
-                color: "#2D3748",
-              }}
-            >
-              <span>Puntaje {score}</span>
-              <span style={{ color: "#4A5568", fontWeight: 500 }}>
-                {count} ({pct}%)
-              </span>
-            </div>
-            <div
-              style={{
-                height: "10px",
-                background: "rgba(0,0,0,0.08)",
-                borderRadius: "6px",
-                overflow: "hidden",
-                boxShadow: "inset 0 1px 3px rgba(0,0,0,0.15)",
-              }}
-            >
-              <div
-                style={{
-                  width: `${pct}%`,
-                  height: "100%",
-                  background: barColor,
-                  transition: "width 300ms ease",
+          return (
+            <Box key={score}>
+              <Flex justify="space-between" align="center" mb={2} gap={3}>
+                <Box>
+                  <Text color="#1A202C" fontSize="sm" fontWeight="800">
+                    Puntaje {score}
+                  </Text>
+
+                  <Text color="#718096" fontSize="xs" fontWeight="600">
+                    {palette.label}
+                  </Text>
+                </Box>
+
+                <Text color="#4A5568" fontSize="sm" fontWeight="700">
+                  {numericCount} · {pct}%
+                </Text>
+              </Flex>
+
+              <Progress
+                value={pct}
+                h="10px"
+                borderRadius="full"
+                bg="rgba(0,0,0,0.07)"
+                sx={{
+                  "& > div": {
+                    background: palette.gradient,
+                  },
                 }}
               />
-            </div>
-          </div>
-        );
-      })}
-    </div>
+            </Box>
+          );
+        })}
+      </VStack>
+    </Box>
   );
 }

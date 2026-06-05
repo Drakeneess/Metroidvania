@@ -43,14 +43,14 @@ public class FastTravelMenuButtons : MenuButtons
         UpdateButtonSelection();
     }
 
-    protected override void Select(string actionName)
+    protected override void Select(InputActionType actionName)
     {
-        if (actionName == "Select" || actionName == "OptionSelect" || actionName == "Submit" || actionName == "Interact")
+        if (actionName == InputActionType.Select || actionName == InputActionType.OptionSelect)
         {
             if (currentSelection >= 0 && currentSelection < buttons.Length && menu.AreOptionsDeployed)
                 buttons[currentSelection].onClick.Invoke();
         }
-        else if (actionName == "Back" || actionName == "Cancel")
+        else if (actionName == InputActionType.Back)
         {
             (menu as FastTravelMenu)?.Close();
         }

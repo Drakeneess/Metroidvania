@@ -47,9 +47,9 @@ public class ToolMenu : MonoBehaviour
         SetValues();
     }
 
-    private void OnSelectPressed(string actionName)
+    private void OnSelectPressed(InputActionType actionName)
     {
-        if (actionName != "ToolSelect") return;
+        if (actionName != InputActionType.ToolSelect) return;
 
         // ✅ Reactivar exactamente los que se desactivaron
         foreach (Canvas c in canvasesToRestore)

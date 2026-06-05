@@ -77,9 +77,9 @@ public class MenuUINavigator : MonoBehaviour
         }
     }
 
-    private void HandleCloseInput(string actionName)
+    private void HandleCloseInput(InputActionType actionName)
     {
-        if (actionName != "CloseMap") return;
+        if (actionName != InputActionType.CloseMap) return;
 
         if (mapContainer != null)
         {
@@ -102,9 +102,9 @@ public class MenuUINavigator : MonoBehaviour
     }
 
     // ------------------ Pan ------------------
-    private void HandleNavigationInput(string actionName, Vector2 value)
+    private void HandleNavigationInput(InputActionType actionName, Vector2 value)
     {
-        if (actionName != "MapNavigation" || mapContainer == null) return;
+        if (actionName != InputActionType.MapNavigation || mapContainer == null) return;
 
         currentMovement = -value;
 
@@ -137,9 +137,9 @@ public class MenuUINavigator : MonoBehaviour
     }
 
     // ------------------ Zoom ------------------
-    private void HandleZoomInput(string actionName, float value)
+    private void HandleZoomInput(InputActionType actionName, float value)
     {
-        if (actionName != "MapZoom" || mapContainer == null) return;
+        if (actionName != InputActionType.MapZoom || mapContainer == null) return;
 
         currentZoomInput = value;
 

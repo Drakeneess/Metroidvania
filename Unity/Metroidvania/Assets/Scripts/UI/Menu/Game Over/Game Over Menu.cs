@@ -68,6 +68,11 @@ public class GameOverMenu : MonoBehaviour
 
     private void OnEnable()
     {
+        Debug.Log("[GOMenu] ENABLED — StackTrace:\n" + StackTraceUtility.ExtractStackTrace());
+        Debug.Log("[GOMenu] ENABLED — parent active = " 
+              + transform.parent.gameObject.activeSelf
+              + " | self active = " 
+              + gameObject.activeSelf);
         if (isListening) return;
 
         InputActionController.Instance.OnActionTriggered += OnRespawn;
@@ -84,10 +89,10 @@ public class GameOverMenu : MonoBehaviour
         isRespawning = false;
     }
 
-    private void OnRespawn(string actionName)
+    private void OnRespawn(InputActionType actionName)
     {
         if (!allowInput) return;
-        if (actionName != "Select") return;
+        if (actionName != InputActionType.Select) return;
         if (isRespawning) return; // 🚫 Ya se está respawneando → ignorar inputs extra
 
         // ✅ Cerrar la puerta de inmediato

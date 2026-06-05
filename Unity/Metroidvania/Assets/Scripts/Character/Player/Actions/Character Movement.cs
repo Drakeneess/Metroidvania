@@ -56,14 +56,14 @@ public class CharacterMovement : MonoBehaviour
             InputActionController.Instance.OnFloatInput -= HandleActionInput;
     }
 
-    private void HandleActionInput(string actionName, float value)
+    private void HandleActionInput(InputActionType actionName, float value)
     {
         switch (actionName)
         {
-            case "Movement":
+            case InputActionType.Movement:
                 HandleMovementInput(value);
                 break;
-            case "Run":
+            case InputActionType.Run:
                 HandleRunningInput(value);
                 break;
         }

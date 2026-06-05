@@ -1,48 +1,129 @@
-import { Stack, Box, Text, Input, Button } from "@chakra-ui/react";
+// src/assets/components/StudentFilters.jsx
 
-export default function StudentFilters({ filters, setFilters, onApply, onClear }) {
-  const handleChange = (field) => (e) =>
-    setFilters({ ...filters, [field]: e.target.value });
+import {
+  Box,
+  Button,
+  FormControl,
+  FormLabel,
+  Input,
+  SimpleGrid,
+  HStack,
+} from "@chakra-ui/react";
 
-  const inputProps = {
-    bg: "white",
-    borderColor: "gray.300",
-    _placeholder: { color: "gray.500" },
-    _hover: { borderColor: "gray.400" },
-    _focus: { borderColor: "blue.400", boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)" }
+export default function StudentFilters({
+  filters,
+  setFilters,
+  onApply,
+  onClear,
+}) {
+  const handleChange = (field) => (event) => {
+    setFilters({
+      ...filters,
+      [field]: event.target.value,
+    });
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    onApply?.();
+  };
+
+  const clearFilters = () => {
+    if (onClear) {
+      onClear();
+      return;
+    }
+
+    setFilters({
+      searchId: "",
+      startDate: "",
+      endDate: "",
+      minAge: "",
+      maxAge: "",
+    });
   };
 
   return (
-    <Stack direction="row" spacing={4} mb={4} flexWrap="wrap" align="end">
-      <Box>
-        <Text fontSize="sm" color="gray.700" mb={1}>ID</Text>
-        <Input placeholder="Buscar ID" value={filters.searchId || ""} onChange={handleChange("searchId")} {...inputProps} />
-      </Box>
+    <Box as="form" onSubmit={handleSubmit}>
+      <SimpleGrid
+        columns={{ base: 1, md: 2, xl: 5 }}
+        spacing={4}
+        alignItems="end"
+      >
+        <FormControl>
+          <FormLabel color="gray.400" fontSize="sm">
+            ID
+          </FormLabel>
 
-      <Box>
-        <Text fontSize="sm" color="gray.700" mb={1}>Fecha desde</Text>
-        <Input type="date" value={filters.startDate || ""} onChange={handleChange("startDate")} {...inputProps} />
-      </Box>
+          <Input
+            placeholder="Buscar ID"
+            value={filters.searchId || ""}
+            onChange={handleChange("searchId")}
+          />
+        </FormControl>
 
-      <Box>
-        <Text fontSize="sm" color="gray.700" mb={1}>Fecha hasta</Text>
-        <Input type="date" value={filters.endDate || ""} onChange={handleChange("endDate")} {...inputProps} />
-      </Box>
+        <FormControl>
+          <FormLabel color="gray.400" fontSize="sm">
+            Fecha desde
+          </FormLabel>
 
-      <Box>
-        <Text fontSize="sm" color="gray.700" mb={1}>Edad mínima</Text>
-        <Input type="number" inputMode="numeric" value={filters.minAge || ""} onChange={handleChange("minAge")} {...inputProps} />
-      </Box>
+          <Input
+            type="date"
+            value={filters.startDate || ""}
+            onChange={handleChange("startDate")}
+          />
+        </FormControl>
 
-      <Box>
-        <Text fontSize="sm" color="gray.700" mb={1}>Edad máxima</Text>
-        <Input type="number" inputMode="numeric" value={filters.maxAge || ""} onChange={handleChange("maxAge")} {...inputProps} />
-      </Box>
+        <FormControl>
+          <FormLabel color="gray.400" fontSize="sm">
+            Fecha hasta
+          </FormLabel>
 
-      <Stack direction="row" spacing={2}>
-        <Button colorScheme="blue" onClick={onApply}>Filtrar</Button>
-        {onClear && <Button variant="outline" onClick={onClear}>Limpiar</Button>}
-      </Stack>
-    </Stack>
+          <Input
+            type="date"
+            value={filters.endDate || ""}
+            onChange={handleChange("endDate")}
+          />
+        </FormControl>
+
+        <FormControl>
+          <FormLabel color="gray.400" fontSize="sm">
+            Edad mínima
+          </FormLabel>
+
+          <Input
+            type="number"
+            inputMode="numeric"
+            placeholder="Ej. 12"
+            value={filters.minAge || ""}
+            onChange={handleChange("minAge")}
+          />
+        </FormControl>
+
+        <FormControl>
+          <FormLabel color="gray.400" fontSize="sm">
+            Edad máxima
+          </FormLabel>
+
+          <Input
+            type="number"
+            inputMode="numeric"
+            placeholder="Ej. 18"
+            value={filters.maxAge || ""}
+            onChange={handleChange("maxAge")}
+          />
+        </FormControl>
+      </SimpleGrid>
+
+      <HStack spacing={3} mt={5} justify="flex-end" flexWrap="wrap">
+        <Button type="submit">
+          Filtrar
+        </Button>
+
+        <Button type="button" variant="outline" onClick={clearFilters}>
+          Limpiar
+        </Button>
+      </HStack>
+    </Box>
   );
 }

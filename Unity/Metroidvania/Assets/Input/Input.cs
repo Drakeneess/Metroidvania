@@ -697,6 +697,17 @@ public partial class @Input: IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": false
                 },
                 {
+                    ""name"": """",
+                    ""id"": ""f4d16412-e05c-4b9c-befa-663791eeccf8"",
+                    ""path"": ""<Touchscreen>/Press"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""PA Button"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
                     ""name"": ""Gamepad Joystick"",
                     ""id"": ""5ef869d8-b2d2-4dee-a4b3-f4da304c4f56"",
                     ""path"": ""2DVector"",

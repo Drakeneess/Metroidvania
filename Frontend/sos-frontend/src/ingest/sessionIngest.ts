@@ -1,6 +1,6 @@
 import { api } from "../lib/axiosInstance";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 let SESSION_ID: string | null = null;
 let TOKEN: string | null = null;

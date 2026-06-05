@@ -40,47 +40,7 @@ export function exportToCSV({ payload, sessions = [] }) {
   const { total, apmAvg, clusterDominant } = buildGamerSummary(sessions);
 
   const lines = [];
-  lines.push("Reporte del Estudiante – Shadow of Souls (CSV)");
-  lines.push(toCSVRow(["Nombre", "CI", "Edad", "Registro"]));
-  lines.push(
-    toCSVRow([
-      student.full_name,
-      student.ci,
-      student.age_range,
-      student.register_date ? new Date(student.register_date).toLocaleDateString() : "",
-    ])
-  );
-  lines.push("");
-
-  lines.push("Resumen BDI-II");
-  lines.push(toCSVRow(["Puntaje total", "Respondidas", "Total Ítems", "Completitud %", "Última respuesta"]));
-  lines.push(
-    toCSVRow([
-      stats.totalScore ?? 0,
-      stats.answeredCount ?? 0,
-      stats.totalItems ?? 0,
-      stats.completion ?? 0,
-      stats.lastAnswerAt ? new Date(stats.lastAnswerAt).toLocaleString() : "",
-    ])
-  );
-  lines.push("");
-
-  lines.push("Resumen Gamer");
-  lines.push(toCSVRow(["Total sesiones", "APM promedio", "Cluster dominante"]));
-  lines.push(toCSVRow([total, Math.round(apmAvg), clusterDominant]));
-  lines.push("");
-
-  lines.push("Respuestas BDI-II");
-  lines.push(toCSVRow(["#", "Ítem", "Respuesta", "Score"]));
-  answered.forEach((r) => {
-    const respText = r?.response?.response_symbol || r?.response?.response || "—";
-    const score = typeof r?.response?.score === "number" ? r.response.score : "";
-    lines.push(toCSVRow([r.item_number, r.title || "—", respText, score]));
-  });
-  lines.push("");
-
   if (Array.isArray(sessions) && sessions.length) {
-    lines.push("Game Sessions");
     lines.push(
       toCSVRow([
         "id_session",

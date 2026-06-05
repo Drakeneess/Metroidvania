@@ -128,9 +128,9 @@ public class Interactable : MonoBehaviour
         return false;
     }
 
-    private void InteractPressed(string actionName)
+    private void InteractPressed(InputActionType actionName)
     {
-        if (actionName != "InteractPressed") return;
+        if (actionName != InputActionType.InteractPressed) return;
 //        Debug.Log($"[{name}] InteractPressed recibido. "
   //              + $"type={interactionType}, isInteractable={isInteractable}, hasInteracted={hasInteracted}, canInteract={canInteract}");
 
@@ -143,9 +143,9 @@ public class Interactable : MonoBehaviour
         if (interactableButton != null) interactableButton.Deactivate();
     }
 
-    private void InteractHold(string actionName, float deltaHold)
+    private void InteractHold(InputActionType actionName, float deltaHold)
     {
-        if (actionName != "OnInteractHold") return;
+        if (actionName != InputActionType.OnInteractHold) return;
 
         if (interactionType != InteractionType.Hold)
         {

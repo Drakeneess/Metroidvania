@@ -100,9 +100,9 @@ public class SettingsButtons : MonoBehaviour
         }
     }
 
-    private void OnNavigate(string action, Vector2 dir)
+    private void OnNavigate(InputActionType action, Vector2 dir)
     {
-        if (action != "Navigation" || controls.Length == 0) return;
+        if (action != InputActionType.Navigation || controls.Length == 0) return;
 
         // === Input horizontal (ajuste de valores) ===
         if (Mathf.Abs(dir.x) > 0.1f && dir != Vector2.zero)
@@ -151,19 +151,19 @@ public class SettingsButtons : MonoBehaviour
         moveCooldown = moveDelay;
     }
 
-    private void OnAction(string action)
+    private void OnAction(InputActionType action)
     {
         if (controls.Length == 0) return;
         var ctrl = controls[current];
 
-        if (action == "Select")
+        if (action == InputActionType.Select)
         {
             if (!isEditing)
                 isEditing = ctrl?.OnSelect() ?? false;
             else
                 isEditing = false;
         }
-        else if (action == "Back")
+        else if (action == InputActionType.Back)
         {
             if (isEditing) isEditing = false;
             else

@@ -82,9 +82,9 @@ public class CombatController : MonoBehaviour
         }
     }
 
-    private void LightAttackInput(string actionName)
+    private void LightAttackInput(InputActionType actionName)
     {
-        if (actionName != "LightAttack" || weaponContext.weapon==null) return;
+        if (actionName != InputActionType.LightAttack || weaponContext.weapon==null) return;
         if (!CanAcceptAttackInput()) return;
 
         PlayerActionLogger.Instance.Log("Light Attacking", new List<string>
@@ -99,9 +99,9 @@ public class CombatController : MonoBehaviour
             inputReceivedInWindow = true;
     }
 
-    private void HeavyAttackInput(string actionName, float value)
+    private void HeavyAttackInput(InputActionType actionName, float value)
     {
-        if (actionName != "HeavyAttack" || weaponContext.weapon==null) return;
+        if (actionName != InputActionType.HeavyAttack || weaponContext.weapon==null) return;
         if (!CanAcceptAttackInput()) return;
 
         if (value > 0.5f)

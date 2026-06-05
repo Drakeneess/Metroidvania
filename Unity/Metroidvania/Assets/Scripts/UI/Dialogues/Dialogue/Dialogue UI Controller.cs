@@ -54,9 +54,9 @@ public class DialogueUIController : MonoBehaviour
         }
     }
 
-    private void SelectPressed(string actionName)
+    private void SelectPressed(InputActionType actionName)
     {
-        if (actionName == "OptionSelect"){
+        if (actionName == InputActionType.OptionSelect){
             StartCoroutine(ButtonPressEffect());
             DialogueSystem.Instance.ShowNextDialogue();
         }

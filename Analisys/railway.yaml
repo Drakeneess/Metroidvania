@@ -1,0 +1,8 @@
+# railway.yaml
+services:
+  sos_behavior_analytics:
+    startCommand: python server.py
+    jobs:
+      - name: sos-nightly-refresh
+        schedule: "0 4 * * *"  # 04:00 UTC = 00:00 Bolivia
+        command: curl -X POST https://sosbehavioranalytics-production.up.railway.app/analyze

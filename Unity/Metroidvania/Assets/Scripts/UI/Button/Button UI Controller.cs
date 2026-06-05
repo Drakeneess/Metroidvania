@@ -28,8 +28,12 @@ public class ButtonUIController : MonoBehaviour
 
     private void Start()
     {
+        int initialScheme = 0;
+#if UNITY_ANDROID
+        initialScheme = 2;
+#endif
         // Actualizamos los botones activos al iniciar
-        UpdateButtonUI(0);
+        UpdateButtonUI(initialScheme);
     }
 
     private void OnEnable()

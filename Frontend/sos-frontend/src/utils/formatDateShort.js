@@ -1,26 +1,28 @@
 export function formatDateShort(dateStr) {
   if (!dateStr || typeof dateStr !== "string") return "—";
 
-  // Normaliza formato (asegura "T" en medio)
+  // 🔹 Normaliza formato (asegura "T" en medio)
   const normalized = dateStr.includes("T")
     ? dateStr
     : dateStr.replace(" ", "T");
 
-  const d = new Date(normalized);
+  // 🔹 Intenta parsear normalmente
+  let d = new Date(normalized);
 
+  // 🔹 Fallback si formato raro o inválido
   if (isNaN(d.getTime())) {
-    // algunos backends envían "YYYY/MM/DD" o timestamps
     try {
       const alt = new Date(dateStr);
-      if (!isNaN(alt.getTime())) return alt.toLocaleString("es-BO");
-      return "—";
+      if (!isNaN(alt.getTime())) d = alt;
+      else return "—";
     } catch {
       return "—";
     }
   }
 
-  // Si todo va bien, formato corto local
+  // 🔹 Ajuste explícito a zona horaria Bolivia (UTC-4)
   return d.toLocaleString("es-BO", {
+    timeZone: "America/La_Paz",
     day: "2-digit",
     month: "short",
     year: "2-digit",

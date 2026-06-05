@@ -1,52 +1,90 @@
-import { Spinner } from "@chakra-ui/react";
+// src/components/student-detail/StudentHeader.jsx
+
+import {
+  Box,
+  Flex,
+  HStack,
+  Text,
+  Tag,
+  Tooltip,
+} from "@chakra-ui/react";
 import { formatDate } from "./utils";
 
-export default function StudentHeader({ student }) {
-  if (!student)
-    return (
-      <div style={{ fontWeight: 700, fontSize: 18 }}>
-        Detalle del estudiante
-      </div>
-    );
+function isRealAlert(alert) {
+  const alertColor = alert?.color;
+  const alertType = alert?.type?.toLowerCase?.();
 
-  // --- Verificación más estricta ---
-  const alertColor = student.alert?.color;
-  const alertType = student.alert?.type?.toLowerCase?.();
-  const showAlert =
-    alertColor && alertType && alertType !== "sin alerta"; // ✅ sólo si es una alerta real
+  return Boolean(alertColor && alertType && alertType !== "sin alerta");
+}
+
+export default function StudentHeader({ student }) {
+  if (!student) {
+    return (
+      <Text fontWeight="800" fontSize="lg" color="#1A202C">
+        Detalle del estudiante
+      </Text>
+    );
+  }
+
+  const showAlert = isRealAlert(student.alert);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        width: "100%",
-      }}
+    <Flex
+      align={{ base: "flex-start", md: "center" }}
+      justify="space-between"
+      direction={{ base: "column", md: "row" }}
+      gap={3}
+      w="100%"
+      pr={{ base: 8, md: 0 }}
     >
-      {/* Info del estudiante */}
-      <div style={{ display: "grid", gap: 6 }}>
-        <div style={{ fontWeight: 700, fontSize: 18 }}>
-          {student.full_name}
-        </div>
-        <div style={{ color: "#4A5568", fontSize: 14 }}>
-          CI {student.ci} · Edad: {student.age_range} · Registro:{" "}
-          {formatDate(student.register_date)}
-        </div>
-      </div>
+      <Box minW={0}>
+        <HStack spacing={2} flexWrap="wrap">
+          <Text
+            fontWeight="800"
+            fontSize="lg"
+            color="#1A202C"
+            noOfLines={1}
+          >
+            {student.full_name || "Estudiante sin nombre"}
+          </Text>
 
-      {/* Spinner de nivel de alerta (solo si aplica) */}
-      {showAlert && (
-        <Spinner
-          size="lg"
-          thickness="4px"
-          speed="1s"
-          color={alertColor}
-          emptyColor="gray.200"
-          title={student.alert?.type || "Alerta"}
-          style={{ marginLeft: 16 }}
-        />
-      )}
-    </div>
+          {showAlert && (
+            <Tooltip
+              label={`Nivel de alerta: ${student.alert.type}`}
+              hasArrow
+              placement="bottom"
+            >
+              <Tag
+                size="sm"
+                px={3}
+                py={1}
+                borderRadius="full"
+                bg={`${student.alert.color}24`}
+                color="#1A202C"
+                border="1px solid"
+                borderColor={`${student.alert.color}55`}
+                fontWeight="800"
+              >
+                <HStack spacing={2}>
+                  <Box
+                    w="8px"
+                    h="8px"
+                    borderRadius="full"
+                    bg={student.alert.color}
+                    boxShadow={`0 0 0 4px ${student.alert.color}22`}
+                  />
+                  <Text>{student.alert.type}</Text>
+                </HStack>
+              </Tag>
+            </Tooltip>
+          )}
+        </HStack>
+
+        <Text color="#4A5568" fontSize="sm" mt={1}>
+          CI: {student.ci || "—"} · Edad: {student.age_range || "—"} · Registro:{" "}
+          {formatDate(student.register_date)}
+        </Text>
+      </Box>
+    </Flex>
   );
 }

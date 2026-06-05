@@ -110,9 +110,9 @@ public class MenuButtons : MonoBehaviour
         buttonImage.color = targetColor; // Asegurar el color final
     }
 
-    private void Navigate(string actionName, Vector2 direction)
+    private void Navigate(InputActionType actionName, Vector2 direction)
     {
-        if (actionName != "Navigation") return;
+        if (actionName != InputActionType.Navigation) return;
         if (navigationCooldown <= 0f)
         {
             switch (menuType)
@@ -177,9 +177,9 @@ public class MenuButtons : MonoBehaviour
         UpdateButtonSelection();
     }
 
-    protected virtual void Select(string actionName)
+    protected virtual void Select(InputActionType actionName)
     {
-        if (actionName == "Select")
+        if (actionName == InputActionType.Select)
         {
 
             if (currentSelection >= 0 && currentSelection < buttons.Length && menu.AreOptionsDeployed)

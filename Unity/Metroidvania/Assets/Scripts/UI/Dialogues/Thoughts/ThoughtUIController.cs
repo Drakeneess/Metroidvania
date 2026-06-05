@@ -33,9 +33,9 @@ public class ThoughtUIController : MonoBehaviour
             InputActionController.Instance.OnActionTriggered -= HandleInput;
     }
 
-    private void HandleInput(string actionName)
+    private void HandleInput(InputActionType actionName)
     {
-        if (actionName == "ThoughtNext") // ⚡ define esta acción en tu InputActionController
+        if (actionName == InputActionType.Select) // ⚡ define esta acción en tu InputActionController
         {
             if (ThoughtSystem.Instance != null)
             {

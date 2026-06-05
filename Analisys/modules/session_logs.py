@@ -17,7 +17,7 @@ def get_playthroughs_with_logs(limit=100):
         SELECT * 
         FROM vw_playthrough_summary 
         WHERE nosql_log_id IS NOT NULL
-        ORDER BY nosql_log_id IS NULL, nosql_log_id ASC 
+        ORDER BY start_time DESC
         LIMIT %s
     """
     cursor.execute(query, (limit,))

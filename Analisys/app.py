@@ -1,4 +1,5 @@
 from flask import Flask, jsonify
+from flask_cors import CORS
 import os
 
 # Blueprints
@@ -8,7 +9,15 @@ from api.player_routes import player_bp
 def create_app():
     app = Flask(__name__)
 
-    # Rutas base
+    # ✅ Habilitar CORS para desarrollo y Vercel
+    CORS(app, resources={r"/*": {
+        "origins": [
+            "http://localhost:5173",
+            "https://shadowofsoulspanel-l187espyo-drakeneess-projects.vercel.app",
+        ],
+        "supports_credentials": True
+    }})
+
     @app.route("/")
     def home():
         return jsonify({

@@ -88,9 +88,9 @@ public class CharacterJump : MonoBehaviour
             return jumpCount < maxJump && enoughHealth && airJumpTimer <= 0f;
     }
 
-    private void HandleJumpEvent(string actionName)
+    private void HandleJumpEvent(InputActionType actionName)
     {
-        if (actionName != "Jump") return;
+        if (actionName != InputActionType.Jump) return;
 
         if (CanJump())
         {

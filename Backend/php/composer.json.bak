@@ -1,0 +1,9 @@
+{
+    "require": {
+        "google/cloud-firestore": "^0.1.0",
+        "google/cloud-storage": "^1.30",
+        "google/gax": "^0.25.0",
+        "google/protobuf": "^3.25",
+        "grpc/grpc": "^1.74"
+    }
+}

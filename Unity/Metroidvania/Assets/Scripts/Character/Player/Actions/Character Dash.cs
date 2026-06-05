@@ -42,9 +42,9 @@ public class CharacterDash : MonoBehaviour
             InputActionController.Instance.OnActionTriggered -= HandleDashInput;
     }
 
-    private void HandleDashInput(string actionName)
+    private void HandleDashInput(InputActionType actionName)
     {
-        if (actionName != "Dash") return;
+        if (actionName != InputActionType.Dash) return;
 
         if (isDashing) return;
         if (characterMovement.IsOnAir) return;

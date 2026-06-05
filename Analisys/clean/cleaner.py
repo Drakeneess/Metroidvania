@@ -10,7 +10,14 @@ def clean_log_dataframe(raw_log: dict, id_session: int):
 
     try:
         data = json.loads(raw_log["log_data"])
-        actions = data.get("actions", [])
+        # Permitir logs en formato antiguo (con 'actions') y nuevo (lista directa)
+        if isinstance(data, dict):
+            actions = data.get("actions", [])
+        elif isinstance(data, list):
+            actions = data
+        else:
+            actions = []
+
     except Exception as e:
         print(f"⚠ Error parseando log de sesión {id_session}: {e}")
         return pd.DataFrame()

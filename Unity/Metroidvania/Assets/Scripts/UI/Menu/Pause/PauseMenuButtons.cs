@@ -13,7 +13,7 @@ public class PauseMenuButtons : MenuButtons
         if (buttons.Length > 2) buttons[2].onClick.AddListener(ExitGame);
     }
 
-    protected override void Select(string actionName)
+    protected override void Select(InputActionType actionName)
     {
         if (!menu || !menu.AreOptionsDeployed || MenuInputLock.Blocked)
             return;

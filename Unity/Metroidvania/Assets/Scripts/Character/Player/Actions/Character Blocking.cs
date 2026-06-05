@@ -29,10 +29,10 @@ public class CharacterBlocking : MonoBehaviour
         }
     }
 
-    private void HandleBlockInput(string actionName, float value)
+    private void HandleBlockInput(InputActionType actionName, float value)
     {
         return;
-        if (actionName != "Block") return;
+        if (actionName != InputActionType.Block) return;
 
         if (value != 0)
         {

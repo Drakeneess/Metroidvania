@@ -26,9 +26,9 @@ public class CharacterCure : MonoBehaviour
         }
     }
 
-    private void HandleCureInput(string actionName)
+    private void HandleCureInput(InputActionType actionName)
     {
-        if (actionName == "Cure")
+        if (actionName == InputActionType.Cure)
         { 
             CureController.Instance.TryUseCure();
         }

@@ -81,7 +81,7 @@ public class MainMenuButtons : MenuButtons
         UpdateButtonSelection();
     }
 
-    protected override void Select(string actionName)
+    protected override void Select(InputActionType actionName)
     {
         if (MenuInputLock.Blocked) return;
         base.Select(actionName);

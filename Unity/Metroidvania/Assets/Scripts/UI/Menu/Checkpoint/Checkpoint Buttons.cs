@@ -39,10 +39,10 @@ public class CheckpointMenuButtons : MenuButtons
     {
         base.OnDisable();
     }
-    protected override void Select(string actionName)
+    protected override void Select(InputActionType actionName)
     {
         base.Select(actionName);
-        if (actionName == "Back")
+        if (actionName == InputActionType.Back)
         {
             checkpointMenu.Close();
             

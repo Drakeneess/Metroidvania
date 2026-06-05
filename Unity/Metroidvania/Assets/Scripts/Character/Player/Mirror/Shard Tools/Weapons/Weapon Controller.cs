@@ -117,9 +117,9 @@ public class WeaponController : MonoBehaviour
         weaponImageUI.enabled = (sprite != null);
     }
 
-    private void ChangeWeapon(string actionName, Vector2 value)
+    private void ChangeWeapon(InputActionType actionName, Vector2 value)
     {
-        if (actionName != "ChangeWeapon") return;
+        if (actionName != InputActionType.ChangeWeapon) return;
 
         int newWeaponIndex = -1;
         if      (value == Vector2.up)    newWeaponIndex = 0;

@@ -1,5 +1,6 @@
 # --- Framework Web ---
 flask
+flask-cors
 
 # --- Data Analysis ---
 pandas

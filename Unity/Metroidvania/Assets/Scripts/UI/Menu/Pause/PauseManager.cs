@@ -27,9 +27,9 @@ public class PauseManager : MonoBehaviour
             InputActionController.Instance.OnActionTriggered -= Pause;
     }
 
-    private void Pause(string actionName)
+    private void Pause(InputActionType actionName)
     {
-        if (actionName != "Pause") return;
+        if (actionName != InputActionType.Pause) return;
         TogglePause();
     }
 

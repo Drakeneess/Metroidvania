@@ -30,9 +30,9 @@ public class CharacterMap : MonoBehaviour
         _blockUntil = Time.unscaledTime + reopenCooldown;
     }
 
-    private void HandleMapInput(string actionName)
+    private void HandleMapInput(InputActionType actionName)
     {
-        if (actionName != "Map") return;
+        if (actionName != InputActionType.Map) return;
         if (mapUIController == null) return;
 
         // 🔒 No abrir si ya está abierto

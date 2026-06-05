@@ -1,15 +1,19 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
+
+#if UNITY_STANDALONE || UNITY_EDITOR // Solo en PC/Editor
 using UnityEngine.InputSystem.DualShock;
+#endif
 
 public class InputController : MonoBehaviour
 {
     public static InputController instance { get; private set; }
-    public static event Action<int> OnControlSchemeChanged; // Evento para notificar cambios de esquema
+    public static event Action<int> OnControlSchemeChanged;
 
     private Input inputActions;
     public Input InputActions => inputActions;
+
     private static int currentScheme = 3;
     private InputDevice currentDevice;
 
@@ -23,13 +27,10 @@ public class InputController : MonoBehaviour
             DontDestroyOnLoad(gameObject);
             inputActions = new Input();
         }
-        else
-        {
-            
-        }
-        // Suscripción al cambio de acción de entrada
+
         InputSystem.onActionChange += OnInputActionChange;
     }
+
 
     private void OnDestroy()
     {
@@ -41,14 +42,13 @@ public class InputController : MonoBehaviour
         if (obj is InputAction action && change == InputActionChange.ActionPerformed)
         {
             var device = action.activeControl?.device;
-            if (device == null) return;  // Si el dispositivo es nulo, no hacemos nada
+            if (device == null) return;
 
             currentDevice = device;
             int previousScheme = currentScheme;
 
             UpdateControlScheme(device);
 
-            // Notificar solo si el esquema realmente cambió
             if (previousScheme != currentScheme)
             {
                 OnControlSchemeChanged?.Invoke(currentScheme);
@@ -58,34 +58,45 @@ public class InputController : MonoBehaviour
 
     private void UpdateControlScheme(InputDevice device)
     {
-        // Detectar el dispositivo activo y actualizar el esquema
+        // --- TECLADO + MOUSE ---
         if (device is Keyboard || device is Mouse)
         {
-            currentScheme = 0; // Esquema: Teclado y ratón
+            currentScheme = 0;
             SetCursorState(false);
         }
+
+        // --- DUALSENSE (SOLO EN PC/EDITOR) ---
+#if UNITY_STANDALONE || UNITY_EDITOR
         else if (device is DualSenseGamepadHID)
         {
-            currentScheme = 1; // Esquema: DualSense
+            currentScheme = 1;
             SetCursorState(true);
         }
+#endif
+
+        // --- GAMEPADS GENÉRICOS (Android incluye algunos aquí) ---
         else if (device is Gamepad)
         {
-            currentScheme = 2; // Esquema: Otros Gamepads
+            currentScheme = 2;
             SetCursorState(true);
         }
+
+        // --- OTROS DISPOSITIVOS ---
         else
         {
-            currentScheme = -1; // Esquema desconocido
+            currentScheme = -1;
         }
     }
 
     private void SetCursorState(bool lockCursor)
     {
+#if UNITY_STANDALONE || UNITY_EDITOR
         Cursor.lockState = lockCursor ? CursorLockMode.Locked : CursorLockMode.None;
         Cursor.visible = !lockCursor;
+#endif
+        // 🔸 Android NO usa cursor → no hacemos nada allí.
     }
 
-    // Obtener el dispositivo actual (opcional)
-    public static string GetCurrentDeviceName() => instance.currentDevice?.displayName ?? "Dispositivo desconocido";
+    public static string GetCurrentDeviceName() 
+        => instance.currentDevice?.displayName ?? "Dispositivo desconocido";
 }

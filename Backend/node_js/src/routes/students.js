@@ -28,9 +28,23 @@ studentsRouter.get("/", async (req, res, next) => {
             },
           ],
           required: false,
-          separate: true, // para evitar duplicados
+          separate: true,
           order: [["id_alert_student", "DESC"]],
-          limit: 1, // solo la alerta más reciente
+          limit: 1,
+        },
+        {
+          model: Playthrough,
+          as: "plays",
+          attributes: [
+            "id_playthrough",
+            "start_date",
+            "end_date",
+            "version",
+            "id_status",
+          ],
+          required: false,
+          separate: true,
+          order: [["start_date", "DESC"]],
         },
       ],
       order: [["register_date", "DESC"]],
@@ -38,12 +52,20 @@ studentsRouter.get("/", async (req, res, next) => {
 
     const formatted = students.map((s) => {
       const alert = s.alerts?.[0];
+      const plays = s.plays || [];
+      const lastPlay = plays[0];
+
       return {
         id_student: s.id_student,
         ci: s.ci,
         full_name: s.full_name,
         age_range: s.age_range,
         register_date: s.register_date,
+
+        // 🔹 nuevos campos para frontend
+        total_sessions: plays.length,
+        last_session_date: lastPlay?.start_date || null,
+
         alert: alert
           ? {
               id_alert_student: alert.id_alert_student,
@@ -209,7 +231,7 @@ studentsRouter.get("/:id_student/full", async (req, res, next) => {
       include: [
         {
           model: AlertLevel,
-          as: "alertLevel", // 🔹 alias único para evitar conflicto con BdiLevel
+          as: "alertLevel",
           attributes: ["alert_type", "alert_color", "alert_priority"],
         },
       ],
