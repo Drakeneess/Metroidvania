@@ -14,6 +14,7 @@ def create_app():
         "origins": [
             "http://localhost:5173",
             "https://shadowofsoulspanel-l187espyo-drakeneess-projects.vercel.app",
+            "https://shadowofsoulspanel-3h9zih21k-drakeneess-projects.vercel.app"
         ],
         "supports_credentials": True
     }})

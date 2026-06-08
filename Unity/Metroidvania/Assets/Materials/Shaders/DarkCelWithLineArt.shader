@@ -1,128 +1,206 @@
-Shader "Custom/DarkCelWithLineArt"
+Shader "ShadowOfSouls/DarkLowpolyCelLineArt"
 {
     Properties
     {
-        _MainColor ("Main Color", Color) = (1,1,1,1)
-        _ShadowColor ("Shadow Color", Color) = (0.1,0.1,0.1,1)
-        _LightPos ("Light Position", Vector) = (0,2.18000007,-0.769999981,0)
-        _LightIntensity ("Light Intensity", Range(0,5)) = 1
-        _LineThickness ("Line Thickness", Range(0,0.05)) = 0.04
-        _LineColor ("Line Color", Color) = (0,0,0,1)
-        _ShadowThreshold ("Shadow Threshold", Range(0,1)) = 0.5
-        _SpecularIntensity ("Specular Intensity", Range(0,5)) = 1
-        _SpecularSize ("Specular Size", Range(0,1)) = 0.1
-        _AmbientIntensity ("Ambient Intensity", Range(0,1)) = 0.1
-        _OutlineZOffset ("Outline Z Offset", Range(0,0.1)) = 0.01
+        [Header(Base)]
+        _MainColor ("Main Color", Color) = (0.42, 0.40, 0.38, 1)
+        _ShadowColor ("Shadow Color", Color) = (0.12, 0.11, 0.12, 1)
+        _DeepShadowColor ("Deep Shadow Color", Color) = (0.035, 0.032, 0.04, 1)
+
+        [Header(Lighting)]
+        _LightPos ("Light Position", Vector) = (0, 2.18, -0.77, 0)
+        _LightIntensity ("Light Intensity", Range(0,2)) = 0.85
+        _AmbientIntensity ("Ambient Intensity", Range(0,1)) = 0.08
+
+        [Header(Cel Bands)]
+        _ShadowThreshold ("Shadow Threshold", Range(0,1)) = 0.48
+        _ShadowHardness ("Shadow Hardness", Range(0.001,0.2)) = 0.025
+        _DeepShadowThreshold ("Deep Shadow Threshold", Range(0,1)) = 0.22
+        _DeepShadowHardness ("Deep Shadow Hardness", Range(0.001,0.2)) = 0.025
+
+        [Header(Subtle Edge Light)]
+        _EdgeColor ("Edge Color", Color) = (0.16, 0.03, 0.045, 1)
+        _EdgeIntensity ("Edge Intensity", Range(0,1)) = 0.18
+        _EdgePower ("Edge Power", Range(1,8)) = 4.5
+        _EdgeThreshold ("Edge Threshold", Range(0,1)) = 0.72
+
+        [Header(Line Art)]
+        _LineThickness ("Line Thickness", Range(0,0.06)) = 0.018
+        _LineColor ("Line Color", Color) = (0.005, 0.004, 0.006, 1)
+
+        [Header(Art Direction)]
+        _Desaturation ("Desaturation", Range(0,1)) = 0.35
+        _Darkness ("Darkness", Range(0,1)) = 0.18
     }
+
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
-        Pass // Outline
+        Tags
+        {
+            "RenderType"="Opaque"
+            "Queue"="Geometry"
+            "RenderPipeline"="UniversalPipeline"
+        }
+
+        Pass
         {
             Name "Outline"
+            Tags { "LightMode"="SRPDefaultUnlit" }
+
             Cull Front
             ZWrite On
             ZTest LEqual
-            Offset [_OutlineZOffset], [_OutlineZOffset]
 
             HLSLPROGRAM
-            #pragma vertex vert
-            #pragma fragment frag
-            #include "UnityCG.cginc"
+            #pragma vertex OutlineVert
+            #pragma fragment OutlineFrag
 
-            struct appdata
-            {
-                float4 vertex : POSITION;
-                float3 normal : NORMAL;
-            };
-
-            struct v2f
-            {
-                float4 pos : SV_POSITION;
-            };
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
             float _LineThickness;
             float4 _LineColor;
 
-            v2f vert(appdata v)
+            struct Attributes
             {
-                v2f o;
-                float3 norm = normalize(v.normal);
-                v.vertex.xyz += norm * _LineThickness;
-                o.pos = UnityObjectToClipPos(v.vertex);
-                return o;
+                float4 positionOS : POSITION;
+                float3 normalOS : NORMAL;
+            };
+
+            struct Varyings
+            {
+                float4 positionHCS : SV_POSITION;
+            };
+
+            Varyings OutlineVert(Attributes input)
+            {
+                Varyings output;
+
+                float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
+                float3 normalWS = normalize(TransformObjectToWorldNormal(input.normalOS));
+
+                positionWS += normalWS * _LineThickness;
+
+                output.positionHCS = TransformWorldToHClip(positionWS);
+                return output;
             }
 
-            float4 frag(v2f i) : SV_Target
+            half4 OutlineFrag(Varyings input) : SV_Target
             {
-                return _LineColor;
+                return half4(_LineColor.rgb, 1);
             }
+
             ENDHLSL
         }
 
-        Pass // Cel shading
+        Pass
         {
+            Name "DarkLowpolyCel"
             Tags { "LightMode"="UniversalForward" }
+
             Cull Back
             ZWrite On
+            ZTest LEqual
 
             HLSLPROGRAM
-            #pragma vertex vert
-            #pragma fragment frag
-            #include "UnityCG.cginc"
+            #pragma vertex CelVert
+            #pragma fragment CelFrag
 
-            struct appdata
-            {
-                float4 vertex : POSITION;
-                float3 normal : NORMAL;
-            };
-
-            struct v2f
-            {
-                float4 pos : SV_POSITION;
-                float3 worldPos : TEXCOORD0;
-                float3 worldNormal : TEXCOORD1;
-            };
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
             float4 _MainColor;
             float4 _ShadowColor;
+            float4 _DeepShadowColor;
+
             float3 _LightPos;
             float _LightIntensity;
-            float _ShadowThreshold;
-            float _SpecularIntensity;
-            float _SpecularSize;
             float _AmbientIntensity;
 
-            v2f vert (appdata v)
+            float _ShadowThreshold;
+            float _ShadowHardness;
+            float _DeepShadowThreshold;
+            float _DeepShadowHardness;
+
+            float4 _EdgeColor;
+            float _EdgeIntensity;
+            float _EdgePower;
+            float _EdgeThreshold;
+
+            float _Desaturation;
+            float _Darkness;
+
+            struct Attributes
             {
-                v2f o;
-                o.pos = UnityObjectToClipPos(v.vertex);
-                o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
-                o.worldNormal = UnityObjectToWorldNormal(v.normal);
-                return o;
+                float4 positionOS : POSITION;
+                float3 normalOS : NORMAL;
+            };
+
+            struct Varyings
+            {
+                float4 positionHCS : SV_POSITION;
+                float3 positionWS : TEXCOORD0;
+                float3 normalWS : TEXCOORD1;
+            };
+
+            Varyings CelVert(Attributes input)
+            {
+                Varyings output;
+
+                output.positionHCS = TransformObjectToHClip(input.positionOS.xyz);
+                output.positionWS = TransformObjectToWorld(input.positionOS.xyz);
+                output.normalWS = normalize(TransformObjectToWorldNormal(input.normalOS));
+
+                return output;
             }
 
-            float4 frag (v2f i) : SV_Target
+            float3 Desaturate(float3 color, float amount)
             {
-                float3 N = normalize(i.worldNormal);
-                float3 L = normalize(_LightPos - i.worldPos);
-                float NdotL = dot(N, L) * 0.5 + 0.5; // half-Lambert
-                float lightStep = smoothstep(_ShadowThreshold - 0.05, _ShadowThreshold + 0.05, NdotL);
-
-
-                // Specular
-                float3 V = normalize(_WorldSpaceCameraPos - i.worldPos);
-                float3 H = normalize(L + V);
-                float spec = pow(saturate(dot(N, H)), 1.0 / _SpecularSize) * _SpecularIntensity;
-
-                float3 finalColor = lerp(_ShadowColor.rgb, _MainColor.rgb, lightStep);
-                finalColor += spec;
-                finalColor += _AmbientIntensity * _MainColor.rgb;
-                finalColor *= _LightIntensity;
-
-                return float4(finalColor, 1.0);
+                float gray = dot(color, float3(0.299, 0.587, 0.114));
+                return lerp(color, float3(gray, gray, gray), amount);
             }
+
+            half4 CelFrag(Varyings input) : SV_Target
+            {
+                float3 N = normalize(input.normalWS);
+                float3 V = normalize(_WorldSpaceCameraPos.xyz - input.positionWS);
+                float3 L = normalize(_LightPos - input.positionWS);
+
+                float ndotl = dot(N, L) * 0.5 + 0.5;
+
+                float lightBand = smoothstep(
+                    _ShadowThreshold - _ShadowHardness,
+                    _ShadowThreshold + _ShadowHardness,
+                    ndotl
+                );
+
+                float deepBand = smoothstep(
+                    _DeepShadowThreshold - _DeepShadowHardness,
+                    _DeepShadowThreshold + _DeepShadowHardness,
+                    ndotl
+                );
+
+                float3 shadowBase = lerp(_DeepShadowColor.rgb, _ShadowColor.rgb, deepBand);
+                float3 color = lerp(shadowBase, _MainColor.rgb, lightBand);
+
+                // Ambient very controlled, because this is not a Pixar funeral.
+                color += _MainColor.rgb * _AmbientIntensity;
+
+                // Very subtle edge light, mostly for silhouette separation.
+                float rim = pow(1.0 - saturate(dot(N, V)), _EdgePower);
+                rim = step(_EdgeThreshold, rim);
+                color += _EdgeColor.rgb * rim * _EdgeIntensity;
+
+                color *= _LightIntensity;
+
+                // Art direction: muted and depressive.
+                color = Desaturate(color, _Desaturation);
+                color *= 1.0 - _Darkness;
+
+                return half4(saturate(color), 1);
+            }
+
             ENDHLSL
         }
     }
+
+    FallBack Off
 }
