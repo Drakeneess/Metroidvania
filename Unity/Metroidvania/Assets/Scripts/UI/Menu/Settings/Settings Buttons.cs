@@ -168,7 +168,7 @@ public class SettingsButtons : MonoBehaviour
             if (isEditing) isEditing = false;
             else
             {
-                SettingsUploader.Instance?.OnSettingsMenuClosed();
+                SettingsValue.Instance?.SaveSettings();
                 MenuInputLock.SetBlocked(false);
                 MenuTransition.Instance.SwitchTo(menuButtonsContainer);
             }

@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class MainMenuButtons : MenuButtons
@@ -71,7 +69,7 @@ public class MainMenuButtons : MenuButtons
         }
         else if (currentSelection >= buttons.Length)
         {
-            currentSelection = 0; // Volver al primer botón
+            currentSelection = 0; // Volver al primero
             if (!SaveDataController.AreSavedData())
             {
                 currentSelection++;
@@ -88,7 +86,6 @@ public class MainMenuButtons : MenuButtons
     }
     private void BeginGame(){
         gameObject.SetActive(false);
-        GameSessionManager.Instance.StartGameSession();
         MusicController.Instance.PlayTheme(1);
         GameUI.SetActive(true);
         GameMenuController.CurrentMode = GameMode.Game;

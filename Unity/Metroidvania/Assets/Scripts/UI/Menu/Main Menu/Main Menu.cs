@@ -20,7 +20,7 @@ public class MainMenu : Menu
 
     private void OnDestroy()
     {
-        // 🔥 Restaurar alpha de la courtine cuando se destruya el menú
+        // Restaurar alpha de la courtine cuando se destruya el menú.
         if (courtine != null)
         {
             var raw = courtine.GetComponent<UnityEngine.UI.RawImage>();
@@ -35,9 +35,6 @@ public class MainMenu : Menu
                 cg.alpha = 1f;
             }
         }
-        GameSessionManager.Instance.EndGameSession();
-        BehaviorManager.Instance.SyncBehaviorSummaryFireAndForget();
-        BehaviorManager.Instance.SyncBehaviorSummary();
     }
 
     public void InitializeMenu()
