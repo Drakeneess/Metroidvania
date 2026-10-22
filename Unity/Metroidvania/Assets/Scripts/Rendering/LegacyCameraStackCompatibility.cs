@@ -69,7 +69,6 @@ public static class LegacyCameraStackCompatibility
 
             UniversalAdditionalCameraData overlayData = camera.GetUniversalAdditionalCameraData();
             overlayData.renderType = CameraRenderType.Overlay;
-            overlayData.clearDepth = camera.clearFlags == CameraClearFlags.Depth;
             stack.Add(camera);
             overlaysAdded++;
         }
