@@ -47,6 +47,8 @@ public static class LegacyCameraStackCompatibility
         stack.Clear();
 
         Camera[] cameras = Object.FindObjectsByType<Camera>(FindObjectsSortMode.None);
+        int overlaysAdded = 0;
+
         foreach (Camera camera in cameras)
         {
             if (camera == null || camera == baseCamera || !camera.isActiveAndEnabled)
@@ -69,6 +71,11 @@ public static class LegacyCameraStackCompatibility
             overlayData.renderType = CameraRenderType.Overlay;
             overlayData.clearDepth = camera.clearFlags == CameraClearFlags.Depth;
             stack.Add(camera);
+            overlaysAdded++;
         }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.Log($"[Rendering] URP camera stack rebuilt. Base='{baseCamera.name}', overlays={overlaysAdded}.");
+#endif
     }
 }
