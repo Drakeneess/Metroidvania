@@ -98,7 +98,7 @@ public class Enemy : Character
         foreach (var c in GetComponentsInChildren<Collider>())
             c.enabled = false;
 
-        rb.velocity = Vector3.zero;
+        rb.linearVelocity = Vector3.zero;
         rb.isKinematic = true;
 
         animator?.SetBool("Die", true);

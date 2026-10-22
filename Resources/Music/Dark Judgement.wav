@@ -1,0 +1,342 @@
+############################
+# DARK JUDGEMENT
+# Modos: :tema, :conflicto, :mixto
+############################
+
+use_bpm 38
+set_volume! 1.1
+
+# ---------- CONTROLES ----------
+set :culpa,          0.9
+set :soledad,        0.85
+set :juicio,         0.9
+set :juicio_base,    0.6
+set :conflict_gain,  1.23  # 1.0..2.5 (boost general de conflicto)
+set :conflict_cut,   64    # 58..70   (LPF de conflicto, grave)
+set :modo,          :tema # :tema | :conflicto | :mixto
+
+# Capas (toggles)
+set :L_sub,        true
+set :L_bajo,       true
+set :L_pads,       true
+set :L_lamento,    true
+set :L_latido,     true
+set :L_vox,        true
+set :L_veil,       true
+set :L_mirror,     true
+set :L_veredicto,  true
+set :L_conflicto,  true
+
+# ---------- UTILIDAD ----------
+define :peso do |min_amp, max_amp|
+  dens = [[get(:soledad), 1].min, 0].max
+  cul  = [[get(:culpa),   1].min, 0].max
+  base = min_amp + (max_amp - min_amp) * dens
+  base * (0.7 + 0.3 * cul)
+end
+
+define :activo? do |grupo|
+  m = get(:modo)
+  case grupo
+  when :tema       then (m == :tema || m == :mixto)
+  when :conflicto  then (m == :conflicto || m == :mixto)
+  else true
+  end
+end
+
+define :fallo! do |inc = 0.1|
+  j = get(:juicio) + inc
+  j = 1.0 if j > 1.0
+  j = 0.0 if j < 0.0
+  set :juicio, j
+  set :veredicto, true if j >= 0.9
+end
+
+define :perdon! do |dec = 0.07|
+  j = get(:juicio) - dec
+  j = 1.0 if j > 1.0
+  j = 0.0 if j < 0.0
+  set :juicio, j
+end
+
+# Ducking global
+set :duck, 0.0
+live_loop :duck_decay do
+  d = get(:duck) - 0.02
+  set :duck, [d, 0.0].max
+  sleep 0.2
+end
+
+# Homeostasis de juicio
+live_loop :homeostasis do
+  j  = get(:juicio)
+  jb = get(:juicio_base)
+  j -= 0.005 if j > jb
+  set :juicio, j
+  sleep 1
+end
+
+# Grids
+live_loop :g8  do; cue :g8;  sleep 8;  end
+live_loop :g10 do; cue :g10; sleep 10; end
+
+# Progresión maestra y acceso armónico (comparten tema y conflicto)
+set :grado, 0
+define :acorde_por_grado do |g|
+  case g
+  when 0 then chord(:d2, :minor7) # i
+  when 1 then chord(:f2, :major7) # III
+  when 2 then chord(:g2, :sus2)   # IV (susp.)
+  else        chord(:a2, :sus4)   # V sus
+  end
+end
+
+live_loop :prog_tick do
+  sync :g8
+  g = (get(:grado) + 1) % 4
+  set :grado, g
+  set :acorde_actual, acorde_por_grado(g)
+end
+
+# ---------- TEXTOURA PRINCIPAL ----------
+with_fx :reverb, mix: 0.72, room: 1.0 do
+  with_fx :compressor do
+    
+    # 0) SUB-DRIFT — subgrave con deriva lenta
+    live_loop :L0_sub do
+      if get(:L_sub) && activo?(:tema)
+        use_synth :subpulse
+        duck = 1.0 - get(:duck)
+        with_fx :hpf, cutoff: 30 do
+          with_fx :lpf, cutoff: 58 do
+            n   = :d1
+            det = note(n) - 0.08
+            a   = peso(0.10, 0.22) * duck
+            play n,   attack: 2.5, sustain: 4.5, release: 2.0, amp: a
+            sleep 4.6
+            play det, attack: 1.5, sustain: 3.5, release: 2.0, amp: a*0.9
+            sleep 4.0
+          end
+        end
+      else
+        sleep 1
+      end
+    end
+    
+    # 1) Bajo — respiración grave
+    live_loop :L1_bajo do
+      if get(:L_bajo) && activo?(:tema)
+        use_synth :dark_ambience
+        nota = choose([:d1, :a1, :f1])
+        with_fx :lpf, cutoff: 58 do
+          play nota, attack: 3, sustain: 6, release: 4, amp: peso(0.16, 0.30) * (1.0 - get(:duck))
+        end
+        sleep 8 + rrand(-0.4, 0.5)
+      else
+        sleep 1
+      end
+    end
+    
+    # 2) Pads — acordes bajos + ♭2 fantasma dependiente de juicio
+    live_loop :L2_pads do
+      if get(:L_pads) && activo?(:tema)
+        sync :g8
+        g  = get(:grado)
+        ac = acorde_por_grado(g)
+        set :acorde_actual, ac
+        duck = 1.0 - get(:duck)
+        use_synth :prophet
+        with_fx :lpf, cutoff: 62 do
+          play ac, attack: 2.8, sustain: 6.6, release: 2.6, amp: peso(0.10, 0.20) * duck
+          j = get(:juicio)
+          chance = 3 - (j * 2).floor
+          chance = 1 if chance < 1
+          if one_in(chance) && g == 0
+            play :eb2, attack: 1.2, sustain: 3.0, release: 2.0, amp: peso(0.02, 0.05) * duck
+          end
+        end
+      else
+        sleep 1
+      end
+    end
+    
+    # 3) Lamento — piano apagado (medio-bajo). Guarda la última nota.
+    set :mute_lamento, false
+    live_loop :L3_lamento do
+      if get(:L_lamento) && activo?(:tema)
+        if get(:mute_lamento)
+          sleep 2
+        else
+          use_synth :piano
+          notas = [:d3, :c3, :bb2, :a2, :g2, :f2, :d3]
+          with_fx :lpf, cutoff: 66 do
+            notas.each do |n|
+              ampv = peso(0.09, 0.16) * (1.0 - get(:duck))
+              play n, sustain: 0.9, release: 1.8, amp: ampv
+              set :last_note, n
+              sleep [1.9, 2.3].choose
+            end
+          end
+          sleep 1.2
+        end
+      else
+        sleep 1
+      end
+    end
+    
+    # 4) Latido — irregular + ducking
+    live_loop :L4_latido do
+      if get(:L_latido) && activo?(:tema)
+        j = get(:juicio)
+        base_amp = peso(0.20, 0.34)
+        sample :bd_haus, amp: base_amp * (0.9 + 0.3*j), rate: 0.38
+        set :duck, 0.30 + 0.08*j
+        sleep rrand(5.8 - j, 7.6 - j*0.6)
+        if one_in(4)
+          sample :drum_bass_hard, amp: base_amp * 0.85, rate: 0.44
+          set :duck, 0.26 + 0.06*j
+        end
+        sleep rrand(4.2 - j*0.4, 6.2 - j*0.3)
+      else
+        sleep 1
+      end
+    end
+    
+    # 5) Voces — coros huecos graves
+    live_loop :L5_vox do
+      if get(:L_vox) && activo?(:tema)
+        if get(:mute_lamento)
+          sleep 2
+        else
+          use_synth :hollow
+          n = choose([:d2, :f2, :g2, :a2])
+          with_fx :echo, phase: 2.2, mix: 0.22 do
+            with_fx :lpf, cutoff: 60 do
+              play n, attack: 3.5, sustain: 5.5, release: 4, amp: peso(0.05, 0.11) * (1.0 - get(:duck))
+            end
+          end
+          sleep [9, 10, 11].choose
+        end
+      else
+        sleep 1
+      end
+    end
+    
+    # 6) Velo — metal húmedo (ring-mod grave, filtrado)
+    live_loop :L6_veil do
+      if get(:L_veil) && activo?(:tema)
+        sync :g10
+        use_synth :hollow
+        with_fx :ring_mod, freq: 28, mix: 0.15 + (get(:juicio) * 0.05) do
+          with_fx :lpf, cutoff: 58 do
+            play :d2, attack: 2.0, sustain: 5.0, release: 3.0, amp: peso(0.04, 0.08) * (1.0 - get(:duck))
+          end
+        end
+        sleep 10
+      else
+        sleep 1
+      end
+    end
+    
+    # 7) MIRROR — refleja el lamento una ♭2 abajo (crece con :juicio)
+    live_loop :L7_mirror do
+      if get(:L_mirror) && activo?(:tema)
+        ln = get(:last_note)
+        if ln
+          j = get(:juicio)
+          use_synth :hollow
+          with_fx :lpf, cutoff: 58 do
+            with_fx :tanh, krunch: 1.0, mix: 0.10 + j*0.12 do
+              play (ln - 1), attack: 0.8, sustain: 1.6, release: 1.2,
+                amp: peso(0.03, 0.10) * (0.5 + j*0.8)
+            end
+          end
+        end
+        sleep 1.0 + rrand(0.2, 0.6)
+      else
+        sleep 1
+      end
+    end
+    
+    # 8) VEREDICTO — cluster bajo D2–Eb2–F2
+    set :veredicto, false
+    live_loop :L8_veredicto do
+      if get(:L_veredicto) && activo?(:tema)
+        if get(:juicio) >= 0.9 || get(:veredicto)
+          use_synth :mod_fm
+          with_fx :lpf, cutoff: 56 do
+            play_chord [:d2, :eb2, :f2], attack: 0.6, sustain: 2.0, release: 2.5,
+              divisor: 0.25, depth: 0.8, amp: peso(0.10, 0.20)
+          end
+          set :veredicto, false
+          set :mute_lamento, true
+          in_thread do
+            sleep 3.5 + rrand(0.0, 1.0)
+            set :mute_lamento, false
+          end
+          sleep 6
+        else
+          sleep 0.5
+        end
+      else
+        sleep 1
+      end
+    end
+    
+    # 9) CAPA DE CONFLICTO — amarrada al grado/armonía del tema
+    # 9) CAPA DE CONFLICTO — constante y complementaria (sin silencios largos)
+    live_loop :L9_conflicto do
+      if get(:L_conflicto) && activo?(:conflicto)
+        j   = get(:juicio)
+        cg  = get(:conflict_gain)
+        cof = get(:conflict_cut)
+        g   = get(:grado)
+        ac  = acorde_por_grado(g)
+        root = ac[0]
+        
+        mix_boost = (get(:modo) == :mixto) ? 0.9 : 1.0
+        with_fx :level, amp: cg * mix_boost do
+          # A) Cluster grave (root, ♭2, m3) con sustain largo
+          use_synth :mod_fm
+          with_fx :lpf, cutoff: cof do
+            with_fx :tanh, krunch: 1.3, mix: 0.22 + j*0.12 do
+              play_chord [root, root+1, root+3],
+                attack: 0.3, sustain: 4.5 + j*2.0, release: 1.8,
+                divisor: 0.20, depth: 0.9,
+                amp: peso(0.16, 0.28) * (0.7 + 0.5*j)
+            end
+          end
+          
+          # B) Línea descendente continua, grave y cercana al cluster
+          seq = [root+3, root+2, root+1, root]
+          seq.each do |n|
+            with_fx :lpf, cutoff: cof do
+              use_synth :hollow
+              play n, attack: 0.4, sustain: 1.2 + j, release: 0.9,
+                amp: peso(0.08, 0.14) * (0.6 + 0.4*j),
+                pan: rrand(-0.1, 0.1)
+              use_synth :fm
+              play (n - 12), attack: 0.3, sustain: 1.0, release: 0.8,
+                amp: peso(0.06, 0.10) * (0.6 + 0.4*j)
+            end
+            sleep 1.4 - (j*0.2)  # más rápido con juicio alto
+          end
+        end
+        
+        # pausa breve antes del siguiente ciclo (fluidez constante)
+        sleep 0.8 - (j*0.3)
+      else
+        sleep 1
+      end
+    end
+    
+  end
+end
+
+############################
+# CONTROLES RÁPIDOS
+############################
+# Modo → set :modo, :tema | :conflicto | :mixto
+# Triggers → fallo! / perdon!
+# Gain/cut conflicto → set :conflict_gain, 1.0..2.5 ; set :conflict_cut, 58..70
+# Toggles → set :L_conflicto, true/false (y los demás L_...)

@@ -68,12 +68,12 @@ public class CharacterDash : MonoBehaviour
         float dashEndTime = Time.time + dashDuration;
         Vector3 dashDirection = new(characterMovement.Direction, 0f, 0f);
 
-        rb.velocity = dashDirection * dashSpeed;
+        rb.linearVelocity = dashDirection * dashSpeed;
 
         while (Time.time < dashEndTime)
             yield return null;
 
-        rb.velocity = Vector3.zero;
+        rb.linearVelocity = Vector3.zero;
         isDashing = false;
 
         Physics.IgnoreLayerCollision(playerLayer, characterLayer, false);

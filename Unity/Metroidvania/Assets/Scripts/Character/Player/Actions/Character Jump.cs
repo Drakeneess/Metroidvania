@@ -104,7 +104,7 @@ public class CharacterJump : MonoBehaviour
     {
         anim.Jump(); // ✅ reemplazo del viejo StartJumping()
 
-        rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
+        rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
         rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
 
         jumpCount++;
@@ -124,7 +124,7 @@ public class CharacterJump : MonoBehaviour
     private IEnumerator StallAirCoroutine(float duration)
     {
         rb.useGravity = false;
-        rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
+        rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
 
         yield return new WaitForSeconds(duration);
 
